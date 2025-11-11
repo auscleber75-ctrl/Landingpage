@@ -3,106 +3,130 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>⚡ Desafio 7 Dias: Controle Financeiro - Domine Suas Finanças</title>
+  <title>🏆 Desafio 7 Dias: Controle Financeiro - Domine Suas Finanças</title>
   <meta name="description" content="Em 7 dias você terá clareza do seu dinheiro, eliminará vazamentos e montará um plano simples pra sobrar todo mês." />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=Montserrat:wght@800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
     /* 1. VARIÁVEIS E BASE */
     :root {
-      --bg: #0b1220;
-      --card: #0e192c;
+      --bg: #090e18; /* Fundo mais escuro */
+      --card: #111a2c; /* Card mais escuro */
       --accent: #ffb703; /* Ouro/Amarelo Forte */
+      --accent-secondary: #ff8800; /* Laranja para destaque */
       --accent-hover: #e5a400;
       --muted: #9aa4b2;
       --white: #ffffff;
-      --success: #10b981; /* Verde para sucesso/garantia */
-      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --success: #10b981;
+      font-family: "Inter", sans-serif;
     }
     *{box-sizing:border-box}
-    body{margin:0;background:linear-gradient(180deg,#060f1c 0%, #030810 100%);color:var(--white);-webkit-font-smoothing:antialiased}
+    body{margin:0;background:var(--bg);color:var(--white);-webkit-font-smoothing:antialiased}
     .container{max-width:1100px;margin:40px auto;padding:0 24px}
     
-    /* 2. TIPOGRAFIA E ESTRUTURA */
-    header{text-align:center;padding-bottom:20px}
-    .logo{width:80px;height:80px;border-radius:16px;background:linear-gradient(135deg,#0ea5e9,#1d4ed8);display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:32px;margin-bottom:12px;box-shadow:0 0 15px rgba(30,64,175,0.5)}
-    h1{margin:0;font-size:36px;font-weight:900;line-height:1.2}
+    /* 2. HEADER HERO IMPACTANTE */
+    header{text-align:center;padding-bottom:30px; margin-top:30px}
+    .logo{width:80px;height:80px;border-radius:16px;background:linear-gradient(135deg,#1d4ed8,#0ea5e9);display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:32px;margin-bottom:12px;box-shadow:0 0 20px rgba(30,64,175,0.7)}
+    h1{
+        margin:0;
+        font-family: "Montserrat", sans-serif;
+        font-size: 48px;
+        font-weight: 900;
+        line-height: 1.1;
+        text-transform: uppercase;
+        letter-spacing: -1px;
+    }
     h1 span{color:var(--accent)}
-    p.lead{color:var(--muted);margin-top:10px;font-size:18px}
+    p.lead{color:var(--muted);margin-top:15px;font-size:22px;font-weight:600}
     
-    /* 3. LAYOUT E CARDS */
-    .main{display:grid;grid-template-columns:1fr 380px;gap:36px;margin-top:36px}
-    .card{background:var(--card);padding:24px;border-radius:16px;border:1px solid rgba(255,255,255,0.05);box-shadow:0 10px 20px rgba(0,0,0,0.3);margin-top:24px}
-    /* CORREÇÃO: Zera a margem superior do PRIMEIRO card em cada coluna (section e aside) */
+    /* 3. ESCASSEZ E TIMER */
+    .timer-box{
+        display: inline-block;
+        background: var(--accent-secondary);
+        color: var(--bg);
+        padding: 8px 15px;
+        border-radius: 8px;
+        margin-top: 20px;
+        font-weight: 900;
+        font-size: 18px;
+        box-shadow: 0 4px 10px rgba(255,136,0,0.5);
+    }
+    .timer-box i{margin-right:8px}
+
+    /* 4. LAYOUT E CARDS */
+    .main{display:grid;grid-template-columns:1fr 400px;gap:40px;margin-top:40px}
+    .card{
+        background:var(--card);
+        padding:28px;
+        border-radius:20px;
+        border:1px solid rgba(255,255,255,0.05);
+        box-shadow:0 15px 30px rgba(0,0,0,0.5), inset 0 0 5px rgba(255,255,255,0.05); /* Efeito Imersivo */
+        margin-top:30px
+    }
     .main section .card:first-child, .main aside .card:first-child{margin-top:0} 
 
-    /* 4. SEÇÃO PRINCIPAL (PRODUTO) */
-    .product-details{display:flex;gap:20px;align-items:flex-start}
+    /* 5. SEÇÃO PRINCIPAL E BENEFÍCIOS */
+    .product-details{display:flex;gap:30px;align-items:flex-start}
     .product-content{flex:1}
-    .product-media{width:250px; flex-shrink: 0;}
+    .product-media{width:270px; flex-shrink: 0;}
 
-    h2{margin:10px 0 0 0;font-size:24px;font-weight:800}
-    .sub-pitch{color:var(--muted);margin-top:6px;margin-bottom:12px}
+    h2{margin:10px 0 0 0;font-size:28px;font-weight:900}
+    .sub-pitch{color:var(--muted);margin-top:8px;margin-bottom:15px}
 
-    /* 5. LISTAS DE BENEFÍCIOS/MÓDULOS */
-    ul.features{padding-left:0;list-style:none;margin:12px 0}
-    ul.features li{color:var(--white);margin-bottom:10px;display:flex;align-items:center;font-weight:600;font-size:16px}
-    ul.features li i{color:var(--success);margin-right:10px;font-size:18px}
+    ul.features{padding-left:0;list-style:none;margin:15px 0}
+    ul.features li{color:var(--white);margin-bottom:12px;display:flex;align-items:center;font-weight:600;font-size:17px; background: rgba(255,255,255,0.02); padding: 8px; border-radius: 8px;} /* Destaque nos LIs */
+    ul.features li i{color:var(--success);margin-right:12px;font-size:20px}
     
-    .module-list{display:grid;gap:8px;margin-top:12px}
-    .module{padding:12px;border-radius:10px;background:rgba(255,255,255,0.03);display:flex;justify-content:space-between;align-items:center;border-left:4px solid var(--accent);font-weight:600}
-    .module i{color:var(--accent);margin-right:8px}
+    .module-list{display:grid;gap:10px;margin-top:15px}
+    .module{padding:15px;border-radius:12px;background:rgba(255,255,255,0.04);border-left:5px solid var(--accent);font-weight:700}
+    .module i{color:var(--accent);margin-right:10px}
 
-    /* 6. VÍDEO E MÍDIA */
-    .video-preview{border-radius:12px;overflow:hidden;border:3px solid var(--accent);cursor:pointer;}
-    .video-preview img{width:100%;display:block;filter:brightness(0.85);transition:filter 0.3s}
-    .video-preview:hover img{filter:brightness(1)}
-    .cta-media-box{margin-top:14px; text-align:center;}
+    /* 6. VÍDEO E CTA CENTRAL */
+    .video-preview{border-radius:16px;overflow:hidden;border:4px solid var(--accent-secondary);cursor:pointer;}
+    .cta-media-box{margin-top:20px; text-align:center;}
 
-    /* 7. PREÇO E CTA */
-    .cta-btn{display:block;background:var(--accent);color:var(--bg);padding:14px 24px;border-radius:12px;font-weight:800;text-decoration:none;text-align:center;transition:background 0.2s, transform 0.2s;box-shadow:0 4px 15px rgba(255,183,3,0.4);border:none;cursor:pointer;font-size:16px}
-    .cta-btn:hover{background:var(--accent-hover);transform:translateY(-1px)}
-    .cta-btn i{margin-right:8px}
+    /* 7. CTA */
+    .cta-btn{
+        display:block;
+        background:var(--accent);
+        color:var(--bg);
+        padding:18px 24px; /* Aumento do padding */
+        border-radius:15px;
+        font-weight:900;
+        text-decoration:none;
+        transition:background 0.2s, transform 0.2s, box-shadow 0.3s;
+        box-shadow:0 6px 20px rgba(255,183,3,0.6); /* Sombra mais forte */
+        border:none;cursor:pointer;font-size:18px;
+    }
+    .cta-btn:hover{background:var(--accent-hover);transform:translateY(-2px); box-shadow:0 8px 25px rgba(255,183,3,0.8);}
+    .cta-btn i{margin-right:10px}
 
-    .old-price{font-size:14px;color:var(--muted);text-decoration:line-through;margin-bottom:-4px}
-    .price{font-size:36px;color:var(--accent);font-weight:900;line-height:1}
+    .old-price{font-size:18px;color:var(--muted);text-decoration:line-through}
+    .price-promo{font-size:52px;color:var(--accent);font-weight:900;line-height:1; margin-top:-5px} /* Preço Enorme */
+    .price-detail{font-size:16px;color:var(--muted); margin-top:5px}
 
-    /* 8. BADGES, GARANTIA E DEPOIMENTO */
-    .badge{background:rgba(255,183,3,0.1);padding:6px 12px;border-radius:8px;color:var(--accent);font-weight:700;font-size:13px;display:inline-block}
+    /* 8. TESTEMUNHO E GARANTIA */
+    .testi{background:rgba(255,255,255,0.08);padding:20px;border-radius:15px;margin-top:20px;border-left:6px solid var(--accent-secondary);box-shadow:inset 0 0 10px rgba(255,183,3,0.2)}
+    .testi strong{color:var(--accent-secondary);display:block;margin-bottom:6px}
     
-    .testi{background:rgba(255,255,255,0.05);padding:16px;border-radius:12px;margin-top:16px;border-left:5px solid var(--accent)}
-    .testi strong{color:var(--accent);display:block;margin-bottom:4px}
-    .testi p{margin:0;color:var(--muted);font-style:italic}
-
-    .guarantee{margin-top:16px;background:rgba(16,185,129,0.1);padding:16px;border-radius:12px;color:var(--success);border:1px solid var(--success)}
-    .guarantee strong{font-weight:800;display:block;margin-bottom:4px}
-    .guarantee i{margin-right:8px}
-
+    .guarantee{margin-top:20px;background:rgba(16,185,129,0.15);padding:20px;border-radius:15px;color:var(--success);border:2px solid var(--success)}
+    
     /* 9. CHECKOUT E FORMULÁRIO */
-    #checkout{position:sticky; top:24px; border:2px solid var(--accent)}
-    #checkout h3{margin-top:0; text-align:center;font-size:24px;color:var(--accent)}
+    #checkout{position:sticky; top:30px; border:3px solid var(--accent-secondary); background: #070e1b;} /* Fundo mais contrastante */
+    #checkout h3{margin-top:0; text-align:center;font-size:28px;color:var(--accent)}
+    #checkout input{padding:15px;border-radius:12px;background:#050a11;border:1px solid #07203a;font-size:18px}
+    #after{background:rgba(16,185,129,0.3);padding:15px; border-radius:12px; font-weight:700}
 
-    #checkout input{width:100%;padding:12px;border-radius:10px;border:1px solid #07203a;background:#091629;color:var(--white);font-size:16px;transition:border-color 0.2s}
-    #checkout input:focus{outline:none;border-color:var(--accent)}
-    #checkout label{display:block;margin-top:12px;margin-bottom:6px;color:var(--muted);font-weight:600}
-    #after{margin-top:20px;padding:12px;border-radius:8px;background:rgba(16,185,129,0.2);color:var(--success);text-align:center;display:none}
-
-    /* 10. RODAPÉ */
-    footer{margin-top:40px;padding:20px 0;border-top:1px solid rgba(255,255,255,0.05);color:var(--muted);font-size:13px;text-align:center}
-    footer span.small-text{font-size:11px}
-
-    /* 11. MOBILE RESPONSIVO */
+    /* 10. MOBILE RESPONSIVO */
     @media(max-width:900px){
+      h1{font-size:36px}
+      p.lead{font-size:18px}
       .main{grid-template-columns:1fr; gap:30px}
-      h1{font-size:30px}
-      .logo{width:64px;height:64px;font-size:28px}
-      .cta-btn{padding:12px 20px}
-      /* Inverte a ordem no mobile: Mídia/CTA aparece antes do texto longo */
       .product-details{flex-direction:column-reverse; align-items:center;}
-      .product-media{width:100%; margin-bottom:10px}
-      /* Remove sticky no mobile para não atrapalhar a rolagem */
-      #checkout{position:static; border:2px solid var(--accent);}
+      .product-media{width:100%; margin-bottom:15px}
+      #checkout{position:static; border:2px solid var(--accent-secondary);}
+      .price-promo{font-size:44px;}
     }
   </style>
 </head>
@@ -110,8 +134,11 @@
   <div class="container">
     <header>
       <div class="logo">7D</div>
-      <h1>Domine Suas Finanças Pessoais <span>em Apenas 7 Dias</span></h1>
-      <p class="lead">O desafio prático que entrega clareza imediata, elimina gastos invisíveis e garante a **primeira sobra** no seu bolso. Zero teoria chata.</p>
+      <h1>PARE DE PERDER DINHEIRO. <br><span>ASSUMA O CONTROLE EM 7 DIAS.</span></h1>
+      <p class="lead">O único plano de ação que elimina vazamentos e força a sobra no seu orçamento, sem planilhas complexas ou teoria chata.</p>
+      <div class="timer-box">
+          <i class="fas fa-clock"></i> OFERTA EXPIRA EM: <span id="timer">00:00:00</span>
+      </div>
     </header>
 
     <main class="main">
@@ -119,15 +146,15 @@
         <div class="card">
           <div class="product-details">
             <div class="product-content">
-              <span class="badge">Acesso Imediato</span>
-              <h2>O Plano de Ação de 7 Dias para o Controle Absoluto.</h2>
-              <p class="sub-pitch">7 Vídeos Curto | Planilha Exclusiva | Suporte VIP no WhatsApp.</p>
+              <span class="badge">PLANO DE AÇÃO 100% PRÁTICO</span>
+              <h2>A Solução para Quem Já Tentou de Tudo e Não Conseguiu Organizar as Contas.</h2>
+              <p class="sub-pitch">7 Passos Curto | Planilha Exclusiva | Suporte VIP. Menos de 15 minutos por dia.</p>
 
               <ul class="features">
-                <li><i class="fas fa-check-circle"></i> Raio-X total do seu dinheiro em apenas 1 dia.</li>
-                <li><i class="fas fa-check-circle"></i> Estratégia "Cortador de Vazamentos" para economizar 10-20% já.</li>
-                <li><i class="fas fa-check-circle"></i> Planilha Milionária™ (Google Sheets) pronta para usar.</li>
-                <li><i class="fas fa-check-circle"></i> **GARANTIDO:** Clareza e planejamento para a primeira sobra do mês.</li>
+                <li><i class="fas fa-check-double"></i> **CLAREZA TOTAL:** Faça o Raio-X definitivo do seu dinheiro em 1 dia (Passo 1).</li>
+                <li><i class="fas fa-check-double"></i> **ECONOMIA IMEDIATA:** Use o Cortador de Vazamentos para estancar perdas invisíveis.</li>
+                <li><i class="fas fa-check-double"></i> **FERRAMENTA DE PRO:** Receba a Planilha Milionária™ (Google Sheets) pronta.</li>
+                <li><i class="fas fa-check-double"></i> **RESULTADO GARANTIDO:** Tenha clareza e planeje sua primeira grande sobra em 30 dias.</li>
               </ul>
             </div>
 
@@ -137,8 +164,10 @@
               </div>
               
               <div class="cta-media-box">
-                <div style="font-size:14px;color:var(--muted)">Preço de Lançamento (Tempo Limitado!)</div>
-                <button id="buyBtnTop" class="cta-btn" style="margin-top:8px"><i class="fas fa-arrow-alt-circle-right"></i> QUERO MINHA VAGA POR R$37</button>
+                <div class="old-price">Preço Normal: R$197,00</div>
+                <div style="font-size:16px;color:var(--white);font-weight:700;">AGORA, APENAS:</div>
+                <div class="price-promo">R$37</div>
+                <button id="buyBtnTop" class="cta-btn" style="margin-top:10px"><i class="fas fa-arrow-alt-circle-right"></i> QUERO MINHA VAGA POR R$37</button>
               </div>
             </div>
           </div>
@@ -146,50 +175,50 @@
           <div class="guarantee">
             <i class="fas fa-shield-alt"></i> 
             <strong>Blindagem de Risco: 30 Dias de Garantia Incondicional.</strong>
-            Se você fizer os exercícios do desafio e não tiver clareza das suas finanças no primeiro mês, devolvo seu dinheiro.
+            Se você aplicar o método e não tiver clareza das suas finanças no primeiro mês, devolvo 100% do seu investimento. Risco zero para você.
           </div>
 
           <div class="testi">
-            <strong><i class="fas fa-star" style="color:var(--accent)"></i> Depoimento Verificado:</strong>
+            <strong><i class="fas fa-award"></i> PROVA SOCIAL:</strong>
             <p>“Segui o desafio e em 2 semanas já consegui reduzir gastos e criar 1 reserva. Simples e direto. Parei de 'vazar' dinheiro!”</p> 
             <span style="font-size:12px;color:var(--accent);display:block;text-align:right">— João S., 32 (Profissional Liberal)</span>
           </div>
         </div>
 
         <div class="card">
-          <h3 style="margin:0 0 12px 0;font-weight:800;font-size:22px"><i class="fas fa-bolt" style="color:var(--accent)"></i> O Programa: 7 Passos para o Domínio</h3>
+          <h3 style="margin:0 0 15px 0;font-weight:900;font-size:24px"><i class="fas fa-map-marked-alt" style="color:var(--accent)"></i> O Mapa Completo para a Paz Financeira (Módulos)</h3>
           <div class="module-list">
-            <div class="module"><div><i class="fas fa-chart-line"></i> Dia 1 — O Raio-X Definitivo do Seu Dinheiro</div><div>5–8 min</div></div>
-            <div class="module"><div><i class="fas fa-cut"></i> Dia 2 — O Cortador de Vazamentos (Como Cortar o que Você Não Vê)</div><div>5–8 min</div></div>
-            <div class="module"><div><i class="fas fa-map-marker-alt"></i> Dia 3 — Mapeamento Estratégico dos Gastos Fixos</div><div>5–8 min</div></div>
-            <div class="module"><div><i class="fas fa-wallet"></i> Dia 4 — A Fórmula dos 3 Potinhos (Liberdade Financeira Simplificada)</div><div>5–8 min</div></div>
-            <div class="module"><div><i class="fas fa-calculator"></i> Dia 5 — Planilha Milionária na Prática (Sua Ferramenta Automática)</div><div>8–12 min</div></div>
-            <div class="module"><div><i class="fas fa-lock"></i> Dia 6 — O Código do Lucro Pessoal (Estratégia para Fazer Sobrar)</div><div>6–8 min</div></div>
-            <div class="module"><div><i class="fas fa-calendar-check"></i> Dia 7 — Plano dos Próximos 30 Dias (Rota de Crescimento)</div><div>8–10 min</div></div>
+            <div class="module"><div><i class="fas fa-chart-line"></i> Dia 1 — O Raio-X Definitivo: Onde o seu dinheiro realmente está indo.</div><div>5–8 min</div></div>
+            <div class="module"><div><i class="fas fa-cut"></i> Dia 2 — O Cortador de Vazamentos: Identifique e elimine os gastos invisíveis.</div><div>5–8 min</div></div>
+            <div class="module"><div><i class="fas fa-map-marker-alt"></i> Dia 3 — Mapeamento Estratégico: O segredo para dominar gastos fixos sem sofrimento.</div><div>5–8 min</div></div>
+            <div class="module"><div><i class="fas fa-wallet"></i> Dia 4 — A Fórmula dos 3 Potinhos: O framework que garante a sobra e o investimento.</div><div>5–8 min</div></div>
+            <div class="module"><div><i class="fas fa-calculator"></i> Dia 5 — Planilha Milionária na Prática: Preencha em 5 minutos e veja o futuro.</div><div>8–12 min</div></div>
+            <div class="module"><div><i class="fas fa-lock"></i> Dia 6 — O Código do Lucro Pessoal: Estratégias de blindagem financeira.</div><div>6–8 min</div></div>
+            <div class="module"><div><i class="fas fa-calendar-check"></i> Dia 7 — Plano dos Próximos 30 Dias: A rota de crescimento e o fim da confusão.</div><div>8–10 min</div></div>
           </div>
         </div>
 
         <div class="card">
-          <h3 style="margin:0 0 10px 0;font-weight:800;font-size:22px"><i class="fas fa-question-circle" style="color:var(--accent)"></i> Perguntas Frequentes (FAQ)</h3>
-          <div style="color:var(--muted);line-height:1.6">
-            <strong style="color:var(--white)">Preciso ter experiência em finanças?</strong> 
-            <br>Absolutamente não. Este desafio é feito para quem está começando e precisa de passos práticos, não de teoria complexa. É para iniciantes.  
-            <br><strong style="color:var(--white);margin-top:10px;display:block">Quanto tempo por dia preciso dedicar?</strong> 
-            <br>Apenas 5 a 10 minutos para assistir ao vídeo do dia e 10 a 20 minutos para aplicar o exercício na planilha. Menos tempo que o seu café da manhã.  
-            <br><strong style="color:var(--white);margin-top:10px;display:block">Como e quando recebo o acesso?</strong> 
-            <br>O acesso é **imediato** após a confirmação do pagamento. Você receberá um e-mail com o login para a plataforma e o link direto para a Planilha Milionária (Google Sheets).
+          <h3 style="margin:0 0 10px 0;font-weight:900;font-size:24px"><i class="fas fa-question-circle" style="color:var(--accent)"></i> Perguntas que Vão na Sua Cabeça (FAQ)</h3>
+          <div style="color:var(--muted);line-height:1.8">
+            <strong style="color:var(--white)">Eu sou iniciante. Vou conseguir aplicar?</strong> 
+            <br>Sim. O Desafio é 100% voltado para iniciantes que precisam de resultados práticos, não de teoria acadêmica. O foco é fazer você agir.  
+            <br><strong style="color:var(--white);margin-top:15px;display:block">Tenho uma rotina corrida. O tempo é suficiente?</strong> 
+            <br>Com certeza. O método é enxuto. São apenas 5 a 10 minutos de vídeo e 10 a 20 minutos de exercício por dia. Mais rápido que ver um episódio de série.  
+            <br><strong style="color:var(--white);margin-top:15px;display:block">Onde e como eu recebo o acesso?</strong> 
+            <br>Acesso **imediato** após a confirmação. Enviamos o login da plataforma e o link da Planilha Milionária™ diretamente para o seu e-mail.
           </div>
         </div>
       </section>
 
       <aside>
         <div id="checkout" class="card">
-          <h3>🚨 OFERTA RELÂMPAGO 🚨</h3>
+          <h3 style="text-shadow: 0 0 5px rgba(255,255,255,0.4);">🔒 GARANTA SEU ACESSO COM DESCONTO</h3>
           
-          <div style="text-align:center;margin-bottom:12px">
+          <div style="text-align:center;margin-bottom:15px; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 15px;">
             <div class="old-price">De R$197,00 por:</div>
-            <div class="price">R$37,00</div>
-            <div style="font-size:14px;color:var(--muted)">ou 4x de R$9,97 no cartão</div>
+            <div class="price-promo">R$37</div>
+            <div class="price-detail">ou 4x de R$9,97 no cartão</div>
           </div>
           
           <form id="buyForm" onsubmit="handleBuy(event)">
@@ -199,8 +228,8 @@
             <label for="email">Seu Melhor E-mail</label>
             <input id="email" required placeholder="seu@exemplo.com" type="email">
 
-            <button type="submit" style="margin-top:20px;width:100%;" class="cta-btn"><i class="fas fa-lock"></i> GARANTIR MINHA VAGA POR R$37</button>
-            <div style="text-align:center;margin-top:10px;font-size:12px;color:var(--muted)"><i class="fas fa-shield-alt"></i> Compra 100% Segura e Garantida.</div>
+            <button type="submit" style="margin-top:25px;width:100%;" class="cta-btn"><i class="fas fa-shopping-cart"></i> FINALIZAR COMPRA POR R$37</button>
+            <div style="text-align:center;margin-top:12px;font-size:12px;color:var(--muted);font-weight:600;"><i class="fas fa-shield-alt"></i> Compra 100% Segura e Garantida.</div>
           </form>
 
           <div id="after">
@@ -209,11 +238,11 @@
         </div>
 
         <div class="card">
-          <h4 style="margin:0 0 10px 0;font-weight:800;font-size:20px"><i class="fas fa-gift" style="color:var(--accent)"></i> Bônus Exclusivos de Lançamento</h4>
-          <ul style="color:var(--muted);padding-left:18px;list-style-type:disc">
-            <li style="margin-bottom:8px;color:var(--white)">**Planilha Milionária** (A ferramenta automática que faz a conta por você).</li>
-            <li style="margin-bottom:8px;color:var(--white)">**PDF As 5 Atitudes Ricas** (Guia de mentalidade para a riqueza).</li>
-            <li style="margin-bottom:8px;color:var(--white)">**Grupo VIP** de Suporte no WhatsApp (Tire suas dúvidas e interaja).</li>
+          <h4 style="margin:0 0 10px 0;font-weight:900;font-size:24px"><i class="fas fa-gem" style="color:var(--accent-secondary)"></i> Bônus Exclusivos (Valor R$150)</h4>
+          <ul style="color:var(--muted);padding-left:18px;list-style-type:square">
+            <li style="margin-bottom:10px;color:var(--white);font-weight:600;">**Planilha Milionária™** (O software que automatiza sua organização).</li>
+            <li style="margin-bottom:10px;color:var(--white);font-weight:600;">**PDF As 5 Atitudes Ricas** (O Guia de Mentalidade para o Crescimento).</li>
+            <li style="margin-bottom:10px;color:var(--white);font-weight:600;">**Grupo VIP** de Suporte no WhatsApp (Networking e Ajuda Ilimitada).</li>
           </ul>
         </div>
       </aside>
@@ -222,37 +251,59 @@
     <footer>
       © <span id="year"></span> Desafio 7 Dias • Todos os direitos reservados.
       <br>
-      <span class="small-text">Política de reembolso integral disponível no checkout. CNPJ/Termos de uso.</span>
+      <span class="small-text">Política de reembolso integral disponível no checkout. Termos de uso e privacidade.</span>
     </footer>
   </div>
 
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
     
+    // Configuração do Contador de Tempo (Escassez)
+    function startTimer(duration, display) {
+        let timer = duration, hours, minutes, seconds;
+        setInterval(function () {
+            hours = parseInt(timer / 3600, 10);
+            minutes = parseInt((timer % 3600) / 60, 10);
+            seconds = parseInt(timer % 60, 10);
+
+            hours = hours < 10 ? "0" + hours : hours;
+            minutes = minutes < 10 ? "0" + minutes : minutes;
+            seconds = seconds < 10 ? "0" + seconds : seconds;
+
+            display.textContent = hours + ":" + minutes + ":" + seconds;
+
+            if (--timer < 0) {
+                timer = duration; // Reinicia o timer para simulação (em produção, o timer deve parar)
+            }
+        }, 1000);
+    }
+
+    window.onload = function () {
+        // Timer de 4 horas (14400 segundos) para simular escassez
+        const fourHours = 60 * 60 * 4;
+        const display = document.querySelector('#timer');
+        startTimer(fourHours, display);
+    };
+
     // Função de tratamento do formulário
     function handleBuy(e){
       e.preventDefault();
-      
       const name = document.getElementById('name').value;
       
-      // Validação básica
       if (!name || !document.getElementById('email').value) {
         alert("Por favor, preencha todos os campos.");
         return;
       }
 
-      // Esconde o formulário e mostra a mensagem de sucesso
       document.getElementById('buyForm').style.display = 'none';
       document.getElementById('after').style.display = 'block';
       
-      // Simulação: Aqui você integrará com Hotmart / Braip / PagSeguro via redirect.
       alert(`Obrigado(a), ${name}! Você seria redirecionado(a) para a plataforma de pagamento seguro para finalizar a transação.`);
     }
 
     // Rolagem suave para o checkout ao clicar no CTA superior
     document.getElementById('buyBtnTop').addEventListener('click', function(e){
       e.preventDefault();
-      // Encontrando o elemento checkout e rolando até ele
       document.querySelector('#checkout').scrollIntoView({behavior:'smooth', block: 'start'});
     });
   </script>
