@@ -11,128 +11,240 @@
   <style>
     /* 1. VARIÁVEIS E BASE */
     :root {
-      --bg: #090e18; /* Fundo mais escuro */
-      --card: #111a2c; /* Card mais escuro */
-      --accent: #ffb703; /* Ouro/Amarelo Forte */
-      --accent-secondary: #ff8800; /* Laranja para destaque */
+      --bg: #090e18; 
+      --card: rgba(17, 26, 44, 0.7); /* Card transparente */
+      --accent: #ffb703; 
+      --accent-secondary: #ff8800; 
       --accent-hover: #e5a400;
-      --muted: #9aa4b2;
+      --muted: #c9d6e5; /* Texto um pouco mais claro */
       --white: #ffffff;
       --success: #10b981;
       font-family: "Inter", sans-serif;
     }
     *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--white);-webkit-font-smoothing:antialiased}
-    .container{max-width:1100px;margin:40px auto;padding:0 24px}
+    body{
+      margin:0;
+      background-color:var(--bg);
+      color:var(--white);
+      -webkit-font-smoothing:antialiased;
+      overflow-x: hidden; /* Previne scroll horizontal de animações */
+      position: relative;
+    }
+    
+    /* FUNDO DINÂMICO */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 10% 10%, rgba(30, 64, 175, 0.1) 0%, transparent 20%),
+                  radial-gradient(circle at 90% 90%, rgba(255, 183, 3, 0.08) 0%, transparent 20%);
+      opacity: 0.6;
+      z-index: -1;
+      animation: pulseBg 20s infinite alternate;
+    }
+
+    @keyframes pulseBg {
+      from { background-position: 0% 0%, 100% 100%; }
+      to { background-position: 10% 10%, 90% 90%; }
+    }
+    
+    .container{max-width:1100px;margin:40px auto;padding:0 24px; position: relative;}
     
     /* 2. HEADER HERO IMPACTANTE */
-    header{text-align:center;padding-bottom:30px; margin-top:30px}
-    .logo{width:80px;height:80px;border-radius:16px;background:linear-gradient(135deg,#1d4ed8,#0ea5e9);display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:32px;margin-bottom:12px;box-shadow:0 0 20px rgba(30,64,175,0.7)}
+    header{text-align:center;padding-bottom:30px; margin-top:50px}
+    .logo{
+        width:90px;height:90px;border-radius:20px;
+        background:linear-gradient(135deg,#1d4ed8,#0ea5e9);
+        display:inline-flex;align-items:center;justify-content:center;
+        font-weight:900;font-size:36px;margin-bottom:15px;
+        box-shadow:0 0 25px rgba(30,64,175,0.8);
+        transform: rotate(-5deg); /* Toque de estilo */
+    }
     h1{
         margin:0;
         font-family: "Montserrat", sans-serif;
-        font-size: 48px;
+        font-size: 56px; /* Aumento */
         font-weight: 900;
         line-height: 1.1;
         text-transform: uppercase;
-        letter-spacing: -1px;
+        letter-spacing: -2px;
+        text-shadow: 0 5px 10px rgba(0,0,0,0.5);
     }
-    h1 span{color:var(--accent)}
-    p.lead{color:var(--muted);margin-top:15px;font-size:22px;font-weight:600}
+    h1 span{color:var(--accent); text-shadow: 0 0 10px rgba(255,183,3,0.8);}
+    p.lead{color:var(--muted);margin-top:20px;font-size:24px;font-weight:600; text-shadow: 0 2px 5px rgba(0,0,0,0.5);}
     
     /* 3. ESCASSEZ E TIMER */
     .timer-box{
         display: inline-block;
-        background: var(--accent-secondary);
+        background: linear-gradient(90deg, var(--accent-secondary), var(--accent));
         color: var(--bg);
-        padding: 8px 15px;
-        border-radius: 8px;
-        margin-top: 20px;
+        padding: 10px 20px;
+        border-radius: 10px;
+        margin-top: 30px;
         font-weight: 900;
-        font-size: 18px;
-        box-shadow: 0 4px 10px rgba(255,136,0,0.5);
+        font-size: 20px;
+        box-shadow: 0 6px 15px rgba(255,136,0,0.7);
+        animation: breath 1.5s infinite alternate; /* Animação leve */
     }
-    .timer-box i{margin-right:8px}
+    .timer-box i{margin-right:10px}
+    @keyframes breath {
+      from { transform: scale(1); }
+      to { transform: scale(1.02); }
+    }
 
-    /* 4. LAYOUT E CARDS */
-    .main{display:grid;grid-template-columns:1fr 400px;gap:40px;margin-top:40px}
+    /* 4. LAYOUT E CARDS (GLASSMORHISM) */
+    .main{display:grid;grid-template-columns:1fr 400px;gap:40px;margin-top:50px}
     .card{
         background:var(--card);
-        padding:28px;
-        border-radius:20px;
-        border:1px solid rgba(255,255,255,0.05);
-        box-shadow:0 15px 30px rgba(0,0,0,0.5), inset 0 0 5px rgba(255,255,255,0.05); /* Efeito Imersivo */
-        margin-top:30px
+        padding:35px;
+        border-radius:25px; /* Bordas mais suaves */
+        border:1px solid rgba(255,255,255,0.1);
+        box-shadow:0 20px 40px rgba(0,0,0,0.6); /* Sombra mais profunda */
+        backdrop-filter: blur(8px); /* Efeito Vidro Fosco */
+        -webkit-backdrop-filter: blur(8px);
+        margin-top:40px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 25px 50px rgba(0,0,0,0.8);
     }
     .main section .card:first-child, .main aside .card:first-child{margin-top:0} 
 
     /* 5. SEÇÃO PRINCIPAL E BENEFÍCIOS */
-    .product-details{display:flex;gap:30px;align-items:flex-start}
+    .product-details{display:flex;gap:40px;align-items:flex-start}
     .product-content{flex:1}
     .product-media{width:270px; flex-shrink: 0;}
 
-    h2{margin:10px 0 0 0;font-size:28px;font-weight:900}
-    .sub-pitch{color:var(--muted);margin-top:8px;margin-bottom:15px}
+    h2{margin:10px 0 0 0;font-size:32px;font-weight:900; border-left: 4px solid var(--accent); padding-left: 15px;}
+    .sub-pitch{color:var(--muted);margin-top:10px;margin-bottom:20px; font-size: 18px;}
 
-    ul.features{padding-left:0;list-style:none;margin:15px 0}
-    ul.features li{color:var(--white);margin-bottom:12px;display:flex;align-items:center;font-weight:600;font-size:17px; background: rgba(255,255,255,0.02); padding: 8px; border-radius: 8px;} /* Destaque nos LIs */
-    ul.features li i{color:var(--success);margin-right:12px;font-size:20px}
+    ul.features{padding-left:0;list-style:none;margin:20px 0}
+    ul.features li{
+      color:var(--white);margin-bottom:15px;display:flex;align-items:center;
+      font-weight:700;font-size:18px; 
+      background: rgba(255,255,255,0.05); 
+      padding: 12px 15px; 
+      border-radius: 12px;
+      transition: background 0.3s;
+    } 
+    ul.features li:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    ul.features li i{color:var(--success);margin-right:15px;font-size:22px}
     
-    .module-list{display:grid;gap:10px;margin-top:15px}
-    .module{padding:15px;border-radius:12px;background:rgba(255,255,255,0.04);border-left:5px solid var(--accent);font-weight:700}
-    .module i{color:var(--accent);margin-right:10px}
+    .module-list{display:grid;gap:12px;margin-top:15px}
+    .module{
+      padding:18px;border-radius:15px;
+      background:rgba(255,255,255,0.05);
+      border-left:6px solid var(--accent);
+      font-weight:700;
+      transition: background 0.2s;
+    }
+    .module:hover { background: rgba(255,255,255,0.08); }
+    .module i{color:var(--accent);margin-right:12px}
 
     /* 6. VÍDEO E CTA CENTRAL */
-    .video-preview{border-radius:16px;overflow:hidden;border:4px solid var(--accent-secondary);cursor:pointer;}
-    .cta-media-box{margin-top:20px; text-align:center;}
+    .video-preview{border-radius:20px;overflow:hidden;border:5px solid var(--accent-secondary);cursor:pointer; box-shadow: 0 0 20px rgba(255,136,0,0.5);}
+    .cta-media-box{margin-top:30px; text-align:center;}
 
     /* 7. CTA */
     .cta-btn{
         display:block;
-        background:var(--accent);
+        background: linear-gradient(45deg, var(--accent), var(--accent-secondary));
         color:var(--bg);
-        padding:18px 24px; /* Aumento do padding */
-        border-radius:15px;
+        padding:20px 24px;
+        border-radius:20px;
         font-weight:900;
-        text-decoration:none;
-        transition:background 0.2s, transform 0.2s, box-shadow 0.3s;
-        box-shadow:0 6px 20px rgba(255,183,3,0.6); /* Sombra mais forte */
-        border:none;cursor:pointer;font-size:18px;
+        transition:all 0.3s;
+        box-shadow:0 8px 30px rgba(255,183,3,0.8);
+        border:none;cursor:pointer;font-size:20px; /* Aumento da fonte */
+        letter-spacing: 0.5px;
     }
-    .cta-btn:hover{background:var(--accent-hover);transform:translateY(-2px); box-shadow:0 8px 25px rgba(255,183,3,0.8);}
-    .cta-btn i{margin-right:10px}
-
-    .old-price{font-size:18px;color:var(--muted);text-decoration:line-through}
-    .price-promo{font-size:52px;color:var(--accent);font-weight:900;line-height:1; margin-top:-5px} /* Preço Enorme */
-    .price-detail{font-size:16px;color:var(--muted); margin-top:5px}
+    .cta-btn:hover{
+      background: linear-gradient(45deg, var(--accent-hover), var(--accent));
+      transform: translateY(-3px) scale(1.02); 
+      box-shadow:0 12px 40px rgba(255,183,3,1.2);
+    }
+    .old-price{font-size:20px;color:var(--muted);text-decoration:line-through}
+    .price-promo{font-size:64px;color:var(--accent);font-weight:900;line-height:1; margin-top:-8px; text-shadow: 0 0 15px rgba(255,183,3,0.9);} /* Preço Gigante */
+    .price-detail{font-size:18px;color:var(--muted); margin-top:8px}
 
     /* 8. TESTEMUNHO E GARANTIA */
-    .testi{background:rgba(255,255,255,0.08);padding:20px;border-radius:15px;margin-top:20px;border-left:6px solid var(--accent-secondary);box-shadow:inset 0 0 10px rgba(255,183,3,0.2)}
-    .testi strong{color:var(--accent-secondary);display:block;margin-bottom:6px}
+    .testi{
+      background:rgba(255,255,255,0.1);padding:25px;border-radius:18px;margin-top:25px;
+      border-left:8px solid var(--accent-secondary);
+      box-shadow:inset 0 0 15px rgba(255,183,3,0.3);
+      backdrop-filter: blur(5px);
+    }
+    .testi strong{color:var(--accent-secondary);display:block;margin-bottom:8px; font-size: 18px;}
     
-    .guarantee{margin-top:20px;background:rgba(16,185,129,0.15);padding:20px;border-radius:15px;color:var(--success);border:2px solid var(--success)}
+    .guarantee{
+      margin-top:25px;background:rgba(16,185,129,0.2);padding:25px;border-radius:18px;
+      color:var(--success);border:2px solid var(--success);
+      box-shadow: 0 0 15px rgba(16,185,129,0.5);
+    }
     
-    /* 9. CHECKOUT E FORMULÁRIO */
-    #checkout{position:sticky; top:30px; border:3px solid var(--accent-secondary); background: #070e1b;} /* Fundo mais contrastante */
-    #checkout h3{margin-top:0; text-align:center;font-size:28px;color:var(--accent)}
-    #checkout input{padding:15px;border-radius:12px;background:#050a11;border:1px solid #07203a;font-size:18px}
-    #after{background:rgba(16,185,129,0.3);padding:15px; border-radius:12px; font-weight:700}
+    /* 9. CHECKOUT E FORMULÁRIO (Stickier) */
+    #checkout{
+      position:sticky; top:30px; 
+      border:4px solid var(--accent-secondary); 
+      background: rgba(7, 14, 27, 0.9);
+      backdrop-filter: blur(10px);
+      z-index: 10; /* Garante que fique acima de outros elementos ao rolar */
+    }
+    #checkout h3{font-size:32px; color:var(--accent-secondary); text-shadow: 0 0 5px rgba(255,136,0,0.5);}
+    #checkout input{
+      padding:18px;
+      border-radius:15px;
+      background:#050a11;
+      border:2px solid #07203a;
+      font-size:18px;
+      transition: border-color 0.3s;
+    }
+    #checkout input:focus {
+      border-color: var(--accent-secondary);
+      box-shadow: 0 0 10px rgba(255,136,0,0.5);
+    }
+    #after{background:rgba(16,185,129,0.4);padding:20px; border-radius:15px; font-weight:700; font-size: 18px;}
 
-    /* 10. MOBILE RESPONSIVO */
+    /* 10. RODAPÉ */
+    footer{margin-top:80px;padding:30px 0;border-top:1px solid rgba(255,255,255,0.1);color:var(--muted);font-size:14px;text-align:center}
+
+    /* 11. ANIMAÇÕES DE SCROLL (Scroll Reveal) */
+    .reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .reveal.visible.delay-1 { transition-delay: 0.1s; }
+    .reveal.visible.delay-2 { transition-delay: 0.2s; }
+    .reveal.visible.delay-3 { transition-delay: 0.3s; }
+
+    /* 12. MOBILE RESPONSIVO */
     @media(max-width:900px){
-      h1{font-size:36px}
-      p.lead{font-size:18px}
+      h1{font-size:40px; letter-spacing: -1px;}
+      p.lead{font-size:20px}
       .main{grid-template-columns:1fr; gap:30px}
-      .product-details{flex-direction:column-reverse; align-items:center;}
+      .product-details{flex-direction:column-reverse; align-items:center; gap: 20px;}
       .product-media{width:100%; margin-bottom:15px}
-      #checkout{position:static; border:2px solid var(--accent-secondary);}
-      .price-promo{font-size:44px;}
+      #checkout{position:static; border:3px solid var(--accent-secondary); padding: 25px;}
+      .price-promo{font-size:52px;}
+      .card{padding: 25px;}
+      h2{font-size: 26px;}
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <header>
+    <header class="reveal">
       <div class="logo">7D</div>
       <h1>PARE DE PERDER DINHEIRO. <br><span>ASSUMA O CONTROLE EM 7 DIAS.</span></h1>
       <p class="lead">O único plano de ação que elimina vazamentos e força a sobra no seu orçamento, sem planilhas complexas ou teoria chata.</p>
@@ -143,76 +255,76 @@
 
     <main class="main">
       <section>
-        <div class="card">
+        <div class="card reveal">
           <div class="product-details">
             <div class="product-content">
               <span class="badge">PLANO DE AÇÃO 100% PRÁTICO</span>
-              <h2>A Solução para Quem Já Tentou de Tudo e Não Conseguiu Organizar as Contas.</h2>
-              <p class="sub-pitch">7 Passos Curto | Planilha Exclusiva | Suporte VIP. Menos de 15 minutos por dia.</p>
+              <h2 class="reveal delay-1">A Solução para Quem Já Tentou de Tudo e Não Conseguiu Organizar as Contas.</h2>
+              <p class="sub-pitch reveal delay-2">7 Passos Curto | Planilha Exclusiva | Suporte VIP. Menos de 15 minutos por dia.</p>
 
               <ul class="features">
-                <li><i class="fas fa-check-double"></i> **CLAREZA TOTAL:** Faça o Raio-X definitivo do seu dinheiro em 1 dia (Passo 1).</li>
-                <li><i class="fas fa-check-double"></i> **ECONOMIA IMEDIATA:** Use o Cortador de Vazamentos para estancar perdas invisíveis.</li>
-                <li><i class="fas fa-check-double"></i> **FERRAMENTA DE PRO:** Receba a Planilha Milionária™ (Google Sheets) pronta.</li>
-                <li><i class="fas fa-check-double"></i> **RESULTADO GARANTIDO:** Tenha clareza e planeje sua primeira grande sobra em 30 dias.</li>
+                <li class="reveal delay-3"><i class="fas fa-check-double"></i> **CLAREZA TOTAL:** Faça o Raio-X definitivo do seu dinheiro em 1 dia (Passo 1).</li>
+                <li class="reveal delay-4"><i class="fas fa-check-double"></i> **ECONOMIA IMEDIATA:** Use o Cortador de Vazamentos para estancar perdas invisíveis.</li>
+                <li class="reveal delay-5"><i class="fas fa-check-double"></i> **FERRAMENTA DE PRO:** Receba a Planilha Milionária™ (Google Sheets) pronta.</li>
+                <li class="reveal delay-6"><i class="fas fa-check-double"></i> **RESULTADO GARANTIDO:** Tenha clareza e planeje sua primeira grande sobra em 30 dias.</li>
               </ul>
             </div>
 
-            <div class="product-media">
+            <div class="product-media reveal delay-1">
               <div class="video-preview">
                 <img src="https://images.unsplash.com/photo-1561414927-6a5b02e0c4b6?q=80&w=1200&auto=format&fit=crop&ixlib=rb-4.0.3&s=3b0f94d0d78b9c8ab7c0d7c818a37c02" alt="Especialista em Finanças Pessoais Apresenta o Desafio" loading="lazy">
               </div>
               
               <div class="cta-media-box">
                 <div class="old-price">Preço Normal: R$197,00</div>
-                <div style="font-size:16px;color:var(--white);font-weight:700;">AGORA, APENAS:</div>
+                <div style="font-size:18px;color:var(--white);font-weight:700;">AGORA, APENAS:</div>
                 <div class="price-promo">R$37</div>
                 <button id="buyBtnTop" class="cta-btn" style="margin-top:10px"><i class="fas fa-arrow-alt-circle-right"></i> QUERO MINHA VAGA POR R$37</button>
               </div>
             </div>
           </div>
           
-          <div class="guarantee">
+          <div class="guarantee reveal delay-2">
             <i class="fas fa-shield-alt"></i> 
             <strong>Blindagem de Risco: 30 Dias de Garantia Incondicional.</strong>
             Se você aplicar o método e não tiver clareza das suas finanças no primeiro mês, devolvo 100% do seu investimento. Risco zero para você.
           </div>
 
-          <div class="testi">
+          <div class="testi reveal delay-3">
             <strong><i class="fas fa-award"></i> PROVA SOCIAL:</strong>
             <p>“Segui o desafio e em 2 semanas já consegui reduzir gastos e criar 1 reserva. Simples e direto. Parei de 'vazar' dinheiro!”</p> 
             <span style="font-size:12px;color:var(--accent);display:block;text-align:right">— João S., 32 (Profissional Liberal)</span>
           </div>
         </div>
 
-        <div class="card">
-          <h3 style="margin:0 0 15px 0;font-weight:900;font-size:24px"><i class="fas fa-map-marked-alt" style="color:var(--accent)"></i> O Mapa Completo para a Paz Financeira (Módulos)</h3>
+        <div class="card reveal">
+          <h3 style="margin:0 0 15px 0;font-weight:900;font-size:28px"><i class="fas fa-map-marked-alt" style="color:var(--accent)"></i> O Mapa Completo para a Paz Financeira (Módulos)</h3>
           <div class="module-list">
-            <div class="module"><div><i class="fas fa-chart-line"></i> Dia 1 — O Raio-X Definitivo: Onde o seu dinheiro realmente está indo.</div><div>5–8 min</div></div>
-            <div class="module"><div><i class="fas fa-cut"></i> Dia 2 — O Cortador de Vazamentos: Identifique e elimine os gastos invisíveis.</div><div>5–8 min</div></div>
-            <div class="module"><div><i class="fas fa-map-marker-alt"></i> Dia 3 — Mapeamento Estratégico: O segredo para dominar gastos fixos sem sofrimento.</div><div>5–8 min</div></div>
-            <div class="module"><div><i class="fas fa-wallet"></i> Dia 4 — A Fórmula dos 3 Potinhos: O framework que garante a sobra e o investimento.</div><div>5–8 min</div></div>
-            <div class="module"><div><i class="fas fa-calculator"></i> Dia 5 — Planilha Milionária na Prática: Preencha em 5 minutos e veja o futuro.</div><div>8–12 min</div></div>
-            <div class="module"><div><i class="fas fa-lock"></i> Dia 6 — O Código do Lucro Pessoal: Estratégias de blindagem financeira.</div><div>6–8 min</div></div>
-            <div class="module"><div><i class="fas fa-calendar-check"></i> Dia 7 — Plano dos Próximos 30 Dias: A rota de crescimento e o fim da confusão.</div><div>8–10 min</div></div>
+            <div class="module reveal delay-1"><div><i class="fas fa-chart-line"></i> Dia 1 — O Raio-X Definitivo: Onde o seu dinheiro realmente está indo.</div><div>5–8 min</div></div>
+            <div class="module reveal delay-2"><div><i class="fas fa-cut"></i> Dia 2 — O Cortador de Vazamentos: Identifique e elimine os gastos invisíveis.</div><div>5–8 min</div></div>
+            <div class="module reveal delay-3"><div><i class="fas fa-map-marker-alt"></i> Dia 3 — Mapeamento Estratégico: O segredo para dominar gastos fixos sem sofrimento.</div><div>5–8 min</div></div>
+            <div class="module reveal delay-4"><div><i class="fas fa-wallet"></i> Dia 4 — A Fórmula dos 3 Potinhos: O framework que garante a sobra e o investimento.</div><div>5–8 min</div></div>
+            <div class="module reveal delay-5"><div><i class="fas fa-calculator"></i> Dia 5 — Planilha Milionária na Prática: Preencha em 5 minutos e veja o futuro.</div><div>8–12 min</div></div>
+            <div class="module reveal delay-6"><div><i class="fas fa-lock"></i> Dia 6 — O Código do Lucro Pessoal: Estratégias de blindagem financeira.</div><div>6–8 min</div></div>
+            <div class="module reveal delay-7"><div><i class="fas fa-calendar-check"></i> Dia 7 — Plano dos Próximos 30 Dias: A rota de crescimento e o fim da confusão.</div><div>8–10 min</div></div>
           </div>
         </div>
 
-        <div class="card">
-          <h3 style="margin:0 0 10px 0;font-weight:900;font-size:24px"><i class="fas fa-question-circle" style="color:var(--accent)"></i> Perguntas que Vão na Sua Cabeça (FAQ)</h3>
+        <div class="card reveal">
+          <h3 style="margin:0 0 10px 0;font-weight:900;font-size:28px"><i class="fas fa-question-circle" style="color:var(--accent)"></i> Perguntas que Vão na Sua Cabeça (FAQ)</h3>
           <div style="color:var(--muted);line-height:1.8">
-            <strong style="color:var(--white)">Eu sou iniciante. Vou conseguir aplicar?</strong> 
-            <br>Sim. O Desafio é 100% voltado para iniciantes que precisam de resultados práticos, não de teoria acadêmica. O foco é fazer você agir.  
-            <br><strong style="color:var(--white);margin-top:15px;display:block">Tenho uma rotina corrida. O tempo é suficiente?</strong> 
-            <br>Com certeza. O método é enxuto. São apenas 5 a 10 minutos de vídeo e 10 a 20 minutos de exercício por dia. Mais rápido que ver um episódio de série.  
-            <br><strong style="color:var(--white);margin-top:15px;display:block">Onde e como eu recebo o acesso?</strong> 
-            <br>Acesso **imediato** após a confirmação. Enviamos o login da plataforma e o link da Planilha Milionária™ diretamente para o seu e-mail.
+            <strong style="color:var(--white)" class="reveal delay-1">Eu sou iniciante. Vou conseguir aplicar?</strong> 
+            <br class="reveal delay-2">Sim. O Desafio é 100% voltado para iniciantes que precisam de resultados práticos, não de teoria acadêmica. O foco é fazer você agir.  
+            <br><strong style="color:var(--white);margin-top:15px;display:block" class="reveal delay-3">Tenho uma rotina corrida. O tempo é suficiente?</strong> 
+            <br class="reveal delay-4">Com certeza. O método é enxuto. São apenas 5 a 10 minutos de vídeo e 10 a 20 minutos de exercício por dia. Mais rápido que ver um episódio de série.  
+            <br><strong style="color:var(--white);margin-top:15px;display:block" class="reveal delay-5">Onde e como eu recebo o acesso?</strong> 
+            <br class="reveal delay-6">Acesso **imediato** após a confirmação. Enviamos o login da plataforma e o link da Planilha Milionária™ diretamente para o seu e-mail.
           </div>
         </div>
       </section>
 
       <aside>
-        <div id="checkout" class="card">
+        <div id="checkout" class="card reveal delay-1">
           <h3 style="text-shadow: 0 0 5px rgba(255,255,255,0.4);">🔒 GARANTA SEU ACESSO COM DESCONTO</h3>
           
           <div style="text-align:center;margin-bottom:15px; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 15px;">
@@ -237,8 +349,8 @@
           </div>
         </div>
 
-        <div class="card">
-          <h4 style="margin:0 0 10px 0;font-weight:900;font-size:24px"><i class="fas fa-gem" style="color:var(--accent-secondary)"></i> Bônus Exclusivos (Valor R$150)</h4>
+        <div class="card reveal delay-2">
+          <h4 style="margin:0 0 10px 0;font-weight:900;font-size:28px"><i class="fas fa-gem" style="color:var(--accent-secondary)"></i> Bônus Exclusivos (Valor R$150)</h4>
           <ul style="color:var(--muted);padding-left:18px;list-style-type:square">
             <li style="margin-bottom:10px;color:var(--white);font-weight:600;">**Planilha Milionária™** (O software que automatiza sua organização).</li>
             <li style="margin-bottom:10px;color:var(--white);font-weight:600;">**PDF As 5 Atitudes Ricas** (O Guia de Mentalidade para o Crescimento).</li>
@@ -248,7 +360,7 @@
       </aside>
     </main>
 
-    <footer>
+    <footer class="reveal">
       © <span id="year"></span> Desafio 7 Dias • Todos os direitos reservados.
       <br>
       <span class="small-text">Política de reembolso integral disponível no checkout. Termos de uso e privacidade.</span>
@@ -273,7 +385,7 @@
             display.textContent = hours + ":" + minutes + ":" + seconds;
 
             if (--timer < 0) {
-                timer = duration; // Reinicia o timer para simulação (em produção, o timer deve parar)
+                timer = duration; 
             }
         }, 1000);
     }
@@ -283,7 +395,33 @@
         const fourHours = 60 * 60 * 4;
         const display = document.querySelector('#timer');
         startTimer(fourHours, display);
+        initScrollReveal();
     };
+
+    // FUNÇÃO PARA ANIMAÇÃO DE SCROLL (Intersection Observer)
+    function initScrollReveal() {
+        const revealElements = document.querySelectorAll('.reveal');
+        
+        const observerOptions = {
+            root: null, // viewport
+            rootMargin: '0px',
+            threshold: 0.1 // O elemento é considerado visível quando 10% dele está no viewport
+        };
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target); // Para a observação depois de animar
+                }
+            });
+        }, observerOptions);
+
+        revealElements.forEach(el => {
+            observer.observe(el);
+        });
+    }
+
 
     // Função de tratamento do formulário
     function handleBuy(e){
