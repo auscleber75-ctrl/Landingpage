@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Desafio 7 Dias do Controle Financeiro — Inscreva-se</title>
+  <meta name="description" content="Em 7 dias você terá clareza do seu dinheiro, eliminará vazamentos e montará um plano simples pra sobrar todo mês." />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0f1724;
+      --card:#0b1220;
+      --accent:#ffb703;
+      --muted:#9aa4b2;
+      --white:#ffffff;
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,#081026 0%, #071726 100%);color:var(--white);-webkit-font-smoothing:antialiased}
+    .container{max-width:1100px;margin:40px auto;padding:24px}
+    header{display:flex;align-items:center;gap:16px}
+    .logo{width:72px;height:72px;border-radius:12px;background:linear-gradient(135deg,#0ea5a5,#06b6d4);display:flex;align-items:center;justify-content:center;font-weight:800}
+    h1{margin:0;font-size:28px}
+    p.lead{color:var(--muted);margin-top:8px}
+    .main{display:grid;grid-template-columns:1fr 380px;gap:28px;margin-top:28px}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:20px;border-radius:12px}
+    .price{font-size:24px;color:var(--accent);font-weight:700}
+    .cta-btn{display:inline-block;background:var(--accent);color:#07203a;padding:12px 18px;border-radius:10px;font-weight:700;text-decoration:none}
+    ul.features{padding-left:18px;color:var(--muted)}
+    .module-list{display:grid;gap:8px;margin-top:12px}
+    .module{padding:10px;border-radius:8px;background:rgba(255,255,255,0.02);display:flex;justify-content:space-between;align-items:center}
+    footer{margin-top:28px;color:var(--muted);font-size:13px;text-align:center}
+    .video-preview{border-radius:10px;overflow:hidden}
+    /* responsive */
+    @media(max-width:900px){
+      .main{grid-template-columns:1fr; }
+      .logo{width:56px;height:56px}
+    }
+    /* simple badge */
+    .badge{background:#052d2d;padding:6px 8px;border-radius:8px;color:var(--accent);font-weight:700;font-size:12px;display:inline-block}
+    /* testimonial */
+    .testi{background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:12px;border-radius:8px;margin-top:12px;color:var(--muted)}
+    .guarantee{margin-top:12px;background:rgba(7,16,26,0.6);padding:12px;border-radius:8px;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">7D</div>
+      <div>
+        <h1>Desafio 7 Dias do Controle Financeiro</h1>
+        <p class="lead">Organize seu dinheiro, elimine os vazamentos e comece a sobrar — em 7 dias. Sem teoria chata. Só passos práticos.</p>
+      </div>
+    </header>
+
+    <div class="main">
+      <div>
+        <div class="card">
+          <div style="display:flex;gap:16px;align-items:flex-start">
+            <div style="flex:1">
+              <div style="margin-bottom:12px">
+                <span class="badge">Desafio Prático</span>
+                <h2 style="margin:8px 0 0 0">7 passos claros. 5–8 minutos por dia.</h2>
+                <p style="color:var(--muted);margin-top:6px">Vídeos curtos + planilha automática + grupo de apoio no WhatsApp.</p>
+              </div>
+
+              <ul class="features">
+                <li>Raio-X do seu dinheiro em 1 dia</li>
+                <li>Ferramentas simples pra cortar gastos invisíveis</li>
+                <li>Planilha pronta (Google Sheets) — só colar os valores</li>
+                <li>Promessa: clareza e primeira sobra em 30 dias</li>
+              </ul>
+            </div>
+
+            <div style="width:220px">
+              <div class="video-preview">
+                <img src="https://images.unsplash.com/photo-1561414927-6a5b02e0c4b6?q=80&w=1200&auto=format&fit=crop&ixlib=rb-4.0.3&s=3b0f94d0d78b9c8ab7c0d7c818a37c02" alt="preview" style="width:100%;display:block">
+              </div>
+              <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center">
+                <div>
+                  <div style="font-size:12px;color:var(--muted)">Preço especial</div>
+                  <div class="price">R$37</div>
+                </div>
+                <a class="cta-btn" id="buyBtn" href="#checkout">Quero Entrar!</a>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:14px">
+            <h3 style="margin:0 0 8px 0">O que você recebe</h3>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <span class="badge">7 Vídeos</span>
+              <span class="badge">Planilha Milionária</span>
+              <span class="badge">Grupo no WhatsApp</span>
+              <span class="badge">Acesso imediato</span>
+            </div>
+
+            <div class="testi">
+              <strong>Depoimento (teste):</strong>
+              <div style="margin-top:6px;color:var(--muted)">“Segui o desafio e em 2 semanas já consegui reduzir gastos e criar 1 reserva. Simples e direto.” — João, 32</div>
+            </div>
+
+            <div class="guarantee">
+              <strong>Garantia:</strong> Se você fizer os exercícios e não ver clareza no primeiro mês, devolvo seu dinheiro (condições na página de checkout).
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:18px" class="card">
+          <h3 style="margin:0 0 8px 0">Programa (resumo)</h3>
+          <div class="module-list">
+            <div class="module"><div>Dia 1 — O Raio-X do Seu Dinheiro</div><div>5–8m</div></div>
+            <div class="module"><div>Dia 2 — O Cortador de Vazamentos</div><div>5–8m</div></div>
+            <div class="module"><div>Dia 3 — Mapa dos Gastos Fixos</div><div>5–8m</div></div>
+            <div class="module"><div>Dia 4 — Fórmula dos 3 Potinhos</div><div>5–8m</div></div>
+            <div class="module"><div>Dia 5 — Planilha Milionária</div><div>8–12m</div></div>
+            <div class="module"><div>Dia 6 — Código do Lucro Pessoal</div><div>6–8m</div></div>
+            <div class="module"><div>Dia 7 — Plano dos Próximos 30 Dias</div><div>8–10m</div></div>
+          </div>
+        </div>
+
+        <div style="margin-top:18px" class="card">
+          <h3 style="margin:0 0 8px 0">Perguntas frequentes</h3>
+          <div style="color:var(--muted)">
+            <strong>Preciso saber finanças?</strong> Não. É para iniciantes.  
+            <br><strong>Quanto tempo por dia?</strong> 5–10 minutos nos vídeos e 10–20 minutos nos exercícios.  
+            <br><strong>Como recebo os materiais?</strong> Acesso imediato via plataforma e link para Google Sheets.
+          </div>
+        </div>
+      </div>
+
+      <aside>
+        <div id="checkout" class="card">
+          <h3 style="margin:0 0 10px 0">Oferta de Lançamento</h3>
+          <div style="font-size:18px;margin-bottom:6px">Desafio 7 Dias — R$37</div>
+          <div style="color:var(--muted);margin-bottom:12px">Pagamento seguro — Acesso imediato após compra</div>
+
+          <form id="buyForm" onsubmit="handleBuy(event)">
+            <label style="display:block;margin-bottom:6px;color:var(--muted)">Nome</label>
+            <input id="name" required placeholder="Seu nome" style="width:100%;padding:10px;border-radius:8px;border:0;background:#071827;color:var(--white)">
+
+            <label style="display:block;margin-top:8px;margin-bottom:6px;color:var(--muted)">E-mail</label>
+            <input id="email" required placeholder="seu@exemplo.com" type="email" style="width:100%;padding:10px;border-radius:8px;border:0;background:#071827;color:var(--white)">
+
+            <button type="submit" style="margin-top:12px;width:100%;" class="cta-btn">Pagar R$37</button>
+          </form>
+
+          <div id="after" style="display:none;margin-top:12px;color:var(--muted)">
+            Concluído! Você receberá instruções por e-mail e WhatsApp (se fornecido). <br>
+            Acompanhe o grupo e prepare sua planilha.
+          </div>
+        </div>
+
+        <div style="margin-top:14px" class="card">
+          <h4 style="margin:0 0 8px 0">Bônus</h4>
+          <ul style="color:var(--muted);padding-left:18px">
+            <li>Planilha Milionária (Google Sheets)</li>
+            <li>PDF As 5 Atitudes Ricas</li>
+            <li>Grupo exclusivo no WhatsApp</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+
+    <footer>
+      © <span id="year"></span> Desafio 7 Dias • Todos os direitos reservados • Política de reembolso disponível no checkout.
+    </footer>
+  </div>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+    function handleBuy(e){
+      e.preventDefault();
+      // Simples mock do comportamento de checkout.
+      document.getElementById('buyForm').style.display='none';
+      document.getElementById('after').style.display='block';
+      // Aqui você integrará com Hotmart / Braip / PagSeguro via redirect.
+      // Exemplo: enviar dados para o servidor e redirecionar para checkout seguro.
+      alert("Compra simulada: agora redirecione para sua plataforma de pagamentos (Hotmart/Braip).");
+    }
+    document.getElementById('buyBtn').addEventListener('click', function(e){
+      // rolagem até checkout
+      e.preventDefault();
+      document.querySelector('#checkout').scrollIntoView({behavior:'smooth'});
+    });
+  </script>
+</body>
+</html>
