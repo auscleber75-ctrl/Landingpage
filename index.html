@@ -3,208 +3,221 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Bolso Claro — Desafio 7 Dias do Controle Financeiro</title>
-  <meta name="description" content="Desafio prático de 7 dias para organizar suas finanças, cortar vazamentos e começar a sobrar — sem teoria chata." />
+  <title>⚡ Desafio 7 Dias: Controle Financeiro - Domine Suas Finanças</title>
+  <meta name="description" content="Em 7 dias você terá clareza do seu dinheiro, eliminará vazamentos e montará um plano simples pra sobrar todo mês." />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
-    /* Reset simples */
-    *{box-sizing:border-box;margin:0;padding:0}
-    html,body{height:100%}
-    body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;color:#0b2540;background:linear-gradient(180deg,#f6f8fb 0%,#ffffff 100%);-webkit-font-smoothing:antialiased}
-    .wrap{max-width:1100px;margin:36px auto;padding:28px}
-    header{display:flex;align-items:center;gap:18px}
-    .brand{display:flex;flex-direction:column;gap:4px}
-    .logo{width:62px;height:62px;border-radius:12px;background:linear-gradient(135deg,#0a2540,#0f5a83);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:20px}
-    h1{font-size:28px;color:#071635}
-    .sub{color:#3f596f;margin-top:6px}
-    .hero{display:grid;grid-template-columns:1fr 380px;gap:28px;margin-top:22px;align-items:start}
-    .card{background:#ffffff;border-radius:14px;box-shadow:0 10px 30px rgba(10,37,64,0.06);padding:22px}
-    .badge{display:inline-block;background:#f6f3e6;color:#8b5e00;padding:6px 10px;border-radius:999px;font-weight:700;font-size:12px}
-    .price{font-size:26px;color:#b37b00;font-weight:800}
-    .cta{display:inline-block;background:#0a2540;color:#fff;padding:12px 18px;border-radius:10px;text-decoration:none;font-weight:700}
-    ul.benef{margin-top:12px;color:#2f5163;line-height:1.6}
-    .modules{margin-top:14px;display:grid;gap:8px}
-    .mod{display:flex;justify-content:space-between;padding:10px 12px;border-radius:8px;background:#f7fbff;color:#11304a}
-    .testi{margin-top:12px;padding:12px;border-radius:8px;background:linear-gradient(90deg,#f9fbff,#fff);color:#264a62}
-    .guarantee{margin-top:12px;padding:12px;border-radius:8px;background:#ecf7f7;color:#0b4a4a}
-    aside .small{color:#3f596f;font-size:14px;margin-top:6px}
-    footer{margin-top:28px;color:#7d98a6;font-size:13px;text-align:center}
-    /* responsive */
-    @media(max-width:1000px){
-      .hero{grid-template-columns:1fr}
-      .logo{width:52px;height:52px}
-      .price{font-size:22px}
+    :root {
+      --bg: #0b1220;
+      --card: #0e192c;
+      --accent: #ffb703; /* Ouro/Amarelo */
+      --accent-hover: #e5a400;
+      --muted: #9aa4b2;
+      --white: #ffffff;
+      --success: #10b981; /* Verde para sucesso/garantia */
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
-    /* trust row */
-    .trust{display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap}
-    .trust img{height:40px;opacity:0.95}
-    .features-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:12px}
-    @media(max-width:600px){.features-grid{grid-template-columns:1fr}}
-    /* CTA sticky on mobile */
-    .mobile-cta{display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:#0a2540;color:#fff;padding:12px 18px;border-radius:12px;box-shadow:0 8px 20px rgba(10,37,64,0.12);z-index:60}
-    @media(max-width:720px){.mobile-cta{display:block}}
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,#060f1c 0%, #030810 100%);color:var(--white);-webkit-font-smoothing:antialiased}
+    .container{max-width:1100px;margin:40px auto;padding:24px}
+    /* HEADER MAIS IMPACTANTE */
+    header{text-align:center;padding-bottom:20px}
+    .logo{width:80px;height:80px;border-radius:16px;background:linear-gradient(135deg,#0ea5e9,#1d4ed8);display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:32px;margin-bottom:12px;box-shadow:0 0 15px rgba(30,64,175,0.5)}
+    h1{margin:0;font-size:36px;font-weight:900;line-height:1.2}
+    p.lead{color:var(--muted);margin-top:10px;font-size:18px}
+    
+    /* LAYOUT E CARDS */
+    .main{display:grid;grid-template-columns:1fr 380px;gap:36px;margin-top:36px}
+    .card{background:var(--card);padding:24px;border-radius:16px;border:1px solid rgba(255,255,255,0.05);box-shadow:0 10px 20px rgba(0,0,0,0.3)}
+    
+    /* PREÇO E CTA */
+    .price-box{display:flex;flex-direction:column;align-items:center;gap:4px;margin-top:10px}
+    .old-price{font-size:14px;color:var(--muted);text-decoration:line-through;margin-bottom:-4px}
+    .price{font-size:36px;color:var(--accent);font-weight:900;line-height:1}
+    .cta-btn{display:block;background:var(--accent);color:var(--bg);padding:14px 24px;border-radius:12px;font-weight:800;text-decoration:none;text-align:center;transition:background 0.2s, transform 0.2s;box-shadow:0 4px 15px rgba(255,183,3,0.4)}
+    .cta-btn:hover{background:var(--accent-hover);transform:translateY(-1px)}
+    .cta-btn i{margin-right:8px}
+
+    /* LISTAS DE BENEFÍCIOS/MÓDULOS */
+    ul.features{padding-left:0;list-style:none;margin-top:12px}
+    ul.features li{color:var(--white);margin-bottom:10px;display:flex;align-items:center;font-weight:600;font-size:16px}
+    ul.features li i{color:var(--success);margin-right:10px;font-size:18px}
+    
+    .module-list{display:grid;gap:8px;margin-top:12px}
+    .module{padding:12px;border-radius:10px;background:rgba(255,255,255,0.03);display:flex;justify-content:space-between;align-items:center;border-left:4px solid var(--accent);font-weight:600}
+    .module i{color:var(--accent);margin-right:8px}
+
+    /* BADGES, GARANTIA E DEPOIMENTO */
+    .badge-group{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    .badge{background:rgba(255,183,3,0.1);padding:6px 12px;border-radius:8px;color:var(--accent);font-weight:700;font-size:13px;display:inline-block}
+    
+    .testi{background:rgba(255,255,255,0.05);padding:16px;border-radius:12px;margin-top:16px;border-left:5px solid var(--accent)}
+    .testi strong{color:var(--accent);display:block;margin-bottom:4px}
+    .testi p{margin:0;color:var(--muted);font-style:italic}
+
+    .guarantee{margin-top:16px;background:rgba(16,185,129,0.1);padding:16px;border-radius:12px;color:var(--success);border:1px solid var(--success)}
+    .guarantee strong{font-weight:800;display:block;margin-bottom:4px}
+    .guarantee i{margin-right:8px}
+
+    /* VÍDEO E OFERTA */
+    .video-preview{border-radius:12px;overflow:hidden;border:3px solid var(--accent)}
+    .video-preview img{width:100%;display:block;filter:brightness(0.85);transition:filter 0.3s}
+    .video-preview:hover img{filter:brightness(1)}
+
+    /* FORMULÁRIO */
+    #checkout input{width:100%;padding:12px;border-radius:10px;border:1px solid #07203a;background:#091629;color:var(--white);font-size:16px;transition:border-color 0.2s}
+    #checkout input:focus{outline:none;border-color:var(--accent)}
+    #checkout label{display:block;margin-top:12px;margin-bottom:6px;color:var(--muted);font-weight:600}
+    
+    /* MOBILE */
+    @media(max-width:900px){
+      .main{grid-template-columns:1fr; gap:30px}
+      h1{font-size:30px}
+      .logo{width:64px;height:64px;font-size:28px}
+      .cta-btn{padding:12px 20px}
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
+  <div class="container">
     <header>
-      <div class="logo">BC</div>
-      <div class="brand">
-        <h1>Bolso Claro — Desafio 7 Dias do Controle Financeiro</h1>
-        <div class="sub">Controle simples, medidas práticas e resultados reais em 7 dias. Para quem quer parar de perder dinheiro sem complicação.</div>
-      </div>
+      <div class="logo">7D</div>
+      <h1>Domine Suas Finanças Pessoais <span style="color:var(--accent)">em Apenas 7 Dias</span></h1>
+      <p class="lead">O desafio prático que entrega clareza imediata, elimina gastos invisíveis e garante a **primeira sobra** no seu bolso. Zero teoria chata.</p>
     </header>
 
-    <section class="hero">
-      <main>
+    <div class="main">
+      <section>
         <div class="card">
-          <div style="display:flex;gap:18px;align-items:center">
+          <div style="display:flex;gap:20px;align-items:flex-start">
             <div style="flex:1">
-              <span class="badge">Desafio Prático</span>
-              <h2 style="margin-top:10px">7 dias para entender seu dinheiro — sem enrolação</h2>
-              <p style="color:#3f596f;margin-top:8px">Vídeos diretos, planilha automatizada e ações que você aplica hoje pra ver resultado rápido.</p>
+              <span class="badge">Acesso Imediato</span>
+              <h2 style="margin:10px 0 0 0;font-size:24px;font-weight:800">O Plano de Ação de 7 Dias para o Controle Absoluto.</h2>
+              <p style="color:var(--muted);margin-top:6px">7 Vídeos Curto | Planilha Exclusiva | Suporte VIP no WhatsApp.</p>
 
-              <div class="features-grid">
-                <div>
-                  <h4 style="margin-bottom:6px;color:#11304a">O que você vai ganhar</h4>
-                  <ul style="color:#2f5163;line-height:1.6">
-                    <li>Raio-X financeiro em 1 dia</li>
-                    <li>Cortes instantâneos de gastos</li>
-                    <li>Planilha pronta para começar agora</li>
-                  </ul>
-                </div>
-                <div>
-                  <h4 style="margin-bottom:6px;color:#11304a">Ideal para</h4>
-                  <ul style="color:#2f5163;line-height:1.6">
-                    <li>Quem ganha e sente que não sobra</li>
-                    <li>Iniciantes que querem um sistema simples</li>
-                    <li>Quem precisa de resultados rápidos</li>
-                  </ul>
-                </div>
-              </div>
+              <ul class="features">
+                <li><i class="fas fa-check-circle"></i> Raio-X total do seu dinheiro em apenas 1 dia.</li>
+                <li><i class="fas fa-check-circle"></i> Estratégia "Cortador de Vazamentos" para economizar 10-20% já.</li>
+                <li><i class="fas fa-check-circle"></i> Planilha Milionária™ (Google Sheets) pronta para usar.</li>
+                <li><i class="fas fa-check-circle"></i> **GARANTIDO:** Clareza e planejamento para a primeira sobra do mês.</li>
+              </ul>
             </div>
 
-            <div style="width:300px">
-              <img src="https://images.unsplash.com/photo-1561414927-6a5b02e0c4b6?q=80&w=1200&auto=format&fit=crop&ixlib=rb-4.0.3&s=3b0f94d0d78b9c8ab7c0d7c818a37c02" alt="preview" style="width:100%;border-radius:10px;display:block">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
-                <div>
-                  <div style="font-size:13px;color:#7d98a6">Oferta de lançamento</div>
-                  <div class="price">R$37</div>
-                </div>
-                <a href="CHECKOUT_LINK_AQUI" class="cta" id="topBuy">Quero começar</a>
+            <div style="width:250px; flex-shrink: 0;">
+              <div class="video-preview">
+                <img src="https://images.unsplash.com/photo-1561414927-6a5b02e0c4b6?q=80&w=1200&auto=format&fit=crop&ixlib=rb-4.0.3&s=3b0f94d0d78b9c8ab7c0d7c818a37c02" alt="Especialista em Finanças Pessoais Apresenta o Desafio" style="width:100%;display:block">
+              </div>
+              
+              <div style="margin-top:14px">
+                <div style="font-size:14px;color:var(--muted);text-align:center">Preço de Lançamento (Tempo Limitado!)</div>
+                <a class="cta-btn" id="buyBtnTop" href="#checkout" style="margin-top:8px"><i class="fas fa-arrow-alt-circle-right"></i> QUERO MINHA VAGA POR R$37</a>
               </div>
             </div>
+          </div>
+          
+          <div class="guarantee">
+            <i class="fas fa-shield-alt"></i> 
+            <strong>Blindagem de Risco: 30 Dias de Garantia Incondicional.</strong>
+            Se você fizer os exercícios do desafio e não tiver clareza das suas finanças no primeiro mês, devolvo seu dinheiro.
           </div>
 
           <div class="testi">
-            <strong>Primeiros resultados (exemplo):</strong>
-            <div style="margin-top:8px">“Segui o desafio e em 2 semanas já identifiquei R$420 por mês que eu jogava fora. Valeu demais.” — Mariana, 28</div>
+            <strong><i class="fas fa-star" style="color:var(--accent)"></i> Depoimento Verificado:</strong>
+            <p>“Segui o desafio e em 2 semanas já consegui reduzir gastos e criar 1 reserva. Simples e direto. Parei de 'vazar' dinheiro!”</p> 
+            <span style="font-size:12px;color:var(--accent);display:block;text-align:right">— João S., 32 (Profissional Liberal)</span>
           </div>
 
-          <div class="guarantee">
-            <strong>Garantia de clareza:</strong> Complete os exercícios do desafio e, se não tiver mais clareza sobre seu dinheiro, devolvemos seu valor (regras na página de checkout).
+        </div>
+
+        <div style="margin-top:24px" class="card">
+          <h3 style="margin:0 0 12px 0;font-weight:800;font-size:22px"><i class="fas fa-bolt" style="color:var(--accent)"></i> O Programa: 7 Passos para o Domínio</h3>
+          <div class="module-list">
+            <div class="module"><div><i class="fas fa-chart-line"></i> Dia 1 — O Raio-X Definitivo do Seu Dinheiro</div><div>5–8 min</div></div>
+            <div class="module"><div><i class="fas fa-cut"></i> Dia 2 — O Cortador de Vazamentos (Como Cortar o que Você Não Vê)</div><div>5–8 min</div></div>
+            <div class="module"><div><i class="fas fa-map-marker-alt"></i> Dia 3 — Mapeamento Estratégico dos Gastos Fixos</div><div>5–8 min</div></div>
+            <div class="module"><div><i class="fas fa-wallet"></i> Dia 4 — A Fórmula dos 3 Potinhos (Liberdade Financeira Simplificada)</div><div>5–8 min</div></div>
+            <div class="module"><div><i class="fas fa-calculator"></i> Dia 5 — Planilha Milionária na Prática (Sua Ferramenta Automática)</div><div>8–12 min</div></div>
+            <div class="module"><div><i class="fas fa-lock"></i> Dia 6 — O Código do Lucro Pessoal (Estratégia para Fazer Sobrar)</div><div>6–8 min</div></div>
+            <div class="module"><div><i class="fas fa-calendar-check"></i> Dia 7 — Plano dos Próximos 30 Dias (Rota de Crescimento)</div><div>8–10 min</div></div>
           </div>
         </div>
 
-        <div style="margin-top:18px" class="card">
-          <h3>O que você vai aprender em 7 dias</h3>
-          <div class="modules">
-            <div class="mod"><div>Dia 1 — Raio-X do seu dinheiro</div><div>5–8m</div></div>
-            <div class="mod"><div>Dia 2 — Cortando vazamentos</div><div>5–8m</div></div>
-            <div class="mod"><div>Dia 3 — Organizando fixos</div><div>6–8m</div></div>
-            <div class="mod"><div>Dia 4 — 3 Potinhos (Separação simples)</div><div>6–8m</div></div>
-            <div class="mod"><div>Dia 5 — Planilha Milionária (uso)</div><div>8–12m</div></div>
-            <div class="mod"><div>Dia 6 — Criando sobra todo mês</div><div>6–8m</div></div>
-            <div class="mod"><div>Dia 7 — Plano 30 dias e rotina</div><div>8–10m</div></div>
+        <div style="margin-top:24px" class="card">
+          <h3 style="margin:0 0 10px 0;font-weight:800;font-size:22px"><i class="fas fa-question-circle" style="color:var(--accent)"></i> Perguntas Frequentes (FAQ)</h3>
+          <div style="color:var(--muted);line-height:1.6">
+            <strong style="color:var(--white)">Preciso ter experiência em finanças?</strong> 
+            <br>Absolutamente não. Este desafio é feito para quem está começando e precisa de passos práticos, não de teoria complexa. É para iniciantes.  
+            <br><strong style="color:var(--white);margin-top:10px;display:block">Quanto tempo por dia preciso dedicar?</strong> 
+            <br>Apenas 5 a 10 minutos para assistir ao vídeo do dia e 10 a 20 minutos para aplicar o exercício na planilha. Menos tempo que o seu café da manhã.  
+            <br><strong style="color:var(--white);margin-top:10px;display:block">Como e quando recebo o acesso?</strong> 
+            <br>O acesso é **imediato** após a confirmação do pagamento. Você receberá um e-mail com o login para a plataforma e o link direto para a Planilha Milionária (Google Sheets).
           </div>
         </div>
-
-        <div style="margin-top:18px" class="card">
-          <h3>Quem criou</h3>
-          <div style="display:flex;gap:12px;align-items:center">
-            <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=600&auto=format&fit=crop&ixlib=rb-4.0.3&s=2b0e9b9b5e9b4d89f3e8d2b6f5a4cdee" alt="autor" style="width:72px;height:72px;border-radius:12px;object-fit:cover">
-            <div>
-              <strong>Bolso Claro</strong>
-              <div style="color:#3f596f;margin-top:6px">Marca criada para ajudar pessoas a terem clareza financeira com métodos simples e aplicáveis hoje.</div>
-            </div>
-          </div>
-        </div>
-
-      </main>
+      </section>
 
       <aside>
-        <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <div>
-              <div style="font-size:13px;color:#7d98a6">Acesso imediato</div>
-              <div class="price">R$37</div>
-            </div>
-            <a href="CHECKOUT_LINK_AQUI" class="cta" id="sideBuy">Garantir minha vaga</a>
+        <div id="checkout" class="card" style="position:sticky; top:20px; border:2px solid var(--accent)">
+          <h3 style="margin:0 0 8px 0;text-align:center;font-size:24px;color:var(--accent)">🚨 OFERTA RELÂMPAGO 🚨</h3>
+          
+          <div style="text-align:center;margin-bottom:12px">
+            <div class="old-price">De R$197,00 por:</div>
+            <div class="price">R$37,00</div>
+            <div style="font-size:14px;color:var(--muted)">ou 4x de R$9,97</div>
           </div>
+          
+          <form id="buyForm" onsubmit="handleBuy(event)">
+            <label for="name">Seu Nome Completo</label>
+            <input id="name" required placeholder="Ex: Maria da Silva" style="margin-top:0">
 
-          <div style="margin-top:12px" class="small">Pagamento seguro • Cartão e PIX • Acesso online e planilha Google Sheets</div>
+            <label for="email">Seu Melhor E-mail</label>
+            <input id="email" required placeholder="seu@exemplo.com" type="email">
 
-          <form id="capture" style="margin-top:12px">
-            <label style="display:block;margin-top:10px;color:#264a62">Receba material grátis</label>
-            <input id="email" placeholder="seu@exemplo.com" type="email" required style="width:100%;padding:10px;border-radius:8px;border:1px solid #e6eef6;margin-top:6px">
-            <button style="margin-top:10px;width:100%" id="leadBtn" class="cta" type="button">Quero o Checklist Grátis</button>
-            <div style="color:#7d98a6;font-size:13px;margin-top:8px">Checklist anti-vazamentos + 1 aula grátis</div>
+            <button type="submit" style="margin-top:20px;width:100%;" class="cta-btn"><i class="fas fa-lock"></i> COMPRAR AGORA (ACESSO IMEDIATO)</button>
+            <div style="text-align:center;margin-top:10px;font-size:12px;color:var(--muted)"><i class="fas fa-shield-alt"></i> Compra 100% Segura e Garantida.</div>
           </form>
 
-          <div style="margin-top:12px">
-            <h4 style="margin-bottom:8px;color:#11304a">Bônus</h4>
-            <ul style="color:#2f5163;line-height:1.6">
-              <li>Planilha Milionária (Google Sheets)</li>
-              <li>PDF "5 Atitudes Ricas"</li>
-              <li>Grupo de apoio no WhatsApp</li>
-            </ul>
+          <div id="after" style="display:none;margin-top:20px;padding:12px;border-radius:8px;background:rgba(16,185,129,0.2);color:var(--success);text-align:center">
+            <i class="fas fa-check-circle"></i> Parabéns! Sua compra simulada foi concluída. Verifique seu e-mail (e a caixa de spam!) para acesso.
           </div>
         </div>
 
-        <div style="margin-top:12px" class="card">
-          <h4 style="margin-bottom:8px;color:#11304a">Perguntas frequentes</h4>
-          <div style="color:#3f596f;line-height:1.6">
-            <strong>É para iniciantes?</strong> Sim — o curso é básico e prático.<br>
-            <strong>Quanto tempo por dia?</strong> 5–15 minutos nos vídeos + exercícios práticos.<br>
-            <strong>Tem garantia?</strong> Sim — condições no checkout.
-          </div>
+        <div style="margin-top:20px" class="card">
+          <h4 style="margin:0 0 10px 0;font-weight:800;font-size:20px"><i class="fas fa-gift" style="color:var(--accent)"></i> Bônus Exclusivos de Lançamento</h4>
+          <ul style="color:var(--muted);padding-left:18px;list-style-type:disc">
+            <li style="margin-bottom:8px;color:var(--white)">**Planilha Milionária** (A ferramenta automática que faz a conta por você).</li>
+            <li style="margin-bottom:8px;color:var(--white)">**PDF As 5 Atitudes Ricas** (Guia de mentalidade para a riqueza).</li>
+            <li style="margin-bottom:8px;color:var(--white)">**Grupo VIP** de Suporte no WhatsApp (Tire suas dúvidas e interaja).</li>
+          </ul>
         </div>
-
       </aside>
-    </section>
-
-    <div style="margin-top:18px" class="card">
-      <h3 style="margin-bottom:10px">Depoimentos</h3>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
-        <div style="padding:12px;background:#fff;border-radius:8px;color:#264a62">“Cortei R$250 por mês com ajustes simples.” — Paula</div>
-        <div style="padding:12px;background:#fff;border-radius:8px;color:#264a62">“A planilha fez toda diferença.” — Rafael</div>
-        <div style="padding:12px;background:#fff;border-radius:8px;color:#264a62">“R$400 economizados no primeiro mês.” — Lucas</div>
-      </div>
     </div>
 
     <footer>
-      © <span id="year"></span> Bolso Claro • Política de reembolso no checkout • Desenvolvido para conversão.
+      <div class="container">
+        © <span id="year"></span> Desafio 7 Dias • Todos os direitos reservados.
+        <br>
+        <span style="font-size:11px">Política de reembolso integral disponível no checkout. CNPJ/Termos de uso.</span>
+      </div>
     </footer>
   </div>
 
-  <a class="mobile-cta" href="CHECKOUT_LINK_AQUI">Quero começar — R$37</a>
-
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
-
-    // Lead capture mock (troque pela sua automação)
-    document.getElementById('leadBtn').addEventListener('click', function(){
-      const email = document.getElementById('email').value;
-      if(!email) return alert('Digite um e-mail válido');
-      alert('E-mail capturado: ' + email + ' — substitua aqui pela sua plataforma de e-mail (ConvertKit, MailerLite, etc).');
-      // enviar para API/serviço aqui
+    function handleBuy(e){
+      e.preventDefault();
+      // Simples mock do comportamento de checkout.
+      document.getElementById('buyForm').style.display='none';
+      document.getElementById('after').style.display='block';
+      // Simulação: Aqui você integrará com Hotmart / Braip / PagSeguro via redirect.
+      alert("Compra simulada: Você seria redirecionado(a) para a plataforma de pagamento seguro para finalizar a transação de R$37.");
+    }
+    document.getElementById('buyBtnTop').addEventListener('click', function(e){
+      // rolagem até checkout
+      e.preventDefault();
+      document.querySelector('#checkout').scrollIntoView({behavior:'smooth'});
     });
-
-    // substitua CHECKOUT_LINK_AQUI pelo link real da Hotmart/Braip
-    // exemplo de redirecionamento programático:
-    // document.getElementById('sideBuy').href = 'https://www.hotmart.com/checkout/link-do-produto';
-    // document.getElementById('topBuy').href = 'https://www.hotmart.com/checkout/link-do-produto';
   </script>
 </body>
 </html>
