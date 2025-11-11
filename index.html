@@ -9,18 +9,18 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Montserrat:wght@800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
-    /* 1. VARIÁVEIS E BASE (CYBER-LUMINOUS PALETTE REFINADA) */
+    /* 1. VARIÁVEIS E BASE (MATRIX GLOW PALETTE) */
     :root {
       --bg: #000000; 
-      --card-bg: rgba(10, 20, 40, 0.75);
-      --accent: #00e5ff; /* Ciano Brilhante */
-      --accent-secondary: #c200ff; /* Roxo Profundo */
-      --accent-hover: #4dffff;
-      --shadow-accent: 0 0 40px rgba(0, 229, 255, 0.8);
-      --shadow-secondary: 0 0 40px rgba(194, 0, 255, 0.8);
-      --muted: #e0e0e0;
+      --card-bg: rgba(5, 25, 10, 0.85); /* Fundo muito escuro e verde-azulado */
+      --accent: #00ff66; /* Verde Neon (Crescimento/Dinheiro) */
+      --accent-secondary: #007733; /* Verde Escuro Profundo */
+      --accent-hover: #33ff88;
+      --shadow-accent: 0 0 50px rgba(0, 255, 102, 0.9);
+      --shadow-secondary: 0 0 40px rgba(0, 119, 51, 0.7);
+      --muted: #b0e0c0;
       --white: #ffffff;
-      --success: #3eff77; /* Verde Neon Mais Forte */
+      --success: #00ff66; 
       font-family: "Inter", sans-serif;
     }
     *{box-sizing:border-box}
@@ -33,7 +33,7 @@
       position: relative;
     }
     
-    /* FUNDO DINÂMICO (NEBULA EFFECT 3D MAIS SUAVE) */
+    /* FUNDO DINÂMICO (NEBULA EFFECT VERDE) */
     body::before {
       content: '';
       position: fixed;
@@ -41,196 +41,224 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: radial-gradient(circle at 10% 20%, rgba(0, 229, 255, 0.15) 0%, transparent 20%),
-                  radial-gradient(circle at 90% 80%, rgba(194, 0, 255, 0.15) 0%, transparent 20%);
-      opacity: 0.95;
+      background: radial-gradient(circle at 10% 20%, rgba(0, 255, 102, 0.15) 0%, transparent 20%),
+                  radial-gradient(circle at 90% 80%, rgba(0, 119, 51, 0.2) 0%, transparent 20%);
+      opacity: 0.98;
       z-index: -1;
       animation: nebula 50s infinite alternate ease-in-out;
     }
-
     @keyframes nebula {
       0% { background-position: 0% 0%, 100% 100%; }
       100% { background-position: 5% 5%, 95% 95%; }
     }
-    
-    .container{max-width:1150px;margin:50px auto;padding:0 24px; position: relative;}
+    .container{max-width:1200px;margin:50px auto;padding:0 30px; position: relative;}
     
     /* 2. HEADER HERO IMPACTANTE */
-    header{text-align:center;padding-bottom:50px; margin-top:80px}
+    header{text-align:center;padding-bottom:50px; margin-top:90px}
     .logo{
-        width:120px;height:120px;border-radius:50%; 
+        width:130px;height:130px;border-radius:50%; 
         background:linear-gradient(135deg,var(--accent),var(--accent-secondary));
         display:inline-flex;align-items:center;justify-content:center;
-        font-weight:900;font-size:50px;margin-bottom:25px;
-        box-shadow: 0 0 50px rgba(0, 229, 255, 0.9);
+        font-weight:900;font-size:55px;margin-bottom:25px;
+        box-shadow: var(--shadow-accent);
         transform: rotate(-5deg) scale(1.05);
     }
     h1{
         margin:0;
         font-family: "Montserrat", sans-serif;
-        font-size: 80px; 
+        font-size: 85px; 
         font-weight: 900;
         line-height: 1.0;
         text-transform: uppercase;
-        letter-spacing: -5px;
+        letter-spacing: -6px;
     }
     h1 span{color:var(--accent); text-shadow: var(--shadow-accent);}
-    p.lead{color:var(--muted);margin-top:30px;font-size:30px;font-weight:700; max-width: 800px; margin-left: auto; margin-right: auto;}
+    p.lead{color:var(--muted);margin-top:35px;font-size:32px;font-weight:700; max-width: 900px; margin-left: auto; margin-right: auto;}
     
-    /* 3. ESCASSEZ E TIMER */
-    .timer-box{
-        display: inline-block;
-        background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
-        color: var(--bg);
-        padding: 15px 35px;
-        border-radius: 20px;
-        margin-top: 50px;
-        font-weight: 900;
-        font-size: 26px;
-        box-shadow: 0 0 50px var(--shadow-accent);
-        animation: pulseTimer 1.2s infinite alternate; 
+    /* 3. CTA E PREÇO */
+    .price-promo{font-size:100px;color:var(--accent);font-weight:900;line-height:1; margin-top:-15px; text-shadow: var(--shadow-accent);}
+    .cta-btn{
+        background: linear-gradient(45deg, var(--accent), var(--accent-secondary));
+        color:#000;
+        padding:30px 45px;
+        border-radius:40px;
+        font-size:28px; 
+        box-shadow:0 0 50px var(--shadow-accent);
+        animation: pulseCta 1.8s infinite;
     }
-
-    /* 4. LAYOUT E CARDS (DEEP NEUMORPHISM) */
-    .main{display:grid;grid-template-columns:1fr 450px;gap:70px;margin-top:70px}
+    
+    /* 4. LAYOUT E CARDS */
     .card{
         background:var(--card-bg);
-        padding:50px;
-        border-radius:40px; 
-        border:1px solid rgba(255,255,255,0.1);
-        box-shadow:0 35px 70px rgba(0,0,0,1), inset 0 0 30px rgba(0, 229, 255, 0.1);
-        backdrop-filter: blur(20px); 
-        -webkit-backdrop-filter: blur(20px);
+        padding:55px;
+        border-radius:45px; 
+        border:1px solid rgba(0,255,102,0.1);
+        box-shadow:0 35px 70px rgba(0,0,0,1), inset 0 0 30px rgba(0, 255, 102, 0.1);
+        backdrop-filter: blur(25px); 
+        -webkit-backdrop-filter: blur(25px);
         margin-top:60px;
         transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
-        position: relative;
     }
     .card:hover {
-      transform: translateY(-15px) scale(1.01);
-      box-shadow: 0 60px 100px rgba(0,0,0,1), var(--shadow-accent);
+      transform: translateY(-18px) scale(1.01);
+      box-shadow: 0 70px 120px rgba(0,0,0,1), var(--shadow-accent);
     }
-    /* Efeito de Bordas Luminosas */
-    .card::before {
+    .card::before { /* Borda luminosa */
         content: '';
         position: absolute;
         inset: 0;
-        border-radius: 40px;
-        padding: 2px;
+        border-radius: 45px;
+        padding: 3px;
         background: linear-gradient(135deg, var(--accent-hover), var(--accent-secondary));
         -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
         -webkit-mask-composite: xor;
         mask-composite: exclude;
-        opacity: 0.8;
+        opacity: 0.9;
         z-index: -1;
     }
-
-    /* 5. SEÇÃO PRINCIPAL E BENEFÍCIOS */
-    h2{margin:10px 0 0 0;font-size:44px;font-weight:900; border-left: 8px solid var(--accent); padding-left: 30px; line-height: 1.1; text-shadow: 0 0 10px rgba(0, 229, 255, 0.5);}
-    ul.features{list-style: none; padding: 0;}
-    ul.features li{
-      font-weight:800;font-size:20px; 
-      background: rgba(0, 229, 255, 0.05); 
-      padding: 20px 25px; 
-      border-radius: 25px;
-      margin-bottom: 20px;
-      transition: all 0.4s;
-      border-left: 6px solid var(--success);
-    } 
-    ul.features li i{color:var(--success);margin-right:15px;font-size:28px; text-shadow: 0 0 8px var(--success);}
-
-    /* NOVO: ESTILO CARROSSEL DE TESTEMUNHOS */
-    .testimonial-wrapper {
-        position: relative;
-        overflow: hidden;
-        height: 200px; /* Altura fixa para o carrossel */
-    }
-    .testi {
-      position: absolute;
-      width: 100%;
-      opacity: 0;
-      transition: opacity 1s ease-in-out;
-      background:rgba(255,255,255,0.1);padding:40px;border-radius:30px;
-      border-left:15px solid var(--accent-secondary);
-      box-shadow:inset 0 0 30px rgba(194, 0, 255, 0.5);
-      backdrop-filter: blur(15px);
-      font-size: 18px;
-    }
-    .testi.active {
-      opacity: 1;
-    }
-    .testi strong i { color: var(--accent-secondary); text-shadow: var(--shadow-secondary);}
     
-    /* 7. CTA (MEGA-PULSE EFFECT) */
-    .cta-btn{
-        /* Estilos mantidos, animação pulse está no JS */
-        display:block;
-        background: linear-gradient(45deg, var(--accent), var(--accent-secondary));
-        color:#000000;
-        padding:28px 40px;
-        border-radius:35px;
-        font-weight:900;
-        transition:all 0.3s;
-        box-shadow:0 0 50px var(--shadow-accent);
-        border:none;cursor:pointer;font-size:26px; 
-        letter-spacing: 2px;
-        animation: pulseCta 1.8s infinite;
-    }
-    .cta-btn:hover{
-      background: linear-gradient(45deg, var(--accent-hover), var(--accent));
-      transform: translateY(-8px) scale(1.05); 
-      animation: none;
-    }
-    .price-promo{font-size:90px;color:var(--accent);font-weight:900;line-height:1; margin-top:-15px; text-shadow: var(--shadow-accent);}
-    
-    /* 9. CHECKOUT E FORMULÁRIO (FOCUS RING INTENSO) */
+    /* 5. CHECKOUT E INPUTS */
     #checkout{
-      position:sticky; top:40px; 
-      border:6px solid var(--accent-secondary); 
-      background: rgba(0, 0, 0, 0.98);
-      backdrop-filter: blur(25px);
-      box-shadow: 0 10px 60px var(--shadow-secondary);
+      border:8px solid var(--accent); /* Borda mais grossa */
+      box-shadow: 0 10px 80px var(--shadow-accent);
+    }
+    #checkout h3{font-size:45px; color:var(--accent); text-shadow: 0 0 20px rgba(0, 255, 102, 0.9);}
+    #checkout input{
+      border:3px solid var(--accent-secondary);
+      background: #000000;
+      margin-bottom: 25px;
     }
     #checkout input:focus {
       border-color: var(--accent);
-      box-shadow: 0 0 30px var(--accent-hover); /* Brilho mais forte */
+      box-shadow: 0 0 40px var(--accent-hover); /* FOCUS RING EXTREMO */
       outline: none;
     }
-
-    /* 10. ANIMAÇÕES DE SCROLL */
-    .reveal {
-      opacity: 0;
-      transform: translateY(50px);
-      transition: opacity 1.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 1.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    }
-    .reveal.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
     
-    /* 11. RESPONSIVIDADE FINAL */
-    @media(max-width:900px){
-        .main{grid-template-columns:1fr; gap:60px}
-        .testimonial-wrapper { height: 220px; } /* Altura ajustada em mobile */
-        h1{font-size:55px; letter-spacing: -2px;} 
-        h2{font-size: 36px; padding-left: 20px;}
-        .price-promo{font-size:70px;}
+    /* 6. WIDGET DE CHAT (NOVO) */
+    #gemini-widget {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        z-index: 1000;
+    }
+    #chat-button {
+        width: 70px;
+        height: 70px;
+        background: var(--accent);
+        color: var(--bg);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 30px;
+        cursor: pointer;
+        box-shadow: var(--shadow-accent);
+        transition: all 0.3s;
+        animation: pulseCta 2.5s infinite;
+    }
+    #chat-button:hover {
+        transform: scale(1.1);
+    }
+    #chat-container {
+        width: 350px;
+        height: 450px;
+        background: rgba(0, 0, 0, 0.95);
+        border: 4px solid var(--accent);
+        border-radius: 20px;
+        box-shadow: var(--shadow-accent);
+        display: none;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    #chat-header {
+        background: var(--accent-secondary);
+        color: var(--white);
+        padding: 15px;
+        font-weight: 800;
+        text-align: center;
+        border-bottom: 2px solid var(--accent);
+    }
+    #chat-body {
+        flex-grow: 1;
+        padding: 15px;
+        overflow-y: auto;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+    .chat-message {
+        margin-bottom: 15px;
+        padding: 10px 15px;
+        border-radius: 15px;
+        max-width: 85%;
+    }
+    .user {
+        background: #00441a;
+        margin-left: auto;
+        color: var(--white);
+    }
+    .gemini {
+        background: var(--accent);
+        color: var(--bg);
+        border-top-left-radius: 0;
+        margin-right: auto;
+        font-weight: 600;
+        box-shadow: 0 0 10px rgba(0, 255, 102, 0.5);
+    }
+    #chat-input-area {
+        display: flex;
+        padding: 10px;
+        border-top: 2px solid var(--accent);
+    }
+    #chat-input {
+        flex-grow: 1;
+        padding: 10px;
+        border-radius: 10px;
+        border: 1px solid var(--accent-secondary);
+        background: #000;
+        color: var(--white);
+    }
+    #chat-input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 15px var(--accent);
+    }
+    #send-button {
+        background: var(--accent);
+        color: var(--bg);
+        border: none;
+        padding: 10px 15px;
+        margin-left: 10px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 700;
+        transition: background 0.2s;
+    }
+    #send-button:hover {
+        background: var(--accent-hover);
     }
 
+    /* 7. RESPONSIVIDADE DO WIDGET */
     @media(max-width:500px){
-        .testimonial-wrapper { height: 260px; } /* Altura maior para depoimentos mais longos */
-        h1{font-size:42px; letter-spacing: 0;} 
-        .price-promo{font-size:60px;}
-        .testi{padding: 25px;}
+        h1{font-size:45px; letter-spacing: -1px;} 
+        .price-promo{font-size:75px;}
+        .cta-btn{font-size: 22px; padding: 22px 30px;}
+        #gemini-widget {
+            bottom: 15px;
+            right: 15px;
+        }
+        #chat-container {
+            width: 90vw;
+            height: 400px;
+            margin-right: calc(-50% + 45vw);
+        }
     }
-
   </style>
 </head>
 <body>
   <div class="container">
     <header class="reveal">
-      <div class="logo">7D</div>
-      <h1>PARE DE PERDER DINHEIRO. <br><span>ASSUMA O CONTROLE EM 7 DIAS.</span></h1>
-      <p class="lead">O único plano de ação que elimina vazamentos e força a sobra no seu orçamento, sem planilhas complexas ou teoria chata.</p>
+      <div class="logo">FIN</div>
+      <h1>LIBERTE SUAS FINANÇAS. <br><span>O MÉTODO MAIS RÁPIDO DO MUNDO.</span></h1>
+      <p class="lead">O plano de ação de 7 dias para você fechar o mês com **sobra garantida**, sem tédio ou planilhas complexas. Resultados imediatos.</p>
       <div class="timer-box">
           <i class="fas fa-clock"></i> OFERTA EXPIRA EM: <span id="timer">00:00:00</span>
       </div>
@@ -241,27 +269,27 @@
         <div class="card reveal">
           <div class="product-details">
             <div class="product-content">
-              <h2 class="reveal delay-1">A Solução Definitiva para quem Luta para Organizar as Contas.</h2>
+              <h2 class="reveal delay-1">Chega de Dúvidas: O Fim do "Onde Foi Meu Dinheiro?"</h2>
               <p class="sub-pitch reveal delay-2">Plano de Ação 100% Prático. Menos de 15 minutos por dia. Comece a ver resultados *hoje*.</p>
 
               <ul class="features">
-                <li class="reveal delay-3"><i class="fas fa-check-double"></i> **CLAREZA TOTAL:** Faça o Raio-X definitivo do seu dinheiro em 1 dia (Passo 1).</li>
-                <li class="reveal delay-4"><i class="fas fa-check-double"></i> **ECONOMIA IMEDIATA:** Use o Cortador de Vazamentos para estancar perdas invisíveis.</li>
-                <li class="reveal delay-5"><i class="fas fa-check-double"></i> **FERRAMENTA DE PRO:** Receba a Planilha Milionária™ (Google Sheets) pronta para uso.</li>
-                <li class="reveal delay-6"><i class="fas fa-check-double"></i> **RESULTADO GARANTIDO:** Tenha clareza e planeje sua primeira grande sobra em 30 dias.</li>
+                <li class="reveal delay-3"><i class="fas fa-lock"></i> **SEGURANÇA FINANCEIRA:** Aprenda a blindar sua carteira contra imprevistos.</li>
+                <li class="reveal delay-4"><i class="fas fa-tachometer-alt"></i> **ACELERAÇÃO DE RESERVAS:** Crie seu fundo de emergência na metade do tempo.</li>
+                <li class="reveal delay-5"><i class="fas fa-brain"></i> **DOMÍNIO MENTAL:** Mude sua mentalidade de escassez para abundância em 7 dias.</li>
+                <li class="reveal delay-6"><i class="fas fa-robot"></i> **FERRAMENTA PRO:** A Planilha Milionária™ (powered by IA) que faz o trabalho chato por você.</li>
               </ul>
             </div>
 
             <div class="product-media reveal delay-1">
               <div class="video-preview">
-                <img src="https://images.unsplash.com/photo-1561414927-6a5b02e0c4b6?q=80&w=1200&auto=format&fit=crop&ixlib=rb-4.0.3&s=3b0f94d0d78b9c8ab7c0d7c818a37c02" alt="Especialista em Finanças Pessoais Apresenta o Desafio" loading="lazy" style="display: block; width: 100%; height: auto; border-radius: 30px;">
+                <img src="https://images.unsplash.com/photo-1561414927-6a5b02e0c4b6?q=80&w=1200&auto=format&fit=crop&ixlib=rb-4.0.3&s=3b0f94d0d78b9c8ab7c0d7c818a37c02" alt="Especialista em Finanças Pessoais Apresenta o Desafio" loading="lazy" style="display: block; width: 100%; height: auto; border-radius: 35px;">
               </div>
               
-              <div class="cta-media-box" style="margin-top: 50px;">
+              <div class="cta-media-box" style="margin-top: 60px;">
                 <div class="old-price">De R$197,00</div>
-                <div style="font-size:30px;color:var(--white);font-weight:900; margin-top: 8px;">POR APENAS:</div>
+                <div style="font-size:32px;color:var(--white);font-weight:900; margin-top: 10px;">PROMOÇÃO LIMITADA:</div>
                 <div class="price-promo">R$37</div>
-                <button id="buyBtnTop" class="cta-btn" style="margin-top:25px"><i class="fas fa-arrow-alt-circle-right"></i> QUERO MINHA VAGA POR R$37</button>
+                <button id="buyBtnTop" class="cta-btn" style="margin-top:30px"><i class="fas fa-arrow-alt-circle-right"></i> GARANTIR MEU ACESSO AGORA</button>
               </div>
             </div>
           </div>
@@ -275,57 +303,32 @@
           <div class="testimonial-wrapper reveal delay-3" id="testimonial-carousel">
             <div class="testi active">
               <strong><i class="fas fa-award"></i> PROVA SOCIAL:</strong>
-              <p style="font-style: italic; color: #ccc;">“Segui o desafio e em 2 semanas já consegui reduzir gastos e criar 1 reserva. Simples e direto. Parei de 'vazar' dinheiro!”</p> 
+              <p style="font-style: italic; color: var(--muted);">“Segui o desafio e em 2 semanas já consegui reduzir gastos e criar 1 reserva. Simples e direto. Parei de 'vazar' dinheiro!”</p> 
               <span style="font-size:16px;color:var(--accent);display:block;text-align:right">— João S., 32 (Profissional Liberal)</span>
             </div>
-             <div class="testi">
+            <div class="testi">
                 <strong><i class="fas fa-award"></i> PROVA SOCIAL:</strong>
-                <p style="font-style: italic; color: #ccc;">“Graças ao Desafio, consegui economizar o suficiente para dar a entrada do meu carro. A clareza que o método traz é inacreditável.”</p> 
+                <p style="font-style: italic; color: var(--muted);">“Graças ao Desafio, consegui economizar o suficiente para dar a entrada do meu carro. A clareza que o método traz é inacreditável.”</p> 
                 <span style="font-size:16px;color:var(--accent);display:block;text-align:right">— Ana C., 27 (Designer)</span>
             </div>
-             <div class="testi">
+            <div class="testi">
                 <strong><i class="fas fa-award"></i> PROVA SOCIAL:</strong>
-                <p style="font-style: italic; color: #ccc;">“Finalmente consegui sair do vermelho sem precisar de planilhas de 20 abas. O módulo de vazamentos me salvou.”</p> 
+                <p style="font-style: italic; color: var(--muted);">“Finalmente consegui sair do vermelho sem precisar de planilhas de 20 abas. O módulo de vazamentos me salvou.”</p> 
                 <span style="font-size:16px;color:var(--accent);display:block;text-align:right">— Pedro M., 45 (Empresário)</span>
             </div>
-          </div>
-        </div>
-
-        <div class="card reveal">
-          <h3 style="margin:0 0 25px 0;font-weight:900;font-size:38px"><i class="fas fa-map-marked-alt" style="color:var(--accent)"></i> O Mapa Completo para a Paz Financeira (Módulos)</h3>
-          <div class="module-list">
-            <div class="module reveal delay-1"><div><i class="fas fa-chart-line"></i> Dia 1 — O Raio-X Definitivo: Onde o seu dinheiro realmente está indo.</div></div>
-            <div class="module reveal delay-2"><div><i class="fas fa-cut"></i> Dia 2 — O Cortador de Vazamentos: Identifique e elimine os gastos invisíveis.</div></div>
-            <div class="module reveal delay-3"><div><i class="fas fa-map-marker-alt"></i> Dia 3 — Mapeamento Estratégico: O segredo para dominar gastos fixos sem sofrimento.</div></div>
-            <div class="module reveal delay-4"><div><i class="fas fa-wallet"></i> Dia 4 — A Fórmula dos 3 Potinhos: O framework que garante a sobra e o investimento.</div></div>
-            <div class="module reveal delay-5"><div><i class="fas fa-calculator"></i> Dia 5 — Planilha Milionária na Prática: Preencha em 5 minutos e veja o futuro.</div></div>
-            <div class="module reveal delay-6"><div><i class="fas fa-lock"></i> Dia 6 — O Código do Lucro Pessoal: Estratégias de blindagem financeira.</div></div>
-            <div class="module reveal delay-7"><div><i class="fas fa-calendar-check"></i> Dia 7 — Plano dos Próximos 30 Dias: A rota de crescimento e o fim da confusão.</div></div>
-          </div>
-        </div>
-
-        <div class="card reveal">
-          <h3 style="margin:0 0 20px 0;font-weight:900;font-size:38px"><i class="fas fa-question-circle" style="color:var(--accent)"></i> Perguntas que Vão na Sua Cabeça (FAQ)</h3>
-          <div style="color:var(--muted);line-height:2.0; font-size: 18px;">
-            <strong style="color:var(--white)" class="reveal delay-1">Eu sou iniciante. Vou conseguir aplicar?</strong> 
-            <br class="reveal delay-2">Sim. O Desafio é 100% voltado para iniciantes que precisam de resultados práticos, não de teoria acadêmica. O foco é fazer você agir.  
-            <br><strong style="color:var(--white);margin-top:25px;display:block" class="reveal delay-3">Tenho uma rotina corrida. O tempo é suficiente?</strong> 
-            <br class="reveal delay-4">Com certeza. O método é enxuto. São apenas 5 a 10 minutos de vídeo e 10 a 20 minutos de exercício por dia. Mais rápido que ver um episódio de série.  
-            <br><strong style="color:var(--white);margin-top:25px;display:block" class="reveal delay-5">Onde e como eu recebo o acesso?</strong> 
-            <br class="reveal delay-6">Acesso **imediato** após a confirmação. Enviamos o login da plataforma e o link da Planilha Milionária™ diretamente para o seu e-mail.
           </div>
         </div>
       </section>
 
       <aside>
         <div id="checkout" class="card reveal delay-1">
-          <h3 style="text-shadow: 0 0 15px rgba(194, 0, 255, 0.9);">🔒 GARANTA SEU ACESSO COM DESCONTO</h3>
+          <h3 style="text-shadow: 0 0 20px rgba(0, 255, 102, 0.9);">⚡️ APROVEITE O DESCONTO PREMIUM</h3>
           
-          <div style="text-align:center;margin-bottom:30px; border-bottom: 3px dashed rgba(255,255,255,0.2); padding-bottom: 30px;">
+          <div style="text-align:center;margin-bottom:30px; border-bottom: 3px dashed var(--accent-secondary); padding-bottom: 30px;">
             <div class="old-price">De R$197,00 por:</div>
-            <div style="font-size:30px;color:var(--white);font-weight:900; margin-top: 5px;">AGORA, POR APENAS:</div>
+            <div style="font-size:35px;color:var(--white);font-weight:900; margin-top: 5px;">HOJE, POR APENAS:</div>
             <div class="price-promo">R$37</div>
-            <div class="price-detail" style="font-size:24px; font-weight: 700; margin-top: 15px;">ou 4x de R$9,97 no cartão</div>
+            <div class="price-detail" style="font-size:26px; font-weight: 700; margin-top: 15px;">ou 4x de R$9,97 no cartão</div>
           </div>
           
           <form id="buyForm" onsubmit="handleBuy(event)">
@@ -345,27 +348,37 @@
         </div>
 
         <div class="card reveal delay-2">
-          <h4 style="margin:0 0 20px 0;font-weight:900;font-size:38px"><i class="fas fa-gem" style="color:var(--accent-secondary)"></i> Bônus Exclusivos (Valor R$150)</h4>
+          <h4 style="margin:0 0 20px 0;font-weight:900;font-size:38px"><i class="fas fa-gem" style="color:var(--accent)"></i> Bônus Exclusivos (Valor R$150)</h4>
           <ul style="color:var(--muted);padding-left:20px;list-style-type:square; font-size: 20px;">
-            <li style="margin-bottom:15px;color:var(--white);font-weight:700;">**Planilha Milionária™** (O software que automatiza sua organização).</li>
+            <li style="margin-bottom:15px;color:var(--white);font-weight:700;">**Planilha Milionária™ (IA-Ready)** (O software que automatiza sua organização).</li>
             <li style="margin-bottom:15px;color:var(--white);font-weight:700;">**PDF As 5 Atitudes Ricas** (O Guia de Mentalidade para o Crescimento).</li>
             <li style="margin-bottom:15px;color:var(--white);font-weight:700;">**Grupo VIP** de Suporte no WhatsApp (Networking e Ajuda Ilimitada).</li>
           </ul>
         </div>
       </aside>
     </main>
+  </div>
 
-    <footer class="reveal">
-      © <span id="year"></span> Desafio 7 Dias • Todos os direitos reservados.
-      <br>
-      <span class="small-text" style="font-size: 14px; color: #555; margin-top: 10px; display: block;">Política de reembolso integral disponível no checkout. Termos de uso e privacidade.</span>
-    </footer>
+  <div id="gemini-widget">
+    <div id="chat-container">
+        <div id="chat-header">
+            <i class="fas fa-brain"></i> IA Anti-Objeção (Pergunte ao Gemini)
+        </div>
+        <div id="chat-body">
+            <div class="chat-message gemini">Olá! Eu sou o assistente anti-objeção, baseado em IA. Pergunte o que te impede de começar o Desafio 7 Dias, e eu te ajudo a decidir!</div>
+        </div>
+        <div id="chat-input-area">
+            <input type="text" id="chat-input" placeholder="Ex: 'É muito caro?' ou 'Dá resultado?'">
+            <button id="send-button"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+    <div id="chat-button"><i class="fas fa-comments"></i></div>
   </div>
 
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
     
-    // 1. CARROSSEL DE TESTEMUNHOS
+    // 1. LÓGICA DO CARROSSEL DE TESTEMUNHOS
     function startTestimonialCarousel() {
         const testimonials = document.querySelectorAll('.testi');
         let currentIndex = 0;
@@ -382,11 +395,68 @@
         setInterval(() => {
             currentIndex = (currentIndex + 1) % testimonials.length;
             showTestimonial(currentIndex);
-        }, 5000); // Troca a cada 5 segundos
+        }, 5000); 
     }
 
+    // 2. FUNÇÃO SIMULADA DE QUEBRA DE OBJEÇÕES (INTEGRAÇÃO GEMINI)
+    function simulateGeminiResponse(message) {
+        const lowerCaseMessage = message.toLowerCase();
+        let response = "Desculpe, não entendi bem. Tente perguntar sobre preço, tempo ou se o método é complicado!";
 
-    // 2. CONFIGURAÇÃO DO TIMER E SCROLL REVEAL
+        if (lowerCaseMessage.includes("caro") || lowerCaseMessage.includes("preço")) {
+            response = "É caro? Pense assim: Por R$37, você está comprando o método para economizar R$370+ no próximo mês. O custo de *não* ter o controle financeiro é muito maior. É um investimento, não um gasto.";
+        } else if (lowerCaseMessage.includes("tempo") || lowerCaseMessage.includes("corrida")) {
+            response = "Não tenho tempo? O Desafio 7 Dias foi desenhado para quem não tem tempo! São apenas 15 minutos por dia. Você gasta mais tempo rolando o feed do que aplicando o método. O tempo é a sua desculpa, e nós a eliminamos.";
+        } else if (lowerCaseMessage.includes("funciona") || lowerCaseMessage.includes("resultado")) {
+            response = "Funciona? Se você seguir o plano de ação de 7 dias e não tiver clareza das suas finanças, nós devolvemos seu dinheiro. Nossa garantia incondicional de 30 dias prova nossa confiança. Risco zero para você, 100% de resultado.";
+        } else if (lowerCaseMessage.includes("planilha") || lowerCaseMessage.includes("complicado")) {
+            response = "É complicado? Não! Esqueça as planilhas complexas. Nossa Planilha Milionária™ é simples e intuitiva, e os vídeos de 5 minutos guiam você passo a passo. É o método mais descomplicado do mercado.";
+        }
+        return response;
+    }
+
+    // 3. LÓGICA DO CHAT WIDGET
+    document.getElementById('chat-button').addEventListener('click', () => {
+        const chatContainer = document.getElementById('chat-container');
+        chatContainer.style.display = chatContainer.style.display === 'flex' ? 'none' : 'flex';
+    });
+
+    document.getElementById('send-button').addEventListener('click', sendMessage);
+    document.getElementById('chat-input').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+
+    function sendMessage() {
+        const input = document.getElementById('chat-input');
+        const message = input.value.trim();
+        const chatBody = document.getElementById('chat-body');
+
+        if (message === "") return;
+
+        // Adiciona a mensagem do usuário
+        const userMessageDiv = document.createElement('div');
+        userMessageDiv.className = 'chat-message user';
+        userMessageDiv.textContent = message;
+        chatBody.appendChild(userMessageDiv);
+
+        // Limpa o input
+        input.value = '';
+        chatBody.scrollTop = chatBody.scrollHeight; // Rola para o final
+
+        // Simula a digitação da IA
+        setTimeout(() => {
+            const geminiResponse = simulateGeminiResponse(message);
+            const geminiMessageDiv = document.createElement('div');
+            geminiMessageDiv.className = 'chat-message gemini';
+            geminiMessageDiv.textContent = geminiResponse;
+            chatBody.appendChild(geminiMessageDiv);
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }, 800);
+    }
+    
+    // 4. FUNÇÕES DE INÍCIO GERAL, TIMER E SCROLL
     function startTimer(duration, display) {
         let timer = duration, hours, minutes, seconds;
         setInterval(function () {
@@ -408,7 +478,6 @@
 
     function initScrollReveal() {
         const revealElements = document.querySelectorAll('.reveal');
-        
         const observerOptions = {
             root: null, 
             rootMargin: '0px',
@@ -433,10 +502,9 @@
         const display = document.querySelector('#timer');
         startTimer(fourHours, display);
         initScrollReveal();
-        startTestimonialCarousel(); // Inicia o carrossel
+        startTestimonialCarousel();
     };
 
-    // 3. FUNÇÃO DE COMPRA E ROLAGEM
     function handleBuy(e){
       e.preventDefault();
       const name = document.getElementById('name').value;
