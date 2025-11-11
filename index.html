@@ -7,12 +7,13 @@
   <meta name="description" content="Em 7 dias você terá clareza do seu dinheiro, eliminará vazamentos e montará um plano simples pra sobrar todo mês." />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
+    /* 1. VARIÁVEIS E BASE */
     :root {
       --bg: #0b1220;
       --card: #0e192c;
-      --accent: #ffb703; /* Ouro/Amarelo */
+      --accent: #ffb703; /* Ouro/Amarelo Forte */
       --accent-hover: #e5a400;
       --muted: #9aa4b2;
       --white: #ffffff;
@@ -21,27 +22,30 @@
     }
     *{box-sizing:border-box}
     body{margin:0;background:linear-gradient(180deg,#060f1c 0%, #030810 100%);color:var(--white);-webkit-font-smoothing:antialiased}
-    .container{max-width:1100px;margin:40px auto;padding:24px}
-    /* HEADER MAIS IMPACTANTE */
+    .container{max-width:1100px;margin:40px auto;padding:0 24px}
+    
+    /* 2. TIPOGRAFIA E ESTRUTURA */
     header{text-align:center;padding-bottom:20px}
     .logo{width:80px;height:80px;border-radius:16px;background:linear-gradient(135deg,#0ea5e9,#1d4ed8);display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:32px;margin-bottom:12px;box-shadow:0 0 15px rgba(30,64,175,0.5)}
     h1{margin:0;font-size:36px;font-weight:900;line-height:1.2}
+    h1 span{color:var(--accent)} /* Ajuste no H1 */
     p.lead{color:var(--muted);margin-top:10px;font-size:18px}
     
-    /* LAYOUT E CARDS */
+    /* 3. LAYOUT E CARDS */
     .main{display:grid;grid-template-columns:1fr 380px;gap:36px;margin-top:36px}
-    .card{background:var(--card);padding:24px;border-radius:16px;border:1px solid rgba(255,255,255,0.05);box-shadow:0 10px 20px rgba(0,0,0,0.3)}
-    
-    /* PREÇO E CTA */
-    .price-box{display:flex;flex-direction:column;align-items:center;gap:4px;margin-top:10px}
-    .old-price{font-size:14px;color:var(--muted);text-decoration:line-through;margin-bottom:-4px}
-    .price{font-size:36px;color:var(--accent);font-weight:900;line-height:1}
-    .cta-btn{display:block;background:var(--accent);color:var(--bg);padding:14px 24px;border-radius:12px;font-weight:800;text-decoration:none;text-align:center;transition:background 0.2s, transform 0.2s;box-shadow:0 4px 15px rgba(255,183,3,0.4)}
-    .cta-btn:hover{background:var(--accent-hover);transform:translateY(-1px)}
-    .cta-btn i{margin-right:8px}
+    .card{background:var(--card);padding:24px;border-radius:16px;border:1px solid rgba(255,255,255,0.05);box-shadow:0 10px 20px rgba(0,0,0,0.3);margin-top:24px}
+    .card:first-child{margin-top:0} /* Remove margem do primeiro card na coluna */
 
-    /* LISTAS DE BENEFÍCIOS/MÓDULOS */
-    ul.features{padding-left:0;list-style:none;margin-top:12px}
+    /* 4. SEÇÃO PRINCIPAL (PRODUTO) */
+    .product-details{display:flex;gap:20px;align-items:flex-start}
+    .product-content{flex:1}
+    .product-media{width:250px; flex-shrink: 0;}
+
+    h2{margin:10px 0 0 0;font-size:24px;font-weight:800}
+    .sub-pitch{color:var(--muted);margin-top:6px;margin-bottom:12px}
+
+    /* 5. LISTAS DE BENEFÍCIOS/MÓDULOS */
+    ul.features{padding-left:0;list-style:none;margin:12px 0}
     ul.features li{color:var(--white);margin-bottom:10px;display:flex;align-items:center;font-weight:600;font-size:16px}
     ul.features li i{color:var(--success);margin-right:10px;font-size:18px}
     
@@ -49,8 +53,20 @@
     .module{padding:12px;border-radius:10px;background:rgba(255,255,255,0.03);display:flex;justify-content:space-between;align-items:center;border-left:4px solid var(--accent);font-weight:600}
     .module i{color:var(--accent);margin-right:8px}
 
-    /* BADGES, GARANTIA E DEPOIMENTO */
-    .badge-group{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    /* 6. VÍDEO E MÍDIA */
+    .video-preview{border-radius:12px;overflow:hidden;border:3px solid var(--accent);cursor:pointer;}
+    .video-preview img{width:100%;display:block;filter:brightness(0.85);transition:filter 0.3s}
+    .video-preview:hover img{filter:brightness(1)}
+
+    /* 7. PREÇO E CTA */
+    .cta-btn{display:block;background:var(--accent);color:var(--bg);padding:14px 24px;border-radius:12px;font-weight:800;text-decoration:none;text-align:center;transition:background 0.2s, transform 0.2s;box-shadow:0 4px 15px rgba(255,183,3,0.4);border:none;cursor:pointer;font-size:16px} /* Otimização: botões/links */
+    .cta-btn:hover{background:var(--accent-hover);transform:translateY(-1px)}
+    .cta-btn i{margin-right:8px}
+
+    .old-price{font-size:14px;color:var(--muted);text-decoration:line-through;margin-bottom:-4px}
+    .price{font-size:36px;color:var(--accent);font-weight:900;line-height:1}
+
+    /* 8. BADGES, GARANTIA E DEPOIMENTO */
     .badge{background:rgba(255,183,3,0.1);padding:6px 12px;border-radius:8px;color:var(--accent);font-weight:700;font-size:13px;display:inline-block}
     
     .testi{background:rgba(255,255,255,0.05);padding:16px;border-radius:12px;margin-top:16px;border-left:5px solid var(--accent)}
@@ -61,22 +77,28 @@
     .guarantee strong{font-weight:800;display:block;margin-bottom:4px}
     .guarantee i{margin-right:8px}
 
-    /* VÍDEO E OFERTA */
-    .video-preview{border-radius:12px;overflow:hidden;border:3px solid var(--accent)}
-    .video-preview img{width:100%;display:block;filter:brightness(0.85);transition:filter 0.3s}
-    .video-preview:hover img{filter:brightness(1)}
+    /* 9. CHECKOUT E FORMULÁRIO */
+    #checkout{position:sticky; top:24px; border:2px solid var(--accent)}
+    #checkout h3{margin:0 0 8px 0;text-align:center;font-size:24px;color:var(--accent)}
 
-    /* FORMULÁRIO */
     #checkout input{width:100%;padding:12px;border-radius:10px;border:1px solid #07203a;background:#091629;color:var(--white);font-size:16px;transition:border-color 0.2s}
     #checkout input:focus{outline:none;border-color:var(--accent)}
     #checkout label{display:block;margin-top:12px;margin-bottom:6px;color:var(--muted);font-weight:600}
-    
-    /* MOBILE */
+    #after{margin-top:20px;padding:12px;border-radius:8px;background:rgba(16,185,129,0.2);color:var(--success);text-align:center}
+
+    /* 10. RODAPÉ */
+    footer{margin-top:40px;padding:20px 0;border-top:1px solid rgba(255,255,255,0.05);color:var(--muted);font-size:13px;text-align:center}
+    footer span.small-text{font-size:11px}
+
+    /* 11. MOBILE RESPONSIVO */
     @media(max-width:900px){
       .main{grid-template-columns:1fr; gap:30px}
       h1{font-size:30px}
       .logo{width:64px;height:64px;font-size:28px}
       .cta-btn{padding:12px 20px}
+      .product-details{flex-direction:column-reverse; align-items:center;} /* Inverte a ordem no mobile: CTA/Vídeo primeiro */
+      .product-media{width:100%; margin-bottom:10px}
+      #checkout{position:static; border:none;} /* Remove sticky no mobile para não atrapalhar a navegação */
     }
   </style>
 </head>
@@ -84,18 +106,18 @@
   <div class="container">
     <header>
       <div class="logo">7D</div>
-      <h1>Domine Suas Finanças Pessoais <span style="color:var(--accent)">em Apenas 7 Dias</span></h1>
+      <h1>Domine Suas Finanças Pessoais <span>em Apenas 7 Dias</span></h1>
       <p class="lead">O desafio prático que entrega clareza imediata, elimina gastos invisíveis e garante a **primeira sobra** no seu bolso. Zero teoria chata.</p>
     </header>
 
-    <div class="main">
+    <main class="main">
       <section>
         <div class="card">
-          <div style="display:flex;gap:20px;align-items:flex-start">
-            <div style="flex:1">
+          <div class="product-details">
+            <div class="product-content">
               <span class="badge">Acesso Imediato</span>
-              <h2 style="margin:10px 0 0 0;font-size:24px;font-weight:800">O Plano de Ação de 7 Dias para o Controle Absoluto.</h2>
-              <p style="color:var(--muted);margin-top:6px">7 Vídeos Curto | Planilha Exclusiva | Suporte VIP no WhatsApp.</p>
+              <h2>O Plano de Ação de 7 Dias para o Controle Absoluto.</h2>
+              <p class="sub-pitch">7 Vídeos Curto | Planilha Exclusiva | Suporte VIP no WhatsApp.</p>
 
               <ul class="features">
                 <li><i class="fas fa-check-circle"></i> Raio-X total do seu dinheiro em apenas 1 dia.</li>
@@ -105,13 +127,13 @@
               </ul>
             </div>
 
-            <div style="width:250px; flex-shrink: 0;">
+            <div class="product-media">
               <div class="video-preview">
-                <img src="https://images.unsplash.com/photo-1561414927-6a5b02e0c4b6?q=80&w=1200&auto=format&fit=crop&ixlib=rb-4.0.3&s=3b0f94d0d78b9c8ab7c0d7c818a37c02" alt="Especialista em Finanças Pessoais Apresenta o Desafio" style="width:100%;display:block">
+                <img src="https://images.unsplash.com/photo-1561414927-6a5b02e0c4b6?q=80&w=1200&auto=format&fit=crop&ixlib=rb-4.0.3&s=3b0f94d0d78b9c8ab7c0d7c818a37c02" alt="Especialista em Finanças Pessoais Apresenta o Desafio" loading="lazy">
               </div>
               
-              <div style="margin-top:14px">
-                <div style="font-size:14px;color:var(--muted);text-align:center">Preço de Lançamento (Tempo Limitado!)</div>
+              <div style="margin-top:14px; text-align:center;">
+                <div style="font-size:14px;color:var(--muted)">Preço de Lançamento (Tempo Limitado!)</div>
                 <a class="cta-btn" id="buyBtnTop" href="#checkout" style="margin-top:8px"><i class="fas fa-arrow-alt-circle-right"></i> QUERO MINHA VAGA POR R$37</a>
               </div>
             </div>
@@ -131,7 +153,7 @@
 
         </div>
 
-        <div style="margin-top:24px" class="card">
+        <div class="card">
           <h3 style="margin:0 0 12px 0;font-weight:800;font-size:22px"><i class="fas fa-bolt" style="color:var(--accent)"></i> O Programa: 7 Passos para o Domínio</h3>
           <div class="module-list">
             <div class="module"><div><i class="fas fa-chart-line"></i> Dia 1 — O Raio-X Definitivo do Seu Dinheiro</div><div>5–8 min</div></div>
@@ -144,7 +166,7 @@
           </div>
         </div>
 
-        <div style="margin-top:24px" class="card">
+        <div class="card">
           <h3 style="margin:0 0 10px 0;font-weight:800;font-size:22px"><i class="fas fa-question-circle" style="color:var(--accent)"></i> Perguntas Frequentes (FAQ)</h3>
           <div style="color:var(--muted);line-height:1.6">
             <strong style="color:var(--white)">Preciso ter experiência em finanças?</strong> 
@@ -158,32 +180,32 @@
       </section>
 
       <aside>
-        <div id="checkout" class="card" style="position:sticky; top:20px; border:2px solid var(--accent)">
-          <h3 style="margin:0 0 8px 0;text-align:center;font-size:24px;color:var(--accent)">🚨 OFERTA RELÂMPAGO 🚨</h3>
+        <div id="checkout" class="card">
+          <h3 style="margin-top:0">🚨 OFERTA RELÂMPAGO 🚨</h3>
           
           <div style="text-align:center;margin-bottom:12px">
             <div class="old-price">De R$197,00 por:</div>
             <div class="price">R$37,00</div>
-            <div style="font-size:14px;color:var(--muted)">ou 4x de R$9,97</div>
+            <div style="font-size:14px;color:var(--muted)">ou 4x de R$9,97 no cartão</div>
           </div>
           
           <form id="buyForm" onsubmit="handleBuy(event)">
             <label for="name">Seu Nome Completo</label>
-            <input id="name" required placeholder="Ex: Maria da Silva" style="margin-top:0">
+            <input id="name" required placeholder="Ex: Maria da Silva">
 
             <label for="email">Seu Melhor E-mail</label>
             <input id="email" required placeholder="seu@exemplo.com" type="email">
 
-            <button type="submit" style="margin-top:20px;width:100%;" class="cta-btn"><i class="fas fa-lock"></i> COMPRAR AGORA (ACESSO IMEDIATO)</button>
+            <button type="submit" style="margin-top:20px;width:100%;" class="cta-btn"><i class="fas fa-lock"></i> GARANTIR MINHA VAGA POR R$37</button>
             <div style="text-align:center;margin-top:10px;font-size:12px;color:var(--muted)"><i class="fas fa-shield-alt"></i> Compra 100% Segura e Garantida.</div>
           </form>
 
-          <div id="after" style="display:none;margin-top:20px;padding:12px;border-radius:8px;background:rgba(16,185,129,0.2);color:var(--success);text-align:center">
+          <div id="after" style="display:none">
             <i class="fas fa-check-circle"></i> Parabéns! Sua compra simulada foi concluída. Verifique seu e-mail (e a caixa de spam!) para acesso.
           </div>
         </div>
 
-        <div style="margin-top:20px" class="card">
+        <div class="card">
           <h4 style="margin:0 0 10px 0;font-weight:800;font-size:20px"><i class="fas fa-gift" style="color:var(--accent)"></i> Bônus Exclusivos de Lançamento</h4>
           <ul style="color:var(--muted);padding-left:18px;list-style-type:disc">
             <li style="margin-bottom:8px;color:var(--white)">**Planilha Milionária** (A ferramenta automática que faz a conta por você).</li>
@@ -192,29 +214,40 @@
           </ul>
         </div>
       </aside>
-    </div>
+    </main>
 
     <footer>
-      <div class="container">
-        © <span id="year"></span> Desafio 7 Dias • Todos os direitos reservados.
-        <br>
-        <span style="font-size:11px">Política de reembolso integral disponível no checkout. CNPJ/Termos de uso.</span>
-      </div>
+      © <span id="year"></span> Desafio 7 Dias • Todos os direitos reservados.
+      <br>
+      <span class="small-text">Política de reembolso integral disponível no checkout. CNPJ/Termos de uso.</span>
     </footer>
   </div>
 
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
+    
+    // Função de tratamento do formulário
     function handleBuy(e){
       e.preventDefault();
-      // Simples mock do comportamento de checkout.
-      document.getElementById('buyForm').style.display='none';
-      document.getElementById('after').style.display='block';
+      
+      const name = document.getElementById('name').value;
+      
+      // Validação básica
+      if (!name || !document.getElementById('email').value) {
+        alert("Por favor, preencha todos os campos.");
+        return;
+      }
+
+      // Simulação de checkout: Esconde o formulário e mostra a mensagem de sucesso
+      document.getElementById('buyForm').style.display = 'none';
+      document.getElementById('after').style.display = 'block';
+      
       // Simulação: Aqui você integrará com Hotmart / Braip / PagSeguro via redirect.
-      alert("Compra simulada: Você seria redirecionado(a) para a plataforma de pagamento seguro para finalizar a transação de R$37.");
+      alert(`Obrigado(a), ${name}! Você seria redirecionado(a) para a plataforma de pagamento seguro para finalizar a transação.`);
     }
+
+    // Rolagem suave para o checkout ao clicar no CTA superior
     document.getElementById('buyBtnTop').addEventListener('click', function(e){
-      // rolagem até checkout
       e.preventDefault();
       document.querySelector('#checkout').scrollIntoView({behavior:'smooth'});
     });
