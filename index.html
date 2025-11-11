@@ -9,15 +9,15 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
-    /* 1. VARIÁVEIS E BASE (DARK MODE PREMIUM) */
+    /* 1. VARIÁVEIS E BASE (HIGH CONTRAST LIGHT GLOW) */
     :root {
-      --bg: #0A0A0E; /* Fundo mais suave que o preto puro */
-      --card-bg: #1A1A22; /* Fundo dos cards sólido e escuro */
-      --accent: #3effc2; /* Ciano-Verde Neon (Energia/Dinheiro) */
+      --bg: #121218; 
+      --card-bg: #1A1A22; 
+      --accent: #3effc2; 
       --accent-secondary: #007744; 
       --accent-hover: #72ffcf;
-      --shadow-accent: 0 0 35px rgba(62, 255, 194, 0.5); /* Sombra mais contida */
-      --muted: #BFC3D4; /* Cinza-azulado para texto auxiliar */
+      --shadow-accent: 0 0 40px rgba(62, 255, 194, 0.6);
+      --muted: #C0C0D0; 
       --white: #ffffff;
       --success: #3effc2; 
       font-family: "Inter", sans-serif;
@@ -27,7 +27,7 @@
     *{box-sizing:border-box; margin: 0; padding: 0;}
     body{
       background-color:var(--bg);
-      color:var(--white);
+      color:var(--white); 
       -webkit-font-smoothing:antialiased;
       overflow-x: hidden; 
       line-height: 1.6;
@@ -41,160 +41,81 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: radial-gradient(circle at 10% 20%, rgba(62, 255, 194, 0.08) 0%, transparent 15%),
-                  radial-gradient(circle at 90% 80%, rgba(0, 119, 68, 0.08) 0%, transparent 15%);
+      background: radial-gradient(circle at 10% 20%, rgba(62, 255, 194, 0.1) 0%, transparent 15%),
+                  radial-gradient(circle at 90% 80%, rgba(0, 119, 68, 0.1) 0%, transparent 15%);
       z-index: -1;
     }
     .container{max-width:1200px;margin:40px auto;padding:0 25px;}
     
-    /* HEADER E TIPOGRAFIA */
-    header{text-align:center;padding-bottom:30px; margin-top:50px}
-    .logo{
-        width:100px;height:100px;
-        background:linear-gradient(135deg,var(--accent-secondary),var(--accent));
-        display:inline-flex;align-items:center;justify-content:center;
-        font-weight:900;font-size:45px;margin-bottom:20px;
-        border-radius:50%; 
-        box-shadow: 0 0 15px var(--accent);
-        color: var(--bg);
-    }
-    h1{
-        font-family: "Montserrat", sans-serif;
-        font-size: 60px; 
-        font-weight: 900;
-        line-height: 1.1;
-        letter-spacing: -3px;
-    }
-    h1 span{color:var(--accent); text-shadow: 0 0 10px var(--accent);}
-    p.lead{color:var(--muted);margin-top:25px;font-size:22px;font-weight:600;}
+    /* TIPOGRAFIA E HEADER */
+    h1{ font-size: 60px; font-weight: 900; line-height: 1.1; letter-spacing: -3px; }
+    h1 span{ color:var(--accent); text-shadow: 0 0 12px var(--accent); }
+    p.lead{ color:var(--muted); margin-top:25px; font-size:22px; font-weight:600; }
     
-    /* LAYOUT MAIN (Desktop Grid) */
-    .main{display:grid;grid-template-columns:1fr 400px;gap:50px;margin-top:50px}
-    
-    /* CARDS */
+    /* LAYOUT E CARDS */
+    .main{ display:grid; grid-template-columns:1fr 400px; gap:50px; margin-top:50px; }
     .card{
         background:var(--card-bg);
         padding:40px; 
         border-radius:15px; 
-        border:1px solid rgba(62, 255, 194, 0.1);
-        box-shadow:0 10px 30px rgba(0,0,0,0.5);
+        border:1px solid rgba(62, 255, 194, 0.15); 
+        box-shadow:0 10px 30px rgba(0,0,0,0.6);
         margin-top:30px;
-        transition: all 0.3s;
     }
     h2{font-size:30px; font-weight:800; border-left: 5px solid var(--accent); padding-left: 15px; color: var(--white);}
-    
-    /* LISTAS DE VANTAGENS */
-    ul.features{list-style: none; padding: 0; margin-top: 30px;}
-    ul.features li{
-      font-size:18px; 
-      background: rgba(62, 255, 194, 0.05); 
-      padding: 18px 20px; 
-      border-radius: 10px;
-      margin-bottom: 12px;
-      border-left: 4px solid var(--success);
-      font-weight: 500;
-    }
     
     /* CHECKOUT E PREÇO */
     #checkout{
       position: sticky; top: 40px; 
       border:3px solid var(--accent); 
-      box-shadow: 0 0 25px rgba(62, 255, 194, 0.4);
-      background: #000000; /* Fundo puro para o contraste máximo do preço */
+      box-shadow: 0 0 30px rgba(62, 255, 194, 0.5);
+      background: #000000; 
     }
-    .price-promo{font-size:70px; color:var(--accent); font-weight:900; text-shadow: 0 0 20px var(--accent);}
+    .price-promo{font-size:70px; color:var(--accent); font-weight:900; text-shadow: 0 0 25px var(--accent);}
     .cta-btn{
         background: linear-gradient(90deg, var(--accent-secondary), var(--accent));
         color:#000;
-        padding:20px 30px;
-        font-size:22px; 
-        border-radius:8px;
-        box-shadow:0 5px 15px rgba(0,0,0,0.3);
         font-weight: 900;
-        transition: background 0.3s;
+        box-shadow: 0 0 10px rgba(62, 255, 194, 0.4);
     }
-    .cta-btn:hover { background: linear-gradient(90deg, var(--accent), var(--accent-secondary)); }
     
     /* INPUTS */
-    input {
-      width: 100%; padding: 15px; margin-bottom: 20px; 
-      border-radius: 6px; border: 1px solid #333;
-      background: #111; color: var(--white); 
-      font-size: 16px; transition: border-color 0.3s;
-    }
-    input:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 8px rgba(62, 255, 194, 0.5);
-      outline: none;
-    }
-    label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--muted);}
-
-    /* WIDGET DE CHAT IA (REFINADO) */
-    #gemini-widget {
-        position: fixed; bottom: 20px; right: 20px; z-index: 1000;
-    }
-    #chat-button {
-        width: 65px; height: 65px; background: var(--accent); color: var(--bg);
-        border-radius: 50%; display: flex; align-items: center; justify-content: center;
-        font-size: 26px; cursor: pointer; box-shadow: var(--shadow-accent);
-        transition: all 0.3s; animation: pulseCta 2s infinite;
-    }
-    #chat-container {
-        width: 320px; height: 420px; background: var(--card-bg);
-        border: 2px solid var(--accent); border-radius: 12px;
-        box-shadow: 0 0 20px rgba(62, 255, 194, 0.3);
-        display: none; flex-direction: column; overflow: hidden;
-        margin-bottom: 10px; /* Espaço para o botão */
-    }
-    #chat-header {
-        background: var(--accent-secondary); color: var(--white);
-        padding: 12px; font-weight: 700; text-align: center; border-bottom: 1px solid var(--accent);
-    }
-    #chat-body {
-        flex-grow: 1; padding: 15px; overflow-y: auto; font-size: 14px;
-    }
-    .chat-message {
-        margin-bottom: 15px; padding: 10px 15px; border-radius: 10px; max-width: 85%;
-    }
-    .user { background: #2A2A38; margin-left: auto; color: var(--white); }
-    .gemini { background: var(--accent); color: #000; margin-right: auto; font-weight: 600; }
-    .typing-indicator { color: var(--muted); font-style: italic; margin-right: auto; }
-    #chat-input-area { border-top: 1px solid #333; }
-
-    /* ANIMAÇÕES DO CHAT */
-    .chat-hidden { opacity: 0; transform: scale(0.9) translateY(20px); transition: opacity 0.3s ease-out, transform 0.3s ease-out; pointer-events: none; display: none !important; }
-    .chat-visible { opacity: 1; transform: scale(1) translateY(0); display: flex !important; }
+    input { background: #222; border: 1px solid #444; color: var(--white); }
+    input:focus { border-color: var(--accent); box-shadow: 0 0 8px rgba(62, 255, 194, 0.5); }
     
-    /* 2. MEDIA QUERIES (MOBILE FIRST) */
+    /* WIDGET DE CHAT IA */
+    .gemini { background: var(--accent); color: #000; font-weight: 700; }
+    
+    .typing-indicator { 
+        color: var(--accent); 
+        font-style: normal; 
+        margin-right: auto;
+        font-weight: 800;
+        letter-spacing: 5px;
+    }
+    /* Animação de três pontos no indicador */
+    .typing-indicator::after {
+        content: ".";
+        animation: loadingDots 1.5s infinite;
+        display: inline-block;
+        width: 15px;
+        overflow: hidden;
+        vertical-align: bottom;
+    }
+    @keyframes loadingDots {
+      0%, 20% { content: "."; }
+      40% { content: ".."; }
+      60%, 100% { content: "..."; }
+    }
+
+    /* MEDIA QUERIES */
     @media(max-width:768px){
         .main{grid-template-columns:1fr; gap:30px}
-        .container{padding:0 15px;}
-        header{margin-top: 30px;}
         h1{font-size: 40px; letter-spacing: -1px;}
-        p.lead{font-size: 18px;}
-        .card{padding: 25px; margin-top: 25px;}
-        
-        /* Checkout não sticky em mobile */
-        #checkout{position: static; margin-top: 20px; order: -1; /* Força a aparecer antes do conteúdo principal */}
-        
-        .price-promo{font-size: 60px;}
-        .cta-btn{font-size: 20px; padding: 16px 25px; border-radius: 6px;}
-
-        /* Chat na tela cheia ou maior no mobile */
-        #chat-container {
-            width: 95vw;
-            height: 85vh;
-            left: 50%;
-            bottom: 80px;
-            transform: translate(-50%, 50px);
-            border-radius: 15px;
-        }
-        .chat-visible {
-            transform: translate(-50%, 0);
-        }
+        #checkout{position: static; order: -1;} 
     }
     
-    /* 3. ANIMAÇÕES GERAIS */
+    /* ANIMAÇÕES GERAIS */
     .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.8s ease, transform 0.8s ease; }
     .reveal.visible { opacity: 1; transform: translateY(0); }
   </style>
@@ -234,7 +155,7 @@
             <i class="fas fa-check-circle" style="font-size: 30px;"></i> Parabéns! Sua compra simulada foi concluída.
           </div>
         </div>
-
+        
         <div class="card reveal delay-2">
           <h4 style="font-size:26px; border-left: 4px solid var(--accent); padding-left: 10px;"><i class="fas fa-gem" style="color:var(--accent)"></i> Bônus Exclusivos</h4>
           <ul style="list-style: none; padding: 0; margin-top: 20px;">
@@ -259,23 +180,9 @@
             </ul>
           </div>
 
-          <div class="product-media reveal delay-1" style="margin-top: 40px;">
-            <div class="video-preview">
-              <img src="https://images.unsplash.com/photo-1561414927-6a5b02e0c4b6?q=80&w=1200&auto=format&fit=crop&ixlib=rb-4.0.3&s=3b0f94d0d78b9c8ab7c0d7c818a37c02" alt="Especialista em Finanças Pessoais Apresenta o Desafio" loading="lazy" style="display: block; width: 100%; height: auto; border-radius: 12px;">
-            </div>
-          </div>
-          
           <div class="guarantee reveal delay-2" style="margin-top: 30px; text-align: center; border-top: 1px dashed var(--muted); padding-top: 20px;">
             <i class="fas fa-shield-alt" style="color:var(--success); font-size: 24px;"></i> 
             <strong style="display: block; margin-top: 5px; color: var(--accent);">Blindagem de Risco: 30 Dias de Garantia Incondicional.</strong>
-          </div>
-
-          <div class="testimonial-wrapper reveal delay-3" id="testimonial-carousel" style="margin-top: 30px; min-height: 180px;">
-            <div class="testi active" style="opacity: 1; transition: none;">
-              <strong><i class="fas fa-award"></i> PROVA SOCIAL:</strong>
-              <p style="font-style: italic; color: var(--muted);">“Segui o desafio e em 2 semanas já consegui reduzir gastos e criar 1 reserva. Simples e direto. Parei de 'vazar' dinheiro!”</p> 
-              <span style="font-size:16px;color:var(--accent);display:block;text-align:right">— João S., 32</span>
-            </div>
           </div>
         </div>
 
@@ -286,14 +193,14 @@
   <div id="gemini-widget">
     <div id="chat-container" class="chat-hidden">
         <div id="chat-header">
-            <i class="fas fa-brain"></i> IA Anti-Objeção (Pergunte ao Gemini)
+            <i class="fas fa-brain"></i> IA Anti-Objeção (Gemini Chat)
         </div>
         <div id="chat-body">
-            <div class="chat-message gemini">Olá! Eu sou o assistente anti-objeção, baseado em IA. Pergunte o que te impede de começar o Desafio 7 Dias, e eu te ajudo a decidir!</div>
+            <div class="chat-message gemini">Olá! Eu sou o assistente anti-objeção, um modelo de IA pronto para responder qualquer dúvida sobre o Desafio 7 Dias e te ajudar a tomar a melhor decisão!</div>
         </div>
         <div id="chat-input-area" style="display: flex; padding: 10px;">
             <input type="text" id="chat-input" placeholder="Ex: 'É muito caro?' ou 'Dá resultado?'" style="flex-grow: 1; margin-bottom: 0;">
-            <button id="send-button" style="margin-left: 10px; border-radius: 6px;"><i class="fas fa-paper-plane"></i></button>
+            <button id="send-button" class="cta-btn" style="width: 50px; padding: 10px 0; margin-left: 10px; border-radius: 6px;"><i class="fas fa-paper-plane"></i></button>
         </div>
     </div>
     <div id="chat-button"><i class="fas fa-comments"></i></div>
@@ -301,10 +208,24 @@
 
   <script>
     
-    // VARIÁVEIS DE ESTADO DO CHAT
+    // --------------------------------------------------------------------------------------------------
+    // ⚠️ PASSO CRÍTICO: COLOQUE SUA CHAVE DE API DO GEMINI AQUI!
+    // Você pode obtê-la no Google AI Studio (https://ai.google.dev/gemini-api/docs/api-key)
+    const GEMINI_API_KEY = "SUA_CHAVE_AQUI"; 
+    // --------------------------------------------------------------------------------------------------
+
+    const MODEL_NAME = "gemini-2.5-flash"; // Modelo rápido e eficiente
     let isTyping = false;
 
-    // 1. LÓGICA DO CHAT WIDGET COM ANIMAÇÃO
+    // Histórico de conversas (para conversas contínuas)
+    const conversationHistory = [
+        // Prompt inicial do sistema para guiar a IA a ser um assistente de vendas
+        { role: "system", parts: [{ text: "Você é um assistente de vendas altamente persuasivo e gentil para um produto digital chamado 'Desafio 7 Dias: Controle Financeiro'. Seu objetivo é quebrar objeções (Preço, Tempo, Dificuldade) e convencer o usuário de que o investimento de R$37 é valioso e sem risco (Garantia de 30 dias). Mantenha as respostas concisas e otimistas. O produto é um plano de ação de 7 dias para fechar o mês com sobra garantida."}]},
+        { role: "model", parts: [{ text: "Olá! Eu sou o assistente anti-objeção, um modelo de IA pronto para responder qualquer dúvida sobre o Desafio 7 Dias e te ajudar a tomar a melhor decisão!"}]}
+    ];
+
+
+    // 1. LÓGICA DO CHAT WIDGET E BOTÃO (Mantida)
     document.getElementById('chat-button').addEventListener('click', () => {
         const chatContainer = document.getElementById('chat-container');
         
@@ -324,9 +245,9 @@
         }
     });
 
-    // Função de envio de mensagem robusta
-    function sendMessage() {
-        if (isTyping) return; // Impede envio duplicado
+    // 2. FUNÇÃO PRINCIPAL DE ENVIO DE MENSAGEM (CHAMADA API)
+    async function sendMessage() {
+        if (isTyping) return;
         
         const input = document.getElementById('chat-input');
         const message = input.value.trim();
@@ -341,55 +262,93 @@
         userMessageDiv.className = 'chat-message user';
         userMessageDiv.textContent = message;
         chatBody.appendChild(userMessageDiv);
+        conversationHistory.push({ role: "user", parts: [{ text: message }] }); // Adiciona ao histórico
 
         input.value = '';
         chatBody.scrollTop = chatBody.scrollHeight; 
 
-        // 2. Simula o indicador de digitação da IA
+        // 2. Adiciona o indicador de digitação
         const typingIndicatorDiv = document.createElement('div');
         typingIndicatorDiv.className = 'chat-message typing-indicator';
-        typingIndicatorDiv.textContent = 'Digitando...';
+        typingIndicatorDiv.textContent = 'Digitando';
         chatBody.appendChild(typingIndicatorDiv);
         chatBody.scrollTop = chatBody.scrollHeight;
         
-        // 3. Simula a resposta do Gemini (tempo de delay para o realismo)
-        setTimeout(() => {
-            const geminiResponse = simulateGeminiResponse(message);
+        try {
+            // 3. CHAMA A API DO GEMINI
+            const geminiResponseText = await getGeminiResponse(message);
             
-            // Remove o indicador de digitação
+            // 4. Remove o indicador e Adiciona a resposta da IA
             chatBody.removeChild(typingIndicatorDiv);
             
-            // Adiciona a resposta da IA
             const geminiMessageDiv = document.createElement('div');
             geminiMessageDiv.className = 'chat-message gemini';
-            geminiMessageDiv.textContent = geminiResponse;
+            geminiMessageDiv.textContent = geminiResponseText;
             chatBody.appendChild(geminiMessageDiv);
+            
+            // 5. Adiciona a resposta ao histórico
+            conversationHistory.push({ role: "model", parts: [{ text: geminiResponseText }] });
+
+        } catch (error) {
+            console.error("Erro ao chamar a API do Gemini:", error);
+            
+            // Feedback de erro para o usuário
+            chatBody.removeChild(typingIndicatorDiv); 
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'chat-message gemini';
+            errorDiv.textContent = "Erro na conexão com o Assistente IA. Verifique sua chave de API ou tente novamente.";
+            errorDiv.style.backgroundColor = 'red';
+            errorDiv.style.color = 'white';
+            chatBody.appendChild(errorDiv);
+        } finally {
             chatBody.scrollTop = chatBody.scrollHeight;
             isTyping = false;
-
-        }, 1500); // 1.5 segundos para parecer mais humano
+        }
     }
     
-    // 4. FUNÇÃO SIMULADA DE QUEBRA DE OBJEÇÕES (INTEGRAÇÃO GEMINI)
-    function simulateGeminiResponse(message) {
-        const lowerCaseMessage = message.toLowerCase();
-        let response = "Desculpe, não entendi bem. Tente perguntar sobre **preço**, **tempo** ou se o **método é complicado**! Estou aqui para te ajudar a tomar a melhor decisão.";
-
-        if (lowerCaseMessage.includes("caro") || lowerCaseMessage.includes("preço") || lowerCaseMessage.includes("custa")) {
-            response = "É caro? Pense assim: **Por R$37, você está comprando a liberdade de economizar R$370+ no próximo mês.** O custo de *não* ter o controle financeiro é muito maior. É um pequeno investimento que se paga em dias.";
-        } else if (lowerCaseMessage.includes("tempo") || lowerCaseMessage.includes("corrida") || lowerCaseMessage.includes("ocupado")) {
-            response = "Não tenho tempo? O Desafio 7 Dias foi desenhado para quem **não tem tempo**! São apenas **15 minutos por dia**. Você gasta mais tempo rolando o feed do que aplicando o método. O tempo é a sua desculpa, e nós a eliminamos.";
-        } else if (lowerCaseMessage.includes("funciona") || lowerCaseMessage.includes("resultado") || lowerCaseMessage.includes("garantia")) {
-            response = "Funciona? Se você seguir o plano de ação de 7 dias e não tiver clareza das suas finanças, nós devolvemos seu dinheiro. Nossa **garantia incondicional de 30 dias** prova nossa confiança. **Risco zero** para você, 100% de resultado.";
-        } else if (lowerCaseMessage.includes("planilha") || lowerCaseMessage.includes("complicado") || lowerCaseMessage.includes("dificil")) {
-            response = "É complicado? De jeito nenhum! Esqueça as planilhas complexas. Nossa Planilha Milionária™ é **simples e intuitiva**, e os vídeos de 5 minutos guiam você passo a passo. É o método mais descomplicado do mercado.";
-        } else if (lowerCaseMessage.includes("quem") || lowerCaseMessage.includes("voce")) {
-             response = "Eu sou um assistente de IA, uma ferramenta para responder suas dúvidas sobre o produto e quebrar objeções rapidamente. Minha função é garantir que você tome uma decisão informada e confiante para iniciar sua jornada financeira!";
+    // 3. FUNÇÃO DE INTEGRAÇÃO COM A API DO GEMINI
+    async function getGeminiResponse(userMessage) {
+        if (GEMINI_API_KEY === "SUA_CHAVE_AQUI" || !GEMINI_API_KEY) {
+            // Se a chave não foi configurada, voltamos para a simulação de fallback.
+            return `Atenção: A chave da API Gemini não foi configurada. Resposta simulada: O Desafio 7 Dias é o melhor investimento que você fará por R$37. Garantia de 30 dias!`;
         }
-        return response;
+
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${GEMINI_API_KEY}`;
+        
+        // O histórico atualizado com a mensagem do usuário será enviado.
+        const contents = conversationHistory.filter(c => c.role !== 'system');
+        const systemInstruction = conversationHistory.find(c => c.role === 'system');
+
+        const requestBody = {
+            contents: contents,
+            config: {
+                systemInstruction: systemInstruction.parts[0].text,
+                temperature: 0.7, 
+                maxOutputTokens: 200,
+            }
+        };
+
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody),
+        });
+
+        const data = await response.json();
+
+        if (data.candidates && data.candidates.length > 0) {
+            return data.candidates[0].content.parts[0].text;
+        } else if (data.error) {
+             throw new Error(data.error.message || "Erro desconhecido na API.");
+        } else {
+             return "Desculpe, não consegui gerar uma resposta. Tente reformular a pergunta.";
+        }
     }
 
-    // 5. FUNÇÕES DE INÍCIO GERAL
+
+    // 4. FUNÇÕES DE INÍCIO GERAL (Mantidas)
     function startTimer(duration, display) {
         let timer = duration, hours, minutes, seconds;
         const intervalId = setInterval(function () {
@@ -426,8 +385,6 @@
         revealElements.forEach(el => { observer.observe(el); });
     }
     
-    function startTestimonialCarousel() { /* ... (Mantida) ... */ }
-    
     function handleBuy(e){
       e.preventDefault();
       const name = document.getElementById('name').value;
@@ -440,7 +397,6 @@
       alert(`Obrigado(a), ${name}! Você seria redirecionado(a) para a plataforma de pagamento seguro para finalizar a transação.`);
     }
 
-    // SCROLL PARA O CHECKOUT
     document.getElementById('buyBtnTop').addEventListener('click', function(e){
       e.preventDefault();
       document.querySelector('#checkout').scrollIntoView({behavior:'smooth', block: 'start'});
@@ -450,13 +406,13 @@
         const fourHours = 60 * 60 * 4;
         const timerElement = document.createElement('div');
         timerElement.className = 'timer-box';
-        timerElement.innerHTML = `<i class="fas fa-clock"></i> OFERTA EXPIRA EM: <span id="timer">00:00:00</span>`;
+        timerElement.style.cssText = 'padding: 12px 25px; font-size: 20px; margin-top: 30px; background-color: rgba(0,0,0,0.5); border: 1px solid var(--accent); border-radius: 6px; display: inline-block;';
+        timerElement.innerHTML = `<i class="fas fa-clock" style="color: var(--accent);"></i> OFERTA EXPIRA EM: <span id="timer">00:00:00</span>`;
         document.querySelector('header').appendChild(timerElement);
 
         const display = document.querySelector('#timer');
         startTimer(fourHours, display);
         initScrollReveal();
-        startTestimonialCarousel();
     };
   </script>
 </body>
