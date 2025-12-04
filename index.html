@@ -544,6 +544,47 @@ body.login-active {
     <div id="history" class="history"></div>
   </div>
   
+  <div class="card">
+    <div class="suggestionTitle" style="color: var(--accent-secondary); border-bottom-color: var(--accent-secondary);">
+        <span class="material-symbols-outlined">settings_ethernet</span>
+        SELETOR DE PADRÕES (I.A. GATILHO)
+    </div>
+    <select id="patternSelector" class="bankroll-input" style="margin-top: 5px;">
+        <option value="zoneSuccession">ZONA 5 (Sucessão de Zonas)</option>
+        <option value="fourSuccessors">4 SUCESSORES (Gatilho + 4)</option>
+    </select>
+  </div>
+  
+  <div class="card" id="boosterCard">
+    <div class="suggestionTitle iaGlow">
+        <span class="material-symbols-outlined">magic_button</span>
+        BOOSTER DE APOSTA I.A. (<span id="currentPatternName">ZONA 5</span>)
+    </div>
+    <div id="betSuggestion" class="suggestionBox" style="font-size: 16px; font-weight: 700;">
+        <span style="color:var(--muted)">Aguardando dados ou aguardando desbloqueio...</span>
+    </div>
+  </div>
+
+  <div class="card" id="patternAnalysisCard">
+    <div class="suggestionTitle">
+        <span class="material-symbols-outlined">auto_fix</span>
+        ANÁLISE DETALHADA DO GATILHO
+    </div>
+    <div id="patternAnalysisOutput" class="suggestionBox">Selecione um padrão e adicione números ao histórico para ver a análise.</div>
+  </div>
+
+  <div class="card">
+    <div class="analysis-wrapper">
+      <div class="analysis-hot-cold">
+        <div class="suggestionTitle">
+            <span class="material-symbols-outlined">thermometer</span>
+            TENDÊNCIAS GERAIS
+        </div>
+        <div id="hotCold" class="suggestionBox">🔥 Hot: -<br>❄️ Cold: -</div>
+      </div>
+    </div>
+  </div>
+  
 
   <div class="card">
     <div class="suggestionTitle">
@@ -565,44 +606,6 @@ body.login-active {
             <span class="material-symbols-outlined">logout</span>
             SAIR
         </button>
-    </div>
-  </div>
-  
-  <div class="card" id="latestSuccessorsCard" style="display:none;">
-    <div class="suggestionTitle" style="color: var(--accent-secondary); border-bottom-color: var(--accent-secondary);">
-        <span class="material-symbols-outlined">repeat</span>
-        ÚLTIMOS SUCESSORES DO GATILHO (<span id="successorTriggerNum" style="font-weight: 700;">-</span>)
-    </div>
-    <div id="latestSuccessorsList" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-        <span style="color:var(--muted)">Adicione números ao histórico para ver os sucessores.</span>
-    </div>
-  </div>
-  <div class="card">
-    <div class="analysis-wrapper">
-      <div class="analysis-main">
-        <div class="suggestionTitle">
-            <span class="material-symbols-outlined">auto_fix</span>
-            SUCESSÃO DE ZONAS (ZONA 5)
-        </div>
-        <div id="zoneAnalysis" class="suggestionBox">Adicione números ao histórico para análise de Zonas.</div>
-      </div>
-      <div class="analysis-hot-cold" style="margin-top:15px;">
-        <div class="suggestionTitle">
-            <span class="material-symbols-outlined">thermometer</span>
-            TENDÊNCIAS GERAIS
-        </div>
-        <div id="hotCold" class="suggestionBox">🔥 Hot: -<br>❄️ Cold: -</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card" id="boosterCard">
-    <div class="suggestionTitle iaGlow">
-        <span class="material-symbols-outlined">magic_button</span>
-        BOOSTER DE APOSTA I.A.
-    </div>
-    <div id="betSuggestion" class="suggestionBox" style="font-size: 16px; font-weight: 700;">
-        <span style="color:var(--muted)">Aguardando dados ou aguardando desbloqueio...</span>
     </div>
   </div>
   
@@ -633,1192 +636,783 @@ document.addEventListener('DOMContentLoaded', () => {
   const STOP_LOSS_AMOUNT = 35.00; // R$35,00 de prejuízo total
   const STOP_WIN_COUNT = 3; // 3 WINs consecutivos
   const STOP_WIN_AMOUNT = 35.00; // R$35,00 de lucro total
-  const LOCK_DURATION = 2 * 60 * 60 * 1000; // 2 horas em milissegundos
+  const LOCK_DURATION = 2 * 60 * 60 * 1000; // 2 horas em milis
 
-  /* =========================================================================================
-   * CONFIGURAÇÕES ESPECÍFICAS DO NOVO BOOSTER I.A. (Intersecção de Zonas)
-   ========================================================================================= */
-  const SUCCESSOR_LOOKBACK = 100; // Analisa os últimos 100 lançamentos
-  const SUGGESTION_THRESHOLD = 80; // Limite de ativação de 80%
-  const SUCCESSOR_DISPLAY_LIMIT = 10; // Novo: Limite de sucessores para exibir no card
-
-  
-  /* ================== ELEMENTOS DOM ================== */
-  const bodyTag = document.getElementById('bodyTag');
-  const loginScreen = document.getElementById('loginScreen');
-  const mainPanel = document.getElementById('mainPanel');
-  const lockScreen = document.getElementById('lockScreen');
-  const lockTitle = document.getElementById('lockTitle');
-  const countdownTimer = document.getElementById('countdownTimer');
-  const btnSkipLock = document.getElementById('btnSkipLock');
-  const sessionTimerDiv = document.getElementById('sessionTimer'); 
-  const boosterCard = document.getElementById('boosterCard');
-  
-  const historyDiv = document.getElementById('history');
-  const historyCount = document.getElementById('historyCount');
-  const zoneAnalysisDiv = document.getElementById('zoneAnalysis');
-  const hotColdDiv = document.getElementById('hotCold');
-  const betSuggestionDiv = document.getElementById('betSuggestion'); 
-  const gridNumbers = document.getElementById('gridNumbers');
-  
-  // Novos elementos DOM para os sucessores imediatos
-  const latestSuccessorsCard = document.getElementById('latestSuccessorsCard');
-  const latestSuccessorsList = document.getElementById('latestSuccessorsList');
-  const successorTriggerNumDiv = document.getElementById('successorTriggerNum');
-
-
-  const btnRegisterWin = document.getElementById('btnRegisterWin');
-  const btnRegisterLoss = document.getElementById('btnRegisterLoss');
-  const betAmountInput = document.getElementById('betAmountInput');
-  const initialBankrollInput = document.getElementById('initialBankrollInput');
-  const bankrollHistoryDiv = document.getElementById('bankrollHistory');
-  const authPwdInput = document.getElementById('authPwd');
-  const btnUpload = document.getElementById('btnUpload'); 
-  const uploadPhotoInput = document.getElementById('uploadPhoto');
-  const clearBtn = document.getElementById('clearBtn');
-  
-  /* ================== ESTADO DA APLICAÇÃO ================== */
-  let historyArr = []; 
-  let numberStats = {}; 
-  let config = {
-      mode: 'DEMO', 
-      isLoggedIn: false, 
-      isLocked: false,
-      lockUntil: 0,
-      lockReason: '', 
-      sessionStart: 0, 
+  /* ================== VARIÁVEIS DE ESTADO ================== */
+  let history = []; 
+  let bankroll = { initial: 0, current: 0, profit: 0, wins: 0, losses: 0, totalBets: 0, streak: 0, lastResult: null, transactionHistory: [] };
+  let config = { 
+    currentPattern: 'zoneSuccession',
+    lockoutEndTime: 0 
   };
-  
-  let bankrollState = {
-    initial: 0,
-    current: 0,
-    history: [] 
-  };
-  const MAX_HISTORY = 100;
-  
-  /* ================== UTILITÁRIOS OTIMIZADOS ================== */
-  const formatCurrency = (value) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  function getColor(num) {
-    if (num === 0) return 'zero';
-    if (RED_NUMBERS.has(num)) return 'red';
-    return 'black';
+  let isLocked = false;
+  let sessionStartTime = Date.now();
+  let timerInterval;
+
+  /* ================== FUNÇÕES UTILIÁRIAS ================== */
+
+  function loadState() {
+      // Carregar Histórico
+      const storedHistory = localStorage.getItem(HISTORY_STORAGE_KEY);
+      if (storedHistory) {
+          history = JSON.parse(storedHistory);
+          renderHistory();
+      }
+      
+      // Carregar Banca e Transações
+      const storedBankroll = localStorage.getItem(BANKROLL_STORAGE_KEY);
+      if (storedBankroll) {
+          bankroll = JSON.parse(storedBankroll);
+          renderDashboard();
+          renderBankrollHistory();
+      }
+
+      // Carregar Configurações (Padrão, Bloqueio)
+      const storedConfig = localStorage.getItem(CONFIG_STORAGE_KEY);
+      if (storedConfig) {
+          config = { ...config, ...JSON.parse(storedConfig) };
+      }
+
+      // Definir o seletor de padrão com o valor salvo
+      const patternSelector = document.getElementById('patternSelector');
+      if(patternSelector) {
+        patternSelector.value = config.currentPattern || 'zoneSuccession';
+        document.getElementById('currentPatternName').textContent = patternSelector.options[patternSelector.selectedIndex].text.split('(')[0].trim();
+      }
+
+      // Verificar bloqueio
+      checkLockoutStatus();
+  }
+
+  function saveHistory() {
+      localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
   }
   
-  /**
-   * Função crítica para garantir a precisão de ponto flutuante em operações monetárias.
-   */
-  const safeMath = (num) => parseFloat(num.toFixed(2));
-
-
-  /**
-   * Função auxiliar para encontrar vizinhos em um determinado range (Vizinhos 2 para Zona 5).
-   */
-  function getNeighbors(centerNum, radius) {
-    const centerIndex = WHEEL_INDEX_MAP[centerNum];
-    const neighbors = [];
-    const len = WHEEL_ORDER.length;
-
-    for (let i = -radius; i <= radius; i++) {
-        const index = (centerIndex + i + len) % len;
-        neighbors.push(WHEEL_ORDER[index]);
-    }
-    return neighbors; 
+  function saveBankroll() {
+      localStorage.setItem(BANKROLL_STORAGE_KEY, JSON.stringify(bankroll));
   }
-  
-  /* ================== PERSISTÊNCIA E SESSÃO ================== */
-  
+
   function saveConfig() {
-    localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(config));
+      localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(config));
   }
-  function loadConfig() {
-    try {
-        const savedConfig = localStorage.getItem(CONFIG_STORAGE_KEY);
-        if (savedConfig) {
-          const loaded = JSON.parse(savedConfig);
-          config.mode = loaded.mode || 'DEMO';
-          config.isLoggedIn = loaded.isLoggedIn || false; 
-          config.isLocked = loaded.isLocked || false;
-          config.lockUntil = loaded.lockUntil || 0;
-          config.lockReason = loaded.lockReason || '';
-          config.sessionStart = loaded.sessionStart || 0; 
-        }
-    } catch (e) {
-        console.error("Erro ao carregar configuração:", e);
-    }
+
+  function getNumberColorClass(num) {
+      if (num === 0) return 'zero';
+      return RED_NUMBERS.has(num) ? 'red' : 'black';
   }
   
-  function setLoginStatus(isLoggedIn, mode = 'DEMO') {
-      config.isLoggedIn = isLoggedIn;
-      config.mode = mode; // Atualiza o modo antes de salvar
-          
-      if (isLoggedIn) {
-          config.sessionStart = Date.now();
-      } else {
-          config.sessionStart = 0; 
-      }
-      saveConfig();
+  function formatR(amount) {
+      return `R$ ${amount.toFixed(2).replace('.', ',')}`;
   }
 
-  function getLoginStatus() {
-      return config.isLoggedIn; 
-  }
+  /* ================== GESTÃO DE BANCA ================== */
   
-  /* ================== LÓGICA DE BLOQUEIO / STOP / SESSÃO ================== */
-
-  let countdownInterval;
-
-  function checkLockStatus() {
-      const now = Date.now();
-      
-      // 1. Verifica se o bloqueio existente terminou
-      if (config.isLocked && config.lockUntil > now) {
-          lockScreen.classList.remove('hidden');
-          mainPanel.classList.add('hidden');
-          bodyTag.classList.remove('login-active'); 
-          
-          let titleText = '';
-          if (config.lockReason === 'STOP_LOSS') { titleText = 'ZONA SEGURA ATINGIDA (STOP LOSS)'; }
-          else if (config.lockReason === 'STOP_WIN') { titleText = 'ZONA SEGURA ATINGIDA (STOP WIN)'; }
-          else if (config.lockReason === 'SKIPPED') { titleText = 'BLOQUEIO INTERROMPIDO'; } // Pouco provável de aparecer aqui
-
-          lockTitle.textContent = titleText;
-          lockTitle.classList.toggle('win', config.lockReason === 'STOP_WIN');
-          document.getElementById('lockIcon').style.color = (config.lockReason === 'STOP_WIN') ? 'var(--alert-green)' : 'var(--alert-red)';
-
-          startLockCountdown();
-          return true; // Bloqueado por Lock Ativo
-      }
-
-      // 2. Se o bloqueio terminou (ou não existia), desbloqueia/mantém desbloqueado
-      if (config.isLocked && config.lockUntil <= now) {
-          // Bloqueio terminou! Resetamos o estado.
-          config.isLocked = false;
-          config.lockUntil = 0;
-          config.lockReason = '';
-          
-          // **AJUSTE CRÍTICO**: Reset da banca e do histórico de transações.
-          if (bankrollState.initial > 0) {
-            bankrollState.initial = bankrollState.current; 
-            bankrollState.history = []; // RESET DO HISTÓRICO PARA NOVO CICLO
-            saveBankrollData();
-          }
-
-          config.sessionStart = Date.now(); 
-          saveConfig();
-      }
-      
-      // 3. Estado Desbloqueado e Logado
-      lockScreen.classList.add('hidden');
-      if (getLoginStatus()) {
-          mainPanel.classList.remove('hidden');
-          loginScreen.classList.add('hidden');
-          bodyTag.classList.remove('login-active');
-          sessionTimerDiv.textContent = `Sessão: -:-`; // Define o texto como "sem contagem"
-      } else {
-          // Não logado
-          loginScreen.classList.remove('hidden');
-          mainPanel.classList.add('hidden');
-          bodyTag.classList.add('login-active'); 
-      }
-      stopLockCountdown();
-      return false; 
-  }
-  
-  function startLockCountdown() {
-      stopLockCountdown(); 
-      
-      countdownInterval = setInterval(() => {
-          const remainingTime = config.lockUntil - Date.now();
-          if (remainingTime <= 0) {
-              checkLockStatus(); 
-              return;
-          }
-
-          const totalSeconds = Math.floor(remainingTime / 1000);
-          const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
-          const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
-          const seconds = String(totalSeconds % 60).padStart(2, '0');
-          
-          countdownTimer.textContent = `${hours}:${minutes}:${seconds}`;
-
-      }, 1000);
-  }
-
-  function stopLockCountdown() {
-      if (countdownInterval) {
-          clearInterval(countdownInterval);
-          countdownInterval = null; // Limpa a referência
-      }
-  }
-  
-  function triggerLock(reason) {
-      if (config.mode !== 'REAL') return;
-
-      config.isLocked = true;
-      config.lockUntil = Date.now() + LOCK_DURATION;
-      config.lockReason = reason;
-      saveConfig();
-      
-      checkLockStatus();
-  }
-  
-  // FUNÇÃO SOLICITADA PARA PULAR O BLOQUEIO
-  function skipLock() {
-    if (!config.isLocked) return;
-
-    if (confirm('ATENÇÃO! Você está prestes a quebrar a regra de Stop Loss/Win. Isso pode comprometer sua gestão de risco. Tem certeza que deseja pular o bloqueio?')) {
-        // Redefine o estado de bloqueio para o momento atual (força o fim)
-        config.lockUntil = Date.now() - 1; 
-        config.isLocked = false;
-        config.lockReason = 'SKIPPED';
-        saveConfig();
-        
-        // **IMPORTANTE:** Resetar a banca e o histórico de transações para começar novo ciclo
-        if (bankrollState.initial > 0) {
-            bankrollState.initial = bankrollState.current; 
-            bankrollState.history = []; // RESET DO HISTÓRICO PARA NOVO CICLO
-            saveBankrollData();
-        }
-
-        config.sessionStart = Date.now(); 
-        stopLockCountdown(); // Para o contador
-        checkLockStatus(); // Força a atualização da tela
-        updateUI(); // Força a renderização do painel principal
-    }
-}
-
-  function checkStopCondition() {
-      if (config.mode !== 'REAL' || config.isLocked || bankrollState.initial === 0) return;
-
-      const { current, initial, history } = bankrollState;
-      // USANDO safeMath para garantir precisão
-      const totalProfit = safeMath(current - initial); 
-      
-      // 1. Verificação de Saldo (Stop Loss/Win)
-      if (totalProfit <= -STOP_LOSS_AMOUNT) {
-          triggerLock('STOP_LOSS');
+  function setBankroll() {
+      const initialValue = parseFloat(document.getElementById('initialBankrollInput').value);
+      if (isNaN(initialValue) || initialValue <= 0) {
+          alert('Por favor, insira um valor de banca inicial válido (maior que zero).');
           return;
       }
-      if (totalProfit >= STOP_WIN_AMOUNT) {
-          triggerLock('STOP_WIN');
+      bankroll.initial = initialValue;
+      bankroll.current = initialValue;
+      bankroll.profit = 0;
+      bankroll.wins = 0;
+      bankroll.losses = 0;
+      bankroll.totalBets = 0;
+      bankroll.streak = 0;
+      bankroll.lastResult = null;
+      bankroll.transactionHistory = [];
+      saveBankroll();
+      renderDashboard();
+      renderBankrollHistory();
+      alert(`Banca inicial de ${formatR(initialValue)} definida com sucesso!`);
+  }
+
+  function registerTransaction(type) {
+      const amountInput = document.getElementById('betAmountInput');
+      let amount = parseFloat(amountInput.value);
+      
+      if (isNaN(amount) || amount <= 0) {
+          alert('Por favor, insira um valor válido para o registro.');
           return;
       }
+
+      // Se for perda (RED), o valor é negativo
+      if (type === 'loss') {
+          amount = -amount;
+          bankroll.losses++;
+          bankroll.streak = bankroll.streak < 0 ? bankroll.streak - 1 : -1;
+          bankroll.lastResult = 'loss';
+      } else {
+          bankroll.wins++;
+          bankroll.streak = bankroll.streak > 0 ? bankroll.streak + 1 : 1;
+          bankroll.lastResult = 'win';
+      }
+
+      bankroll.current += amount;
+      bankroll.profit = bankroll.current - bankroll.initial;
+      bankroll.totalBets++;
+
+      // Adicionar ao histórico de transações
+      bankroll.transactionHistory.unshift({
+          id: Date.now(),
+          amount: amount,
+          type: type,
+          time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit', second:'2-digit'})
+      });
       
-      // 2. Verificação de Sequência (apenas entradas Win/Loss)
-      let consecutiveLoss = 0;
-      let consecutiveWin = 0;
-      
-      // Itera o histórico em ordem reversa
-      for (let i = history.length - 1; i >= 0; i--) {
-          const amount = history[i].amount;
-          
-          // Ignorar transações de 0, se houver
-          if (amount === 0) continue; 
-          
-          if (amount < 0) {
-              consecutiveLoss++;
-              consecutiveWin = 0; 
-          } else if (amount > 0) {
-              consecutiveWin++;
-              consecutiveLoss = 0; 
-          }
-          
-          if (consecutiveLoss >= STOP_LOSS_COUNT) {
-              triggerLock('STOP_LOSS');
-              return;
-          }
-          if (consecutiveWin >= STOP_WIN_COUNT) {
-              triggerLock('STOP_WIN');
-              return;
+      // Limpar o input e salvar
+      amountInput.value = '';
+      saveBankroll();
+      renderDashboard();
+      renderBankrollHistory();
+
+      // Verificar Stop Loss/Win
+      checkStopConditions();
+  }
+
+  /* ================== ANÁLISE DE PADRÕES ================== */
+
+  // ZONA 5: Lógica para encontrar vizinhos próximos (original do código)
+  function getSuccessorDetails(lastNumber, history) {
+      const MAX_LOOKBACK = 100;
+      const historyToAnalyze = history.slice(1, MAX_LOOKBACK + 1);
+      const successorsMap = {};
+
+      for (let i = 0; i < historyToAnalyze.length; i++) {
+          if (historyToAnalyze[i] === lastNumber && i > 0) {
+              const successor = historyToAnalyze[i - 1]; 
+              successorsMap[successor] = (successorsMap[successor] || 0) + 1;
           }
       }
-  }
 
-  function saveBankrollData() {
-    localStorage.setItem(BANKROLL_STORAGE_KEY, JSON.stringify(bankrollState));
-  }
-  function loadBankrollData() {
-    try {
-        const savedData = localStorage.getItem(BANKROLL_STORAGE_KEY);
-        if (savedData) {
-          bankrollState = JSON.parse(savedData);
-          bankrollState.initial = safeMath(bankrollState.initial || 0); // safeMath
-          bankrollState.current = safeMath(bankrollState.current || 0); // safeMath
-          bankrollState.history = bankrollState.history || [];
-          // Garantir que os valores do histórico sejam numéricos
-          bankrollState.history = bankrollState.history.map(item => ({
-              amount: safeMath(item.amount),
-              timestamp: item.timestamp 
-          }));
-        } else {
-          bankrollState = { initial: 0, current: 0, history: [] };
-        }
-        initialBankrollInput.value = bankrollState.initial > 0 ? bankrollState.initial : '';
-    } catch (e) {
-        console.error("Erro ao carregar dados da Banca:", e);
-    }
-  }
-
-  function saveHistoryData() {
-    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(historyArr));
-  }
-  function loadHistoryData() {
-    try {
-        const savedHistory = localStorage.getItem(HISTORY_STORAGE_KEY);
-        if (savedHistory) {
-          // Filtra e garante que apenas números válidos sejam carregados
-          historyArr = JSON.parse(savedHistory)
-            .map(n => parseInt(n, 10))
-            .filter(n => !isNaN(n) && n >= 0 && n <= 36);
-        } else {
-          historyArr = [];
-        }
-    } catch (e) {
-        console.error("Erro ao carregar Histórico:", e);
-    }
-  }
-
-  function calculateStats() {
-    const allNumbers = [...Array(37).keys()]; 
-    const stats = {
-      counts: {},
-      zoneSuccessionMap: {}, 
-      hotList: [],
-      coldList: [],
-    };
-    allNumbers.forEach(n => { stats.counts[n] = { count: 0 }; });
-
-    for (let i = 0; i < historyArr.length; i++) {
-      const currentNum = historyArr[i];
-      stats.counts[currentNum].count++;
+      const sortedSuccessors = Object.entries(successorsMap)
+          .sort(([, a], [, b]) => b - a)
+          .map(([num, count]) => ({ num: parseInt(num), count }));
       
-      if (i < historyArr.length - 1) {
-        const nextNum = historyArr[i + 1]; 
-        if (!stats.zoneSuccessionMap[currentNum]) { stats.zoneSuccessionMap[currentNum] = []; }
-        stats.zoneSuccessionMap[currentNum].push(nextNum);
+      return sortedSuccessors;
+  }
+  
+  function getZoneNeighbors(num) {
+      if (num === 0) return [0, 3, 26, 32, 15, 19, 4]; // Voisins + 0
+      const index = WHEEL_INDEX_MAP[num];
+      const neighbors = [];
+      // 5 vizinhos: 2 para cada lado + o próprio número
+      for (let i = -2; i <= 2; i++) {
+          let neighborIndex = (index + i + WHEEL_ORDER.length) % WHEEL_ORDER.length;
+          neighbors.push(WHEEL_ORDER[neighborIndex]);
       }
-    }
-    
-    // Calcula hot/cold com base na média para evitar listas vazias
-    const allCounts = allNumbers.map(n => stats.counts[n].count);
-    const avgCount = allCounts.length > 0 ? allCounts.reduce((a, b) => a + b, 0) / allCounts.length : 0;
-
-    stats.hotList = allNumbers
-      .filter(n => stats.counts[n].count > avgCount) 
-      .sort((a, b) => stats.counts[b].count - stats.counts[a].count) // Ordena por maior contagem
-      .slice(0, 4);
-    
-    stats.coldList = allNumbers
-      .filter(n => stats.counts[n].count < avgCount)
-      .sort((a, b) => stats.counts[a].count - stats.counts[b].count) // Ordena por menor contagem
-      .slice(0, 4);
-
-    numberStats = stats;
+      return neighbors;
   }
   
-  function addNumber(num) {
-    if (num < 0 || num > 36 || isNaN(num)) {
-        console.error("Tentativa de adicionar número inválido:", num);
-        return;
-    }
-    if (historyArr.length >= MAX_HISTORY) { historyArr.pop(); }
-    historyArr.unshift(Number(num)); 
-    saveHistoryData();
-    updateUI(); 
+  // Função de Sugestão de ZONA 5 (Mantida como a lógica original de Zonas)
+  function getZoneSuccessionSuggestion(lastNumber, history) {
+      const successors = getSuccessorDetails(lastNumber, history);
+      const neighbors = getZoneNeighbors(lastNumber);
+      const ZONE_THRESHOLD = 2; // Mínimo de 2 sucessões para ser relevante
+
+      let totalSuccessions = 0;
+      let zoneSuccessions = 0;
+
+      const analysisLines = [];
+
+      successors.forEach(({ num, count }) => {
+          totalSuccessions += count;
+          const isNeighbor = neighbors.includes(num);
+          const colorClass = getNumberColorClass(num);
+
+          if (isNeighbor && count >= ZONE_THRESHOLD) {
+              zoneSuccessions += count;
+              analysisLines.push(`- **ZONA:** <span class="chip ${colorClass}">${num}</span>: **${count}x**`);
+          } else if (!isNeighbor && count >= 1) {
+              analysisLines.push(`- Fora: <span class="chip ${colorClass}">${num}</span>: ${count}x`);
+          }
+      });
+      
+      let analysisOutput = `Gatilho: <span class="pattern-trigger">${lastNumber}</span> (Vizinhos: ${neighbors.join(', ')}). Total de ${totalSuccessions} sucessões analisadas.`;
+      
+      if (zoneSuccessions > 0) {
+          analysisOutput += `<div class="data-separator"></div>**Sucessão de Zona (Recomendado):**<br>${analysisLines.filter(line => line.includes('ZONA')).join('<br>')}`;
+      } else {
+          analysisOutput += `<div class="data-separator"></div>**Nenhuma Zona clara detectada (> ${ZONE_THRESHOLD}x).** Foco em vizinhos mais quentes (Hot).`;
+      }
+
+      // Sugerir os vizinhos que mais caíram como sucessores, ou a própria Zona se for forte.
+      const topZoneSuccessors = successors
+          .filter(s => neighbors.includes(s.num))
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 5) // Pega os 5 vizinhos mais frequentes
+          .map(s => s.num);
+
+      return {
+          suggestion: topZoneSuccessors.length > 0 ? topZoneSuccessors : neighbors.filter(n => n !== lastNumber).slice(0, 5), // Se não houver sucessores, sugere os 5 vizinhos mais próximos (excluindo o próprio gatilho)
+          analysisOutput: analysisOutput
+      };
   }
-  
+
+  /* ================== NOVO PADRÃO: 4 SUCESSORES ================== */
+
   /**
-   * Adiciona números lidos em lote, garantindo que o mais recente vá para o topo.
+   * Analisa o histórico para encontrar os 4 números que mais se repetiram após as últimas ocorrências do Gatilho.
+   * @param {number} triggerNum - O número gatilho (último número que caiu).
+   * @param {Array<number>} history - Array do histórico de números (mais recente na frente).
+   * @returns {{suggestion: Array<number>, analysisOutput: string}}
    */
-  function addMultipleNumbers(numArray) {
-    // Garante que apenas números válidos sejam adicionados (entre 0 e 36)
-    const validNumbers = numArray
-      .map(n => parseInt(n, 10))
-      .filter(n => !isNaN(n) && n >= 0 && n <= 36);
-      
-    if (validNumbers.length === 0) {
-        alert('Nenhum número de 0 a 36 válido identificado.');
-        return;
-    }
-    
-    const correctlyOrderedNumbers = validNumbers; 
-    
-    // Adiciona os números (Recente -> Antigo) no início do histórico
-    historyArr = [...correctlyOrderedNumbers, ...historyArr];
-    
-    if (historyArr.length > MAX_HISTORY) {
-      historyArr = historyArr.slice(0, MAX_HISTORY);
-    }
-    
-    saveHistoryData();
-    updateUI();
-  }
-
-  // ==================== NOVA FUNÇÃO: RENDERIZAR SUCESSORES IMEDIATOS ====================
-  function renderLatestSuccessors() {
-    if (historyArr.length < 2) {
-        latestSuccessorsCard.style.display = 'none';
-        return;
-    }
-
-    const triggerNum = historyArr[0];
-    const recentSuccessors = [];
-    const limit = Math.min(historyArr.length - 1, SUCCESSOR_LOOKBACK);
-
-    // 1. Coleta os sucessores imediatos do Gatilho (mais recente para o mais antigo)
-    for (let i = 1; i <= limit; i++) {
-        const predecessorNum = historyArr[i];
-        const successorNum = historyArr[i - 1]; 
-        
-        if (predecessorNum === triggerNum) {
-            recentSuccessors.push(successorNum);
-        }
-    }
-
-    // 2. Renderiza o Card
-    latestSuccessorsCard.style.display = 'block';
-    successorTriggerNumDiv.textContent = triggerNum;
-    latestSuccessorsList.innerHTML = ''; // Limpa a lista
-
-    if (recentSuccessors.length === 0) {
-        latestSuccessorsList.innerHTML = `<span style="color:var(--muted)">O número **${triggerNum}** não se repetiu como predecessor nos últimos ${limit} lançamentos.</span>`;
-        return;
-    }
-    
-    // 3. Renderiza os Chips dos Sucessores (limitando a 10)
-    const displaySuccessors = recentSuccessors.slice(0, SUCCESSOR_DISPLAY_LIMIT); 
-    
-    let html = `
-        <span style="color: var(--black); font-weight: 700; flex-shrink: 0;">Total: ${recentSuccessors.length}x</span>
-    `;
-
-    displaySuccessors.forEach((num, index) => {
-        html += `<div class="chip ${getColor(num)}" 
-                     style="width: 30px; height: 30px; font-size: 12px; font-weight: 700; flex-shrink: 0;" 
-                     title="Ordem de Aparição: ${index + 1}º mais recente (Recente → Antigo)">
-                     ${num}
-                 </div>`;
-    });
-    
-    if (recentSuccessors.length > SUCCESSOR_DISPLAY_LIMIT) {
-         html += `<span style="font-size: 12px; color: var(--muted); align-self: flex-end; flex-shrink: 0;">...e mais ${recentSuccessors.length - SUCCESSOR_DISPLAY_LIMIT}</span>`;
-    }
-
-    latestSuccessorsList.innerHTML = html;
-  }
-  // ==================== FIM NOVA FUNÇÃO ====================
-
-  
-  // ==================== LÓGICA DE ANÁLISE DE SUCESSÃO DE ZONAS (ZONA 5) - MODIFICADA ====================
-  function renderZoneAnalysis() {
-    if (historyArr.length < 2) { 
-      zoneAnalysisDiv.innerHTML = '<span style="color:var(--muted)">Adicione pelo menos 2 números ao histórico para análise de Sucessão de Zonas.</span>';
-      return;
-    }
-    
-    const LOOKBACK_ZONA = 100;
-    const triggerNum = historyArr[0]; 
-    const triggerZone = getNeighbors(triggerNum, 2); 
-    
-    const zoneFollowers = {};
-    const lastAppearanceIndex = {}; // Rastreia o índice (atraso) de aparição mais recente
-    let totalOccurrences = 0;
-    
-    // 1. Coleta os dados brutos de sucessores e rastreia a recentidade
-    for (let i = 1; i < historyArr.length && i <= LOOKBACK_ZONA; i++) {
-        const predecessorNum = historyArr[i];
-        const successorNum = historyArr[i - 1];
-        
-        // Verifica se o predecessor faz parte da Zona do último lançamento (triggerNum)
-        if (triggerZone.includes(predecessorNum)) {
-            zoneFollowers[successorNum] = (zoneFollowers[successorNum] || 0) + 1;
-            totalOccurrences++;
-            
-            // Rastrea o índice de aparição mais recente para ordenação (i é o 'atraso' ou a posição no historyArr)
-            if (!lastAppearanceIndex[successorNum] || i < lastAppearanceIndex[successorNum]) {
-                lastAppearanceIndex[successorNum] = i; 
-            }
-        }
-    }
-
-    if (totalOccurrences === 0) { 
-      zoneAnalysisDiv.innerHTML = `<span style="color:var(--muted)">A **Zona ${triggerNum}** (${triggerZone.join(', ')} ) não teve ocorrências registradas como predecessor nos últimos ${Math.min(historyArr.length, LOOKBACK_ZONA)} lançamentos.</span>`;
-      return;
-    }
-    
-    // 2. AGRUPAMENTO DE SUCESSORES VIZINHOS
-    const processed = new Set();
-    const successorGroups = [];
-
-    // Itera na ordem física da roleta (WHEEL_ORDER)
-    for (const num of WHEEL_ORDER) {
-        if (zoneFollowers[num] && !processed.has(num)) {
-            let group = [num];
-            let groupCount = zoneFollowers[num];
-            processed.add(num);
-
-            let currentIdx = WHEEL_INDEX_MAP[num];
-            let groupLastAppearance = lastAppearanceIndex[num]; // Rastreia o mais recente do grupo
-
-            let isContiguous = true;
-            while (isContiguous) {
-                let nextIdx = (currentIdx + 1) % WHEEL_ORDER.length;
-                let nextNum = WHEEL_ORDER[nextIdx];
-                
-                if (zoneFollowers[nextNum] && !processed.has(nextNum)) {
-                    group.push(nextNum);
-                    groupCount += zoneFollowers[nextNum];
-                    processed.add(nextNum);
-                    currentIdx = nextIdx;
-                    // Atualiza o índice mais recente se o novo membro for mais recente
-                    if (lastAppearanceIndex[nextNum] < groupLastAppearance) {
-                        groupLastAppearance = lastAppearanceIndex[nextNum];
-                    }
-                } else {
-                    isContiguous = false; 
-                }
-                
-                if (group.length === WHEEL_ORDER.length) break; 
-            }
-            
-            successorGroups.push({ 
-                numbers: group, 
-                count: groupCount,
-                first: group[0],
-                last: group[group.length - 1],
-                recentIndex: groupLastAppearance 
-            });
-        }
-    }
-
-    // 3. Ordena os grupos pela RECENTIDADE e depois pela contagem (descendente)
-    successorGroups.sort((a, b) => {
-        if (a.recentIndex !== b.recentIndex) {
-            return a.recentIndex - b.recentIndex; // Mais recente (menor index) primeiro
-        }
-        return b.count - a.count; // Desempate pela contagem
-    });
-    
-    // 4. Renderiza o HTML do Relatório
-    let html = `
-        <div class="analysis-output">
-            <div class="pattern-line">Último lançamento (GATILHO): <span class="pattern-trigger">${triggerNum}</span></div>
-            <div class="pattern-line pattern-count">**ZONA DE ANÁLISE (5 Números):** <span style="font-weight: bold; color: var(--accent);">${triggerZone.join(', ')}</span></div>
-            <div class="data-separator" style="margin: 8px 0;"></div>
-            <div style="font-size: 14px; margin-bottom: 10px; font-weight: bold; color: var(--accent);">
-                **RELATÓRIO DE SUCESSORES AGRUPADOS** (${totalOccurrences} Ocorrências após esta Zona):
-            </div>
-            
-            <div id="successorGroupsReport">
-    `;
-    
-    successorGroups.forEach(groupInfo => {
-        const group = groupInfo.numbers;
-        const count = groupInfo.count;
-        const probability = (count / totalOccurrences * 100).toFixed(1);
-        
-        let groupDisplay;
-        if (group.length === 1) {
-            const num = group[0];
-            groupDisplay = `**${num}** (<span class="pattern-succession">${getColor(num).toUpperCase()}</span>)`;
-        } else {
-            groupDisplay = `**${groupInfo.first} → ${groupInfo.last}** (${group.length} vizinhos)`;
-        }
-        
-        html += `<div class="pattern-line" style="border-left: 3px solid var(--accent); padding-left: 5px; margin-bottom: 8px;">
-                    <span style="font-size: 16px;">
-                        → ${groupDisplay}
-                    </span>
-                    <span class="pattern-count">
-                        — Repetições Totais: **${count}x** (Prob: ${probability}%)
-                        (Recente: #${groupInfo.recentIndex})
-                    </span>
-                </div>`;
-    });
-    
-    html += `</div>`; // Fecha successorGroupsReport
-
-    // 5. Geração da Sugestão de Aposta
-    const filteredSuggestions = successorGroups.filter(g => g.count >= 2);
-    
-    html += `
-        <div class="data-separator"></div>
-        <div class="suggestionTitle" style="color: var(--zero); border-bottom-color: var(--zero);">
-            <span class="material-symbols-outlined">gavel</span>
-            SUGESTÃO DE APOSTA (REPETIÇÃO 2x+)
-        </div>
-        <div style="margin-top: 10px; font-size: 15px;">
-    `;
-
-    if (filteredSuggestions.length === 0) {
-        html += `<span style="color:var(--muted)">Nenhum grupo de sucessores se repetiu 2x ou mais. Aguarde mais lançamentos.</span>`;
-    } else {
-        filteredSuggestions.forEach((groupInfo) => {
-            const count = groupInfo.count;
-            const group = groupInfo.numbers;
-            const targetAnchor = groupInfo.first; 
-            const coverageRadius = 2; 
-            const coveredNumbers = getNeighbors(targetAnchor, coverageRadius);
-            
-            let suggestionText;
-            if (group.length === 1) {
-                suggestionText = `Aposte no **${targetAnchor}** com **2 Vizinhos para cada lado** (Total de 5 números).`;
-            } else {
-                suggestionText = `Aposte na **Zona 5** centrada em **${targetAnchor}** (${coveredNumbers.join(', ')}).`;
-            }
-            
-            html += `
-                <div class="pattern-line" style="margin-bottom: 12px; padding: 5px; background: rgba(0, 121, 192, 0.05); border-left: 3px solid var(--zero);">
-                    <div style="font-weight: 700;">
-                        🔁 Grupo Repetido: <span style="color: var(--zero);">${count}x</span> (Mais Recente em **#${groupInfo.recentIndex}**)
-                    </div>
-                    <div style="margin-top: 4px;">
-                        Zona de Sucessão: <span style="font-weight: bold; color: var(--accent);">${group.join(', ')}</span>
-                    </div>
-                    <div style="font-size: 14px; margin-top: 4px;">
-                        **SUGESTÃO DE COBERTURA 5 NÚMEROS (2 VIZINHOS):** <span style="color: var(--black); font-weight: bold;">${suggestionText}</span>
-                    </div>
-                </div>
-            `;
-        });
-    }
-
-    html += `</div>`; // Fecha a seção de sugestão
-    html += `</div>`; // Fecha analysis-output
-    
-    zoneAnalysisDiv.innerHTML = html;
-  }
-  // ==================== FIM LÓGICA DE ANÁLISE DE SUCESSÃO DE ZONAS ====================
-  
-  
-  // =========================================================================================
-  // LOGICA PRINCIPAL DO BOOSTER I.A.
-  // =========================================================================================
-
-  function renderBetSuggestion() {
-      
-      if (historyArr.length < SUCCESSOR_LOOKBACK) {
-          betSuggestionDiv.innerHTML = `<span style="color:var(--muted)">Booster requer histórico mínimo de ${SUCCESSOR_LOOKBACK} lançamentos para análise.</span>`;
-          return;
-      }
-      if (config.mode !== 'REAL') {
-          betSuggestionDiv.innerHTML = `<span style="color:var(--muted)">Booster requer **Modo REAL** e histórico mínimo de ${SUCCESSOR_LOOKBACK} lançamentos para análise.</span>`;
-          return;
-      }
-      if (config.isLocked) {
-          betSuggestionDiv.innerHTML = `<span style="color:var(--alert-red); font-weight: bold;">ANÁLISE BLOQUEADA. Retorne após o período de resfriamento.</span>`;
-          return;
+  function getFourSuccessorsSuggestion(triggerNum, history) {
+      if (history.length < 2) {
+          return { 
+              suggestion: [], 
+              analysisOutput: `Aguardando mais dados. Padrão "4 Sucessores" precisa de pelo menos 2 números para definir o gatilho.`
+          };
       }
 
-      const triggerNum = historyArr[0];
-      const targetZoneArr = getNeighbors(triggerNum, 2); 
-      const targetZone = new Set(targetZoneArr); 
+      const SUCCESSORS_TO_COLLECT = 4;
+      const LOOKBACK_COUNT = 5; // Olhar as últimas 5 ocorrências do gatilho
 
-      const triggerSuccessors = []; 
-      const frequentSuccessors = {};
-      const limit = Math.min(historyArr.length - 1, SUCCESSOR_LOOKBACK);
+      const allSuccessors = [];
+      let triggerCount = 0;
 
-      // Busca por ocorrências do GATILHO (triggerNum) nos *predecessores*
-      for (let i = 1; i <= limit; i++) {
-          const predecessor = historyArr[i];
-          const successor = historyArr[i - 1]; 
-          
-          if (predecessor === triggerNum) {
-              triggerSuccessors.push(successor);
-              frequentSuccessors[successor] = (frequentSuccessors[successor] || 0) + 1;
-          }
-      }
-
-      const totalTriggerCount = triggerSuccessors.length;
-      
-      if (totalTriggerCount < 5) {
-          betSuggestionDiv.innerHTML = `<span style="color:var(--muted)">Aguardando mais ocorrências do **${triggerNum}** para análise confiável (Mínimo 5).</span>`;
-          return;
-      }
-
-      let intersectionCount = 0;
-      
-      // Itera sobre os sucessores históricos do GATILHO (triggerNum)
-      for (const historicSuccessor of triggerSuccessors) {
-          const successorZone = getNeighbors(historicSuccessor, 2); 
-          
-          let hasIntersection = false;
-          // Verifica se a Zona do Sucessor Intercepta a Zona do GATILHO Atual (targetZone)
-          for (const num of successorZone) {
-              if (targetZone.has(num)) {
-                  hasIntersection = true;
-                  break; 
+      // Iterar o histórico para encontrar as ocorrências do gatilho (excluindo a última posição)
+      // O histórico está em ordem REVERSA (mais recente na frente), então iteramos do 2º elemento em diante
+      for (let i = 1; i < history.length; i++) {
+          if (history[i] === triggerNum) {
+              // O sucessor é o número que veio APÓS a ocorrência do gatilho (ou seja, history[i-1])
+              const successor = history[i - 1];
+              allSuccessors.push(successor);
+              triggerCount++;
+              
+              if (triggerCount >= LOOKBACK_COUNT) {
+                  break; // Limita a análise às últimas N vezes que o gatilho caiu
               }
           }
+      }
 
-          if (hasIntersection) {
-              intersectionCount++;
-          }
+      if (triggerCount === 0) {
+          return { 
+              suggestion: [], 
+              analysisOutput: `O número **${triggerNum}** (gatilho) ainda não caiu no histórico anterior para análise de sucessores.`
+          };
+      }
+
+      // 1. Contar a frequência dos sucessores
+      const successorCounts = {};
+      allSuccessors.forEach(num => {
+          successorCounts[num] = (successorCounts[num] || 0) + 1;
+      });
+
+      // 2. Classificar e pegar os 4 mais frequentes
+      const sortedSuccessors = Object.keys(successorCounts).sort((a, b) => {
+          // Classifica por contagem (maior para menor)
+          return successorCounts[b] - successorCounts[a];
+      }).slice(0, SUCCESSORS_TO_COLLECT).map(Number); // Pega apenas os top 4 e converte para número
+
+      // 3. Gerar a saída da análise
+      let analysisText = `<div class="pattern-line">**Gatilho:** <span class="pattern-trigger">${triggerNum}</span> (Caiu **${triggerCount}** vezes antes no histórico).</div>`;
+      analysisText += `<div class="pattern-line">**Sucessores Encontrados (${allSuccessors.length} total):**</div>`;
+
+      Object.keys(successorCounts).sort((a, b) => successorCounts[b] - successorCounts[a]).forEach(numStr => {
+          const num = Number(numStr);
+          const count = successorCounts[num];
+          const colorClass = getNumberColorClass(num);
+          
+          analysisText += `<div class="pattern-line">  - Número <span class="chip ${colorClass}">${num}</span>: **${count}x** (${(count / allSuccessors.length * 100).toFixed(1)}%)</div>`;
+      });
+      
+      analysisText += `<div class="data-separator"></div>`;
+      
+      if (sortedSuccessors.length > 0) {
+          analysisText += `<div class="pattern-line">**🎯 Sugestão Top 4:** <span class="pattern-succession">${sortedSuccessors.join(', ')}</span></div>`;
+      } else {
+          analysisText += `<div class="pattern-line">**🎯 Sugestão Top 4:** <span class="pattern-succession">Nenhum sucessor encontrado.</span></div>`;
+      }
+
+
+      return {
+          suggestion: sortedSuccessors,
+          analysisOutput: analysisText
+      };
+  }
+
+  /* ================== RENDERIZAÇÃO DA UI ================== */
+
+  // Função para renderizar os botões de número
+  function renderNumberGrid() {
+      const grid = document.getElementById('gridNumbers');
+      grid.innerHTML = '';
+      
+      // Criar a ordem dos números: 0, 1-36
+      const allNumbers = [0, ...Array.from({length: 36}, (_, i) => i + 1)];
+
+      allNumbers.forEach(num => {
+          const btn = document.createElement('button');
+          btn.textContent = num;
+          btn.className = 'number-btn';
+          btn.classList.add(getNumberColorClass(num));
+          btn.dataset.number = num;
+          btn.addEventListener('click', () => addNumberToHistory(num));
+          grid.appendChild(btn);
+      });
+  }
+
+  // Função para renderizar o histórico
+  function renderHistory() {
+      const historyElement = document.getElementById('history');
+      historyElement.innerHTML = '';
+      document.getElementById('historyCount').textContent = `${history.length}/100`;
+
+      if (history.length === 0) {
+          historyElement.innerHTML = '<span style="color:var(--muted); font-style:italic;">Nenhum número registrado.</span>';
+          return;
       }
       
-      const intersectionRate = (intersectionCount / totalTriggerCount) * 100;
+      // Limitar a exibição (chips) aos últimos 50
+      history.slice(0, 50).forEach(num => {
+          const chip = document.createElement('div');
+          chip.textContent = num;
+          chip.className = 'chip';
+          chip.classList.add(getNumberColorClass(num));
+          chip.title = `Clique para remover: ${num}`;
+          chip.addEventListener('click', () => removeNumberFromHistory(num));
+          historyElement.appendChild(chip);
+      });
       
-      const sortedSuccessors = Object.entries(frequentSuccessors)
-          .sort(([, a], [, b]) => b - a)
-          .slice(0, 3)
-          .map(([num]) => parseInt(num)); 
+      // Após renderizar o histórico, atualiza a sugestão
+      updateBetSuggestion(history);
+  }
 
-      let suggestionHTML = `
-          <div style="font-size: 14px; margin-bottom: 8px; color: var(--muted);">
-              O GATILHO atual (último número) é: <span style="color: var(--zero); font-weight: 700;">${triggerNum}</span>.
+  // Função para renderizar o Dashboard de Performance
+  function renderDashboard() {
+      const dashboard = document.getElementById('performanceDashboard');
+      const profitClass = bankroll.profit >= 0 ? 'positive' : 'negative';
+      
+      if (bankroll.initial === 0) {
+          dashboard.innerHTML = '<span class="stat-title" style="grid-column: 1 / -1;">Defina sua banca inicial para começar a registrar estatísticas.</span>';
+          return;
+      }
+
+      const totalProfit = formatR(bankroll.profit);
+      const profitPercent = bankroll.initial > 0 ? ((bankroll.profit / bankroll.initial) * 100).toFixed(2) : 0;
+      const assertividade = bankroll.totalBets > 0 ? ((bankroll.wins / bankroll.totalBets) * 100).toFixed(2) : 0;
+      const currentBalance = formatR(bankroll.current);
+
+      dashboard.innerHTML = `
+          <div class="stat-item">
+              <div class="stat-title">BANCA ATUAL</div>
+              <div class="stat-value">${currentBalance}</div>
           </div>
-          <div style="font-family: 'Passion One', cursive; font-size: 16px;">
-              🔗 **Taxa de Intersecção da Zona** (Baseada em ${totalTriggerCount} sucessores): 
-              <span style="color: ${intersectionRate >= SUGGESTION_THRESHOLD ? 'var(--alert-green)' : 'var(--alert-red)'}; font-weight: bold;">${intersectionRate.toFixed(1)}%</span>
+          <div class="stat-item">
+              <div class="stat-title">LUCRO/PREJUÍZO (${profitPercent}%)</div>
+              <div class="stat-value ${profitClass}">${totalProfit}</div>
+          </div>
+          <div class="stat-item">
+              <div class="stat-title">WINS / LOSSES</div>
+              <div class="stat-value">${bankroll.wins} / ${bankroll.losses}</div>
+          </div>
+          <div class="stat-item">
+              <div class="stat-title">ASSERTIVIDADE</div>
+              <div class="stat-value">${assertividade}%</div>
           </div>
       `;
-      
-      if (intersectionRate >= SUGGESTION_THRESHOLD) {
-          const betZones = sortedSuccessors.map(num => `Zona ${num}: ${getNeighbors(num, 2).join(', ')}`);
-          
-          suggestionHTML += `
-              <div style="margin-top: 12px; margin-bottom: 12px;">
-                  <span style="color: var(--alert-green); font-weight: 800; font-size: 18px;">✅ APOSTA BOOSTER ATIVA!</span>
-              </div>
-              <div style="margin-bottom: 12px;">
-                  🎯 **SUGESTÃO DE COBERTURA TRIPLA**: Aposte nas Zonas 5 dos 3 **Sucessores Mais Frequentes** do ${triggerNum}:
-                  <div style="margin-top: 5px; color: var(--accent); font-weight: 700; border: 1px solid var(--accent); padding: 8px; border-radius: 4px;">
-                      ${betZones.join('<br>')}
-                  </div>
-              </div>
-              <div>
-                  ✨ **Probabilidade Histórica de Intersecção**: <span class="positive">${intersectionRate.toFixed(1)}%</span>
-              </div>
-          `;
-      } else {
-          suggestionHTML += `
-              <div style="margin-top: 12px; margin-bottom: 12px;">
-                  <span style="color: var(--alert-red); font-weight: 800; font-size: 18px;">🛑 APOSTA BOOSTER BLOQUEADA!</span>
-              </div>
-              <div>
-                  A Taxa de Intersecção com a Zona **${triggerNum}** (${intersectionRate.toFixed(1)}%) está **abaixo do limite de ${SUGGESTION_THRESHOLD}%**. A sugestão é desativada por segurança.
-              </div>
-          `;
-      }
-
-      document.getElementById('betSuggestion').innerHTML = suggestionHTML; 
-  }
-  
-  // =========================================================================================
-  // FIM DA LOGICA PRINCIPAL
-  // =========================================================================================
-
-
-  function renderHistory() {
-    historyDiv.innerHTML = '';
-    historyArr.forEach((n, i) => { 
-      const chip = document.createElement('div');
-      chip.textContent = n;
-      chip.className = 'chip ' + getColor(n);
-      chip.onclick = () => confirmRemoveNumber(i);
-      historyDiv.appendChild(chip); 
-    });
-    historyCount.textContent = `${historyArr.length}/${MAX_HISTORY}`;
-    historyDiv.scrollLeft = 0; 
   }
 
-  function renderHotCold() {
-    const hotNumbers = numberStats.hotList || [];
-    const coldNumbers = numberStats.coldList || [];
-    hotColdDiv.innerHTML = `🔥 **Hot** (Mais Frequentes): ${hotNumbers.join(', ') || '-'}<br>❄️ **Cold** (Mais Atrasados): ${coldNumbers.join(', ') || '-'}`;
-  }
-  
-  function renderBankrollDashboard() {
-    const { initial, current, history } = bankrollState;
-    const dashboardElement = document.getElementById('performanceDashboard');
-
-    if (initial === 0) {
-      dashboardElement.innerHTML = `<span class="stat-title" style="grid-column: 1 / -1;">Defina sua banca inicial para começar.</span>`;
-      return;
-    }
-    // USANDO safeMath
-    const totalProfit = safeMath(current - initial); 
-    const totalProfitPercent = (initial > 0) ? safeMath((totalProfit / initial) * 100).toFixed(1) : 0;
-    const wins = history.filter(v => v.amount > 0).length;
-    const losses = history.filter(v => v.amount < 0).length;
-    const totalBets = history.length;
-    const winRate = (totalBets > 0) ? safeMath((wins / totalBets) * 100) : 0;
-    const avgProfitPerBet = (totalBets > 0) ? safeMath(totalProfit / totalBets) : 0;
-    const projection30Entries = safeMath(current + (avgProfitPerBet * 30));
-    const suggestedBet = safeMath(current * 0.02);
-    const profitClass = totalProfit > 0 ? 'positive' : totalProfit < 0 ? 'negative' : '';
-    const projectionClass = projection30Entries > current ? 'positive' : projection30Entries < current ? 'negative' : '';
-
-    dashboardElement.innerHTML = `
-      <div class="stat-item">
-        <div class="stat-title">BANCA ATUAL</div>
-        <div class="stat-value">${formatCurrency(current)}</div>
-      </div>
-      <div class="stat-item ${profitClass}">
-        <div class="stat-title">LUCRO/RED TOTAL</div>
-        <div class="stat-value ${profitClass}">
-          ${formatCurrency(totalProfit)} (${totalProfitPercent}%)
-        </div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-title">TAXA DE ACERTO</div>
-        <div class="stat-value">${winRate.toFixed(1)}%</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-title">ENTRADAS (W/L)</div>
-        <div class="stat-value">
-          <span class="stat-value positive">${wins}</span> / <span class="stat-value negative">${losses}</span>
-        </div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-title">APOSTA SUGERIDA (2%)</div>
-        <div class="stat-value">${formatCurrency(suggestedBet)}</div>
-      </div>
-      <div class="stat-item ${projectionClass}">
-        <div class="stat-title">PROJEÇÃO (30 ENTRADAS)</div>
-        <div class="stat-value ${projectionClass}">
-          ${formatCurrency(projection30Entries)}
-        </div>
-      </div>
-    `;
-  }
-  
+  // Função para renderizar o Histórico de Transações (Extrato)
   function renderBankrollHistory() {
-    const history = bankrollState.history;
-    const historyDiv = document.getElementById('bankrollHistory');
-    if (history.length === 0) {
-      historyDiv.innerHTML = `<div class="log-item log-placeholder" style="border: none;">Nenhum registro ainda.</div>`;
-      return;
-    }
-    historyDiv.innerHTML = '';
-    [...history].reverse().forEach((entry, reverseIndex) => {
-      const originalIndex = history.length - 1 - reverseIndex; 
-      const amount = entry.amount;
-      const item = document.createElement('div');
-      item.className = 'log-item';
-      const text = document.createElement('span');
-      // USANDO safeMath para garantir que o valor exibido é preciso
-      if (amount > 0) { text.textContent = `+ ${formatCurrency(safeMath(amount))}`; item.classList.add('log-win'); } 
-      else { text.textContent = `${formatCurrency(safeMath(amount))}`; item.classList.add('log-loss'); }
-      const deleteBtn = document.createElement('button');
-      deleteBtn.className = 'log-delete-btn'; deleteBtn.textContent = 'X'; deleteBtn.title = 'Excluir este lançamento';
-      deleteBtn.onclick = () => deleteBankrollEntry(originalIndex);
-      item.appendChild(text); item.appendChild(deleteBtn);
-      bankrollHistoryDiv.appendChild(item);
-    });
-    bankrollHistoryDiv.scrollTop = 0;
-  }
-  
-  function deleteBankrollEntry(indexToDelete) {
-    const entry = bankrollState.history[indexToDelete];
-    const amount = entry.amount;
-    const entryType = amount > 0 ? 'Lucro' : 'Red';
-    
-    // USANDO safeMath para o valor exibido na confirmação
-    if (confirm(`Tem certeza que deseja excluir este lançamento de ${entryType} (${formatCurrency(Math.abs(safeMath(amount)))})?`)) {
-      bankrollState.history.splice(indexToDelete, 1);
-      
-      let newCurrent = bankrollState.initial; 
-      for (const item of bankrollState.history) { 
-          // USANDO safeMath
-          newCurrent = safeMath(newCurrent + item.amount); 
+      const historyList = document.getElementById('bankrollHistory');
+      historyList.innerHTML = '';
+
+      if (bankroll.transactionHistory.length === 0) {
+          historyList.innerHTML = '<div class="log-item log-placeholder">Nenhum registro ainda.</div>';
+          return;
       }
-      bankrollState.current = safeMath(newCurrent);
-      
-      saveBankrollData();
-      checkStopCondition();
-      updateUI();
-    }
-  }
 
-  function confirmRemoveNumber(index) {
-    const num = historyArr[index];
-    if (confirm(`Excluir o número ${num} (Recente) do histórico?`)) {
-      historyArr.splice(index, 1);
-      saveHistoryData();
-      updateUI();
-    }
-  }
-
-  function updateClock(){
-    const now = new Date();
-    const h = String(now.getHours()).padStart(2,'0');
-    const m = String(now.getMinutes()).padStart(2,'0');
-    const s = String(now.getSeconds()).padStart(2,'0');
-    document.getElementById('clock').textContent = `${h}:${m}:${s}`;
-  }
-  
-  function updateUI() {
-    // 1. Verificar Status de Bloqueio/Login
-    if (getLoginStatus() && !checkLockStatus()) {
-        // Logado e Desbloqueado
-        loginScreen.classList.add('hidden');
-        mainPanel.classList.remove('hidden');
-        bodyTag.classList.remove('login-active'); 
-        
-        // 2. Renderizar todas as partes da UI
-        try {
-            calculateStats();
-            renderHistory();
-            renderLatestSuccessors(); // <--- CHAMADA para renderizar o card de sucessores imediatos
-            renderZoneAnalysis();
-            renderHotCold();
-            renderBankrollDashboard();
-            renderBankrollHistory();
-            renderBetSuggestion(); 
-            
-            // Bloqueia inputs/botões se estiver no modo DEMO para reforçar
-            const isDemo = config.mode === 'DEMO';
-            btnRegisterWin.disabled = isDemo;
-            btnRegisterLoss.disabled = isDemo;
-            document.getElementById('btnSetBankroll').disabled = isDemo;
-            initialBankrollInput.disabled = isDemo;
-            betAmountInput.disabled = isDemo;
-            btnUpload.disabled = isDemo;
-            
-        } catch (e) {
-            console.error("Erro durante a renderização da UI:", e);
-        }
-
-    } else if (getLoginStatus() && config.isLocked) {
-        // Logado, mas Bloqueado
-        loginScreen.classList.add('hidden');
-        mainPanel.classList.add('hidden');
-        bodyTag.classList.remove('login-active');
-    } else {
-        // Não logado
-        loginScreen.classList.remove('hidden');
-        mainPanel.classList.add('hidden');
-        bodyTag.classList.add('login-active'); 
-    }
-  }
-  
-  // ==================== LÓGICA OCR COM PRÉ-PROCESSAMENTO ====================
-    
-  function preprocessImage(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const image = new Image();
-        image.onload = () => {
-          const canvas = document.createElement('canvas');
-          canvas.width = image.width;
-          canvas.height = image.height;
-          const ctx = canvas.getContext('2d');
+      bankroll.transactionHistory.forEach(log => {
+          const item = document.createElement('div');
+          item.className = `log-item log-${log.type}`;
+          const sign = log.amount >= 0 ? '+' : '-';
           
-          ctx.drawImage(image, 0, 0);
-          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          const data = imageData.data;
-          const threshold = 128; 
+          item.innerHTML = `
+              <span>${log.time} | ${log.type.toUpperCase()}: ${sign}${formatR(Math.abs(log.amount))}</span>
+              <button class="log-delete-btn" data-id="${log.id}">x</button>
+          `;
+          historyList.appendChild(item);
+      });
+      
+      // Adicionar listeners para botões de exclusão
+      historyList.querySelectorAll('.log-delete-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => deleteTransaction(parseInt(e.target.dataset.id)));
+      });
+  }
 
-          for (let i = 0; i < data.length; i += 4) {
-            const luminance = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-            const value = luminance > threshold ? 255 : 0;
-            data[i] = value;
-            data[i + 1] = value;
-            data[i + 2] = value;
+  // Função para atualizar as tendências (Hot/Cold)
+  function updateHotCold(history) {
+      const hotColdElement = document.getElementById('hotCold');
+      if (history.length < 5) {
+          hotColdElement.innerHTML = '🔥 Hot: -<br>❄️ Cold: -';
+          return;
+      }
+
+      const counts = {};
+      for(let i=0; i<=36; i++) counts[i] = 0;
+      
+      // Contar ocorrências nos últimos 50 giros
+      history.slice(0, 50).forEach(num => {
+          counts[num] = (counts[num] || 0) + 1;
+      });
+
+      const sorted = Object.entries(counts).sort(([, a], [, b]) => b - a);
+      
+      const hot = sorted.slice(0, 5).map(([num, count]) => `${num} (${count}x)`).join(', ');
+      const cold = sorted.slice(-5).map(([num, count]) => `${num} (${count}x)`).join(', ');
+
+      hotColdElement.innerHTML = `🔥 **Hot (Top 5):** ${hot}<br>❄️ **Cold (Bottom 5):** ${cold}`;
+  }
+
+  /* ================== FUNÇÃO DE CONTROLE PRINCIPAL: ATUALIZA BOOSTER E ANÁLISE ================== */
+
+  function updateBetSuggestion(history) {
+      const pattern = config.currentPattern;
+      const betSuggestionElement = document.getElementById('betSuggestion');
+      const patternAnalysisOutput = document.getElementById('patternAnalysisOutput');
+      const currentPatternNameElement = document.getElementById('currentPatternName');
+
+      // 1. Verificar Status de Bloqueio
+      if (isLocked) {
+          betSuggestionElement.innerHTML = `<span style="color:var(--muted)">Aguardando dados ou aguardando desbloqueio...</span>`;
+          patternAnalysisOutput.innerHTML = `Análise bloqueada. Retorne após o período de resfriamento.`;
+          return;
+      }
+
+      // 2. Verificar Mínimo de Histórico
+      if (history.length < 1) {
+          betSuggestionElement.innerHTML = `<span style="color:var(--muted)">Adicione o primeiro número para iniciar a análise.</span>`;
+          patternAnalysisOutput.innerHTML = `Adicione números ao histórico para ver a análise detalhada.`;
+          currentPatternNameElement.textContent = document.getElementById('patternSelector').options[document.getElementById('patternSelector').selectedIndex].text.split('(')[0].trim();
+          return;
+      }
+
+      const lastNumber = history[0];
+      let result = { suggestion: [], analysisOutput: 'Nenhuma análise disponível para este padrão.' };
+
+      // Atualiza o nome do padrão no Booster
+      currentPatternNameElement.textContent = document.getElementById('patternSelector').options[document.getElementById('patternSelector').selectedIndex].text.split('(')[0].trim();
+
+
+      // 3. Executar o Padrão Selecionado
+      if (pattern === 'zoneSuccession') {
+          result = getZoneSuccessionSuggestion(lastNumber, history);
+          
+      } else if (pattern === 'fourSuccessors') {
+          result = getFourSuccessorsSuggestion(lastNumber, history);
+      } 
+
+      // 4. Atualizar a UI
+      patternAnalysisOutput.innerHTML = result.analysisOutput;
+
+      if (result.suggestion && result.suggestion.length > 0) {
+          const suggestionChips = result.suggestion.map(num => {
+              const colorClass = getNumberColorClass(num);
+              return `<div class="chip ${colorClass}">${num}</div>`;
+          }).join('');
+
+          betSuggestionElement.innerHTML = `
+              <div style="font-size:14px;color:var(--black);margin-bottom:8px;">
+                  **Gatilho Ativo:** <span class="chip ${getNumberColorClass(lastNumber)}">${lastNumber}</span>
+              </div>
+              <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                  ${suggestionChips}
+              </div>
+          `;
+      } else {
+          betSuggestionElement.innerHTML = `<span style="color:var(--alert-red)">⛔ Sem sugestão. Histórico insuficiente ou padrão não detectado.</span>`;
+      }
+
+      updateHotCold(history);
+  }
+
+  /* ================== GESTÃO DE HISTÓRICO ================== */
+
+  function addNumberToHistory(num) {
+      if (isLocked) {
+          alert('A análise está bloqueada (Stop Loss/Win). Por favor, aguarde o tempo de resfriamento.');
+          return;
+      }
+
+      // Adiciona o número no início (mais recente)
+      history.unshift(num);
+      
+      // Limita o histórico a 100 entradas
+      if (history.length > 100) {
+          history.pop();
+      }
+      
+      saveHistory();
+      renderHistory();
+  }
+
+  function removeNumberFromHistory(numToRemove) {
+      // Encontra o índice da primeira ocorrência do número (que é a mais recente)
+      const index = history.indexOf(numToRemove);
+      
+      if (index > -1) {
+          if (confirm(`Tem certeza que deseja remover o número ${numToRemove} (mais recente) do histórico?`)) {
+              history.splice(index, 1);
+              saveHistory();
+              renderHistory();
           }
+      } else {
+          alert(`Número ${numToRemove} não encontrado no histórico.`);
+      }
+  }
+
+  function clearHistory() {
+      if (confirm('Tem certeza que deseja LIMPAR todo o histórico de números e reiniciar a análise?')) {
+          history = [];
+          saveHistory();
+          renderHistory();
+      }
+  }
+  
+  function deleteTransaction(id) {
+      const index = bankroll.transactionHistory.findIndex(t => t.id === id);
+      if (index > -1) {
+          const transaction = bankroll.transactionHistory[index];
           
-          ctx.putImageData(imageData, 0, 0);
-          resolve(canvas.toDataURL('image/jpeg', 0.9));
-        };
-        image.onerror = (err) => reject(err);
-        image.src = event.target.result;
-      };
-      reader.onerror = (err) => reject(err);
-      reader.readAsDataURL(file);
-    });
+          if (confirm(`Tem certeza que deseja excluir o registro de ${transaction.type.toUpperCase()} de ${formatR(Math.abs(transaction.amount))}?`)) {
+              // Reverter a transação
+              bankroll.current -= transaction.amount;
+              bankroll.profit = bankroll.current - bankroll.initial;
+              bankroll.totalBets--;
+              if (transaction.type === 'win') {
+                  bankroll.wins--;
+              } else {
+                  bankroll.losses--;
+              }
+              
+              bankroll.transactionHistory.splice(index, 1);
+              
+              // Recalcular a streak e o lastResult (isso é complexo e opcional, simplificamos)
+              bankroll.streak = 0; 
+              bankroll.lastResult = null;
+
+              saveBankroll();
+              renderDashboard();
+              renderBankrollHistory();
+              checkStopConditions(); // Rechecar o bloqueio após a exclusão
+          }
+      }
   }
-    
-  // Lógica para acionar a foto
-  btnUpload.onclick = () => {
-    if (config.mode !== 'REAL' || config.isLocked) {
-        alert("O OCR de fotos só é permitido no Modo REAL e desbloqueado.");
-        return;
-    }
-    uploadPhotoInput.value = null; 
-    uploadPhotoInput.click();
-  };
-    
-  // Lógica principal do OCR
-  uploadPhotoInput.addEventListener('change', async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
 
-    const originalBtnText = btnUpload.textContent;
-    btnUpload.textContent = 'Processando...';
-    btnUpload.disabled = true;
+  /* ================== GESTÃO DE BLOQUEIO (STOP) ================== */
 
-    try {
-      console.log('Iniciando pré-processamento P&B...');
-      const processedImage = await preprocessImage(file);
-
-      if (typeof Tesseract === 'undefined' || !Tesseract.recognize) {
-          throw new Error("A biblioteca Tesseract (OCR) não foi carregada corretamente. Verifique o CDN.");
+  function checkStopConditions() {
+      // 1. Stop Loss por Contagem (consecutiva)
+      if (bankroll.lastResult === 'loss' && bankroll.streak <= -STOP_LOSS_COUNT) {
+          activateLockout('ZONA SEGURA ATINGIDA (STOP LOSS POR STREAK)', 'danger');
+          return;
+      }
+      
+      // 2. Stop Loss por Prejuízo Acumulado
+      if (bankroll.profit <= -STOP_LOSS_AMOUNT) {
+          activateLockout('ZONA SEGURA ATINGIDA (STOP LOSS POR VALOR)', 'danger');
+          return;
+      }
+      
+      // 3. Stop Win por Contagem (consecutiva)
+      if (bankroll.lastResult === 'win' && bankroll.streak >= STOP_WIN_COUNT) {
+          activateLockout('META ATINGIDA (STOP WIN POR STREAK)', 'success');
+          return;
+      }
+      
+      // 4. Stop Win por Lucro Acumulado
+      if (bankroll.profit >= STOP_WIN_AMOUNT) {
+          activateLockout('META ATINGIDA (STOP WIN POR VALOR)', 'success');
+          return;
       }
 
-      const { data: { text } } = await Tesseract.recognize(
-        processedImage,
-        'eng', 
-        {
-          logger: m => console.log(m.status === 'recognizing text' ? `OCR: ${(m.progress * 100).toFixed(0)}%` : m.status),
-          tessedit_pageseg_mode: '6', 
-          tessedit_char_whitelist: '0123456789 ' 
-        }
-      );
+      // Se todas as condições forem limpas, garante que não está bloqueado
+      if (!isLocked && config.lockoutEndTime === 0) {
+          // Garante que o painel está visível
+          document.getElementById('lockScreen').classList.add('hidden');
+      }
+  }
+
+  function activateLockout(title, type) {
+      // Só ativa se o tempo de bloqueio for 0 (evita resetar um bloqueio ativo)
+      if (config.lockoutEndTime < Date.now()) {
+          config.lockoutEndTime = Date.now() + LOCK_DURATION;
+          saveConfig();
+      }
+
+      isLocked = true;
+      document.getElementById('mainPanel').classList.add('hidden');
+      const lockScreen = document.getElementById('lockScreen');
+      lockScreen.classList.remove('hidden');
+
+      const lockTitle = document.getElementById('lockTitle');
+      lockTitle.textContent = title;
+      lockTitle.classList.remove('win');
       
-      console.log('OCR Text Original:', text);
-      
-      const matches = text.match(/\b(0|[1-9]|[12][0-9]|3[0-6])\b/g);
-      
-      if (matches && matches.length > 0) {
-        
-        const numbersFromOCR = matches.map(Number); 
-        
-        addMultipleNumbers(numbersFromOCR); 
-        
-        alert(`OCR identificou e adicionou ${numbersFromOCR.length} números ao histórico. (Ordem: Recente → Antigo)`);
-        
+      if (type === 'success') {
+          lockTitle.classList.add('win');
+          document.getElementById('lockIcon').style.color = 'var(--alert-green)';
       } else {
-        alert('Nenhum número de 0 a 36 foi identificado na imagem.');
+          document.getElementById('lockIcon').style.color = 'var(--alert-red)';
       }
-    } catch (err) {
-      console.error(err);
-      alert('ERRO no OCR: ' + (err.message || 'Falha desconhecida.'));
-    } finally {
-      btnUpload.textContent = originalBtnText;
-      btnUpload.disabled = (config.mode !== 'REAL'); 
-    }
+      
+      updateBetSuggestion(history); // Atualiza a sugestão para o estado de bloqueio
+  }
+
+  function checkLockoutStatus() {
+      const now = Date.now();
+      const lockScreen = document.getElementById('lockScreen');
+      const mainPanel = document.getElementById('mainPanel');
+
+      if (config.lockoutEndTime > now) {
+          isLocked = true;
+          mainPanel.classList.add('hidden');
+          lockScreen.classList.remove('hidden');
+          // Chama o activateLockout para renderizar a tela corretamente
+          // Não passa o título para manter o título do gatilho (Stop Loss/Win) que o ativou
+          activateLockout(document.getElementById('lockTitle').textContent, document.getElementById('lockIcon').style.color === 'var(--alert-green)' ? 'success' : 'danger');
+
+      } else {
+          isLocked = false;
+          config.lockoutEndTime = 0; // Limpa o tempo de bloqueio
+          saveConfig();
+          lockScreen.classList.add('hidden');
+          if (mainPanel.dataset.auth === 'true') {
+              mainPanel.classList.remove('hidden');
+          }
+      }
+  }
+
+  function skipLockout() {
+      if (confirm('Tem certeza? Quebrar a regra pode comprometer sua disciplina!')) {
+          config.lockoutEndTime = 0;
+          saveConfig();
+          checkLockoutStatus();
+          updateBetSuggestion(history);
+      }
+  }
+
+  /* ================== RELÓGIO E TIMER DE SESSÃO ================== */
+
+  function updateClock() {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+      document.getElementById('clock').textContent = timeStr;
+      
+      // Timer de sessão
+      const elapsedMs = now.getTime() - sessionStartTime;
+      const hours = Math.floor(elapsedMs / (1000 * 60 * 60));
+      const minutes = Math.floor((elapsedMs % (1000 * 60 * 60)) / (1000 * 60));
+      document.getElementById('sessionTimer').textContent = `Sessão: ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+
+      // Timer de Contagem Regressiva do Bloqueio
+      if (isLocked && config.lockoutEndTime > 0) {
+          const remainingMs = config.lockoutEndTime - now.getTime();
+          const countdownTimer = document.getElementById('countdownTimer');
+
+          if (remainingMs <= 0) {
+              countdownTimer.textContent = '00:00:00';
+              checkLockoutStatus(); // Desbloqueia
+          } else {
+              const rHours = Math.floor(remainingMs / (1000 * 60 * 60));
+              const rMinutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+              const rSeconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
+              countdownTimer.textContent = `${rHours.toString().padStart(2, '0')}:${rMinutes.toString().padStart(2, '0')}:${rSeconds.toString().padStart(2, '0')}`;
+          }
+      }
+  }
+
+  /* ================== GESTÃO DE AUTENTICAÇÃO ================== */
+
+  function handleLogin(mode) {
+      const mainPanel = document.getElementById('mainPanel');
+      let isAuthenticated = false;
+
+      if (mode === 'demo') {
+          isAuthenticated = true;
+      } else { // Real Mode
+          const password = document.getElementById('authPwd').value;
+          if (password === getPasswordHash()) {
+              isAuthenticated = true;
+          } else {
+              alert('Senha de acesso incorreta.');
+          }
+      }
+      
+      if (isAuthenticated) {
+          document.getElementById('loginScreen').classList.add('hidden');
+          document.getElementById('bodyTag').classList.remove('login-active');
+          mainPanel.classList.remove('hidden');
+          mainPanel.dataset.auth = 'true';
+          loadState(); // Carrega o estado após o login
+          renderNumberGrid(); // Inicializa o grid de números
+          // Inicia o timer e o clock
+          updateClock();
+          timerInterval = setInterval(updateClock, 1000);
+          checkLockoutStatus(); // Checa o status de bloqueio após carregar
+      }
+  }
+
+  function logout() {
+      if (confirm('Tem certeza que deseja encerrar a sessão?')) {
+          clearInterval(timerInterval);
+          document.getElementById('mainPanel').classList.add('hidden');
+          document.getElementById('loginScreen').classList.remove('hidden');
+          document.getElementById('bodyTag').classList.add('login-active');
+          document.getElementById('authPwd').value = '';
+          document.getElementById('sessionTimer').textContent = 'Sessão: -:-';
+      }
+  }
+  
+  /* ================== GESTÃO DE OCR (Placeholder) ================== */
+  
+  function triggerOcr() {
+      // Função placeholder para o Tesseract.js
+      alert("Recurso de Envio de Foto (OCR) não implementado neste código. Adicione o Tesseract.js e a lógica de processamento de imagem para funcionar.");
+      // Exemplo de como você iniciaria:
+      // document.getElementById('uploadPhoto').click();
+  }
+
+
+  /* ================== INICIALIZAÇÃO ================== */
+  
+  // Login Listeners
+  document.getElementById('btnSignInReal').addEventListener('click', () => handleLogin('real'));
+  document.getElementById('btnSignInDemo').addEventListener('click', () => handleLogin('demo'));
+  document.getElementById('authPwd').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleLogin('real');
   });
-  // ==================== FIM LÓGICA OCR ====================
+
+  // Bankroll Listeners
+  document.getElementById('btnSetBankroll').addEventListener('click', setBankroll);
+  document.getElementById('btnRegisterWin').addEventListener('click', () => registerTransaction('win'));
+  document.getElementById('btnRegisterLoss').addEventListener('click', () => registerTransaction('loss'));
+
+  // Controle Listeners
+  document.getElementById('clearBtn').addEventListener('click', clearHistory);
+  document.getElementById('logoutBtn').addEventListener('click', logout);
+  document.getElementById('btnSkipLock').addEventListener('click', skipLockout);
+  document.getElementById('btnUpload').addEventListener('click', triggerOcr);
+
+  // NOVO: Seletor de Padrões Listener
+  const patternSelector = document.getElementById('patternSelector');
+  patternSelector.addEventListener('change', (e) => {
+      config.currentPattern = e.target.value;
+      localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(config));
+      updateBetSuggestion(history); // Recalcula a sugestão com o novo padrão
+  });
+
+
+  // Configuração inicial da tela de login
+  document.getElementById('bodyTag').classList.add('login-active');
+  document.getElementById('mainPanel').classList.add('hidden');
   
-  
-  function registerTransaction(amount, isWin) {
-    if (config.mode === 'DEMO') {
-      alert('Você está no Modo DEMO. Alterne para o Modo REAL para registrar transações.');
-      return;
-    }
-    if (bankrollState.initial === 0) {
-        alert('Defina sua Banca Inicial na seção "Gestão de Banca e Risco" antes de registrar entradas.');
-        return;
-    }
-    
-    const rawAmount = parseFloat(amount);
-    if (isNaN(rawAmount) || rawAmount <= 0) {
-        alert('Por favor, insira um valor válido e positivo.');
-        return;
-    }
-    
-    // USANDO safeMath para garantir a precisão antes do cálculo
-    const finalAmount = safeMath(rawAmount); 
-    
-    // USANDO safeMath para garantir a precisão no cálculo do saldo atual
-    bankrollState.current = safeMath(bankrollState.current + (isWin ? finalAmount : -finalAmount));
-    bankrollState.history.push({ amount: isWin ? finalAmount : -finalAmount, timestamp: Date.now() });
-    
-    saveBankrollData();
-    checkStopCondition();
-    updateUI();
-    betAmountInput.value = '';
-  }
-
-  // 1. Popular Grid (FUNÇÃO DE INICIALIZAÇÃO)
-  function setupNumberGrid() {
-      gridNumbers.innerHTML = ''; // Garante que não duplique
-      for (let i = 0; i <= 36; i++) {
-        const btn = document.createElement('button');
-        btn.textContent = i;
-        btn.className = 'number-btn ' + getColor(i);
-        btn.onclick = () => addNumber(i); 
-        gridNumbers.appendChild(btn);
-      }
-  }
-
-  // 2. Event Listeners
-  document.getElementById('btnSignInReal').onclick = () => {
-      if (authPwdInput.value === getPasswordHash()) {
-          setLoginStatus(true, 'REAL');
-          checkLockStatus(); 
-          updateUI();   
-      } else {
-          alert('Senha incorreta.');
-      }
-  };
-  
-  document.getElementById('btnSignInDemo').onclick = () => {
-      setLoginStatus(true, 'DEMO');
-      checkLockStatus(); 
-      updateUI();   
-  };
-
-  document.getElementById('logoutBtn').onclick = () => {
-    if (confirm('Tem certeza que deseja sair?')) {
-        setLoginStatus(false); 
-        updateUI();
-    }
-  };
-  
-  // Listener para o novo botão de Pular Bloqueio
-  btnSkipLock.onclick = skipLock; 
-
-  document.getElementById('btnSetBankroll').onclick = () => {
-    if (config.mode === 'DEMO') {
-        alert('Definir Banca é restrito ao Modo REAL.');
-        return;
-    }
-    
-    const initialRaw = parseFloat(initialBankrollInput.value);
-    // USANDO safeMath para garantir a precisão do valor inicial
-    const initial = safeMath(initialRaw); 
-
-    if (isNaN(initial) || initial < 0) { // Permitir 0, mas avisar se for 0.
-      alert('Por favor, insira um valor de banca inicial válido.');
-      return;
-    }
-    
-    if (bankrollState.initial > 0 && 
-        !confirm('Ao redefinir a banca, o histórico de lucro/perda será zerado. Continuar?')) {
-        return;
-    }
-
-    bankrollState.initial = initial;
-    bankrollState.current = initial; // CORREÇÃO: Define o current como o initial
-    bankrollState.history = [];
-    
-    saveBankrollData();
-    checkStopCondition();
-    updateUI(); 
-    alert(`Banca inicial definida em ${formatCurrency(initial)}`);
-  };
-
-  btnRegisterWin.onclick = () => registerTransaction(betAmountInput.value, true);
-  btnRegisterLoss.onclick = () => registerTransaction(betAmountInput.value, false);
-
-  clearBtn.onclick = () => {
-    if (confirm('Tem certeza que deseja limpar TODO o histórico de lançamentos da roleta? (Isso não afeta a Banca)')) {
-      historyArr = [];
-      saveHistoryData();
-      updateUI();
-    }
-  };
-  
-  // 3. Inicializar
-  function initialize() {
-      setInterval(updateClock, 1000);
-      updateClock();
-      
-      loadConfig();
-      loadBankrollData();
-      loadHistoryData(); 
-      setupNumberGrid(); 
-      
-      checkLockStatus(); 
-      updateUI(); 
-  }
-
-  initialize();
+  // Não carregamos o estado aqui, pois o login pode ser em modo "demo" ou "real"
+  // A função `loadState()` é chamada dentro de `handleLogin()` em caso de sucesso.
 });
 </script>
-
 </body>
 </html>
