@@ -607,7 +607,8 @@ document.addEventListener('DOMContentLoaded', () => {
    * CONFIGURAÇÕES ESPECÍFICAS DO NOVO BOOSTER I.A. (Intersecção de Zonas)
    ========================================================================================= */
   const SUCCESSOR_LOOKBACK = 100; // Analisa os últimos 100 lançamentos
-  const SUGGESTION_THRESHOLD = 80; // Limite de ativação de 80%
+  // const SUGGESTION_THRESHOLD = 80; // REMOVIDO: O limite de 80% foi removido do critério de bloqueio.
+  
   // NOVA REGRA: O Gatilho deve ter aparecido mais de 4x
   const TRIGGER_MIN_COUNT = 5; 
 
@@ -625,16 +626,9 @@ document.addEventListener('DOMContentLoaded', () => {
   
   const historyDiv = document.getElementById('history');
   const historyCount = document.getElementById('historyCount');
-  // const zoneAnalysisDiv = document.getElementById('zoneAnalysis'); // REMOVIDO
-  // const hotColdDiv = document.getElementById('hotCold'); // REMOVIDO
   const betSuggestionDiv = document.getElementById('betSuggestion'); 
   const gridNumbers = document.getElementById('gridNumbers');
   
-  // const latestSuccessorsCard = document.getElementById('latestSuccessorsCard'); // REMOVIDO
-  // const latestSuccessorsList = document.getElementById('latestSuccessorsList'); // REMOVIDO
-  // const successorTriggerNumDiv = document.getElementById('successorTriggerNum'); // REMOVIDO
-
-
   const btnRegisterWin = document.getElementById('btnRegisterWin');
   const btnRegisterLoss = document.getElementById('btnRegisterLoss');
   const betAmountInput = document.getElementById('betAmountInput');
@@ -647,7 +641,6 @@ document.addEventListener('DOMContentLoaded', () => {
   
   /* ================== ESTADO DA APLICAÇÃO ================== */
   let historyArr = []; 
-  // let numberStats = {}; // REMOVIDO
   let config = {
       mode: 'DEMO', 
       isLoggedIn: false, 
@@ -964,7 +957,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Estatísticas simplificadas apenas para o Booster
   function calculateStats() {
-    // Mantido como função dummy pois não renderizamos hot/cold/sucessores, mas pode ser útil no futuro.
+    // Mantido como função dummy
   }
   
   /**
@@ -1024,7 +1017,6 @@ document.addEventListener('DOMContentLoaded', () => {
   
   /**
    * Adiciona números lidos em lote, garantindo que o mais recente vá para o topo.
-   * Não aplica checkBetFinalization em lote, apenas no último número.
    */
   function addMultipleNumbers(numArray) {
     const validNumbers = numArray
@@ -1040,7 +1032,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const newLatestNumber = validNumbers[0]; 
 
     // 1. Verifica e Finaliza/Avança o Alerta (APENAS PARA O LANÇAMENTO MAIS RECENTE)
-    // Os demais números lidos são apenas histórico.
     checkBetFinalization(newLatestNumber); 
 
     const correctlyOrderedNumbers = validNumbers; 
@@ -1057,17 +1048,17 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // =========================================================================================
-  // LOGICA PRINCIPAL DO BOOSTER I.A. (ATUALIZADA)
+  // LOGICA PRINCIPAL DO BOOSTER I.A. (ATUALIZADA SEM LIMITE DE INTERSECÇÃO)
   // =========================================================================================
 
   function renderBetSuggestion() {
       
-      if (historyArr.length < SUCCESSOR_LOOKBACK) {
-          betSuggestionDiv.innerHTML = `<span style="color:var(--muted)">Booster requer histórico mínimo de ${SUCCESSOR_LOOKBACK} lançamentos para análise.</span>`;
+      if (historyArr.length < TRIGGER_MIN_COUNT) {
+          betSuggestionDiv.innerHTML = `<span style="color:var(--muted)">Booster requer histórico mínimo de ${TRIGGER_MIN_COUNT} lançamentos para análise.</span>`;
           return;
       }
       if (config.mode !== 'REAL') {
-          betSuggestionDiv.innerHTML = `<span style="color:var(--muted)">Booster requer **Modo REAL** e histórico mínimo de ${SUCCESSOR_LOOKBACK} lançamentos para análise.</span>`;
+          betSuggestionDiv.innerHTML = `<span style="color:var(--muted)">Booster requer **Modo REAL** para análise.</span>`;
           return;
       }
       if (config.isLocked) {
@@ -1077,11 +1068,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const triggerNum = historyArr[0];
       const targetZoneArr = getNeighbors(triggerNum, 2); // ZONA 5
-      const targetZone = new Set(targetZoneArr); 
+      // const targetZone = new Set(targetZoneArr); // Não é mais necessária para o cálculo de intersecção, mas mantida por clareza
 
       const triggerSuccessors = []; 
       const frequentSuccessors = {};
-      const limit = Math.min(historyArr.length - 1, SUCCESSOR_LOOKBACK);
+      // Usa todo o histórico disponível, limitado por MAX_HISTORY (100)
+      const limit = historyArr.length - 1; 
 
       // Busca por ocorrências do GATILHO (triggerNum) nos *predecessores*
       for (let i = 1; i <= limit; i++) {
@@ -1098,7 +1090,7 @@ document.addEventListener('DOMContentLoaded', () => {
       
       // CRITÉRIO 1: Gatilho deve ter aparecido mais de 4x (>= 5x)
       if (totalTriggerCount < TRIGGER_MIN_COUNT) {
-          betSuggestionDiv.innerHTML = `<span style="color:var(--muted)">Aguardando mais ocorrências do **${triggerNum}** para análise confiável (Mínimo ${TRIGGER_MIN_COUNT}x - Encontrado: ${totalTriggerCount}x).</span>`;
+          betSuggestionDiv.innerHTML = `<span style="color:var(--muted)">Aguardando mais ocorrências do **${triggerNum}** para ativação (Mínimo ${TRIGGER_MIN_COUNT}x - Encontrado: ${totalTriggerCount}x).</span>`;
           return;
       }
 
@@ -1143,96 +1135,79 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       
       // ----------------------------------------------------------------------
-      // Lógica Padrão: Cálculo e Ativação de Novo Alerta
+      // Lógica Padrão: Ativação de Novo Alerta (Sem Limite de Taxa)
       // ----------------------------------------------------------------------
       
-      let intersectionCount = 0;
+      const sortedSuccessors = Object.entries(frequentSuccessors)
+          .sort(([, a], [, b]) => b - a)
+          .slice(0, 3) // Pega os 3 mais frequentes
+          .map(([num]) => parseInt(num)); 
+
+      // Se passou na frequência mínima (>= 5x) e não está ativo, ATIVA A APOSTA.
       
-      // Itera sobre os sucessores históricos do GATILHO (triggerNum)
+      const betZones = [];
+      const allTargetNumbers = new Set();
+      
+      sortedSuccessors.forEach(num => {
+          const zone = getNeighbors(num, 2); // ZONA 5
+          betZones.push(`Zona ${num}: ${zone.join(', ')}`);
+          zone.forEach(n => allTargetNumbers.add(n));
+      });
+      
+      const finalTargetZones = Array.from(allTargetNumbers).sort((a, b) => a - b);
+      
+      // ATIVAÇÃO DO NOVO ALERTA
+      betAlert = {
+          isActive: true, 
+          trigger: triggerNum,
+          zones: finalTargetZones,
+          confirmations: 0,
+          isSuccess: false
+      };
+      saveConfig();
+      
+      // Cálculo da Taxa para exibição (apenas informativo, não bloqueia)
+      const targetZone = new Set(targetZoneArr); 
+      let intersectionCount = 0;
       for (const historicSuccessor of triggerSuccessors) {
           const successorZone = getNeighbors(historicSuccessor, 2); // ZONA 5
-          
           let hasIntersection = false;
-          // Verifica se a Zona do Sucessor Intercepta a Zona do GATILHO Atual (targetZone)
           for (const num of successorZone) {
               if (targetZone.has(num)) {
                   hasIntersection = true;
                   break; 
               }
           }
-
           if (hasIntersection) {
               intersectionCount++;
           }
       }
-      
       const intersectionRate = (intersectionCount / totalTriggerCount) * 100;
-      
-      const sortedSuccessors = Object.entries(frequentSuccessors)
-          .sort(([, a], [, b]) => b - a)
-          .slice(0, 3)
-          .map(([num]) => parseInt(num)); 
 
-      // 1. INICIO do HTML da sugestão (removida a taxa de intersecção aqui)
       let suggestionHTML = `
           <div style="font-size: 14px; margin-bottom: 8px; color: var(--muted);">
               O GATILHO atual (último número) é: <span style="color: var(--zero); font-weight: 700;">${triggerNum}</span> (Apareceu ${totalTriggerCount}x).
           </div>
+          <div style="margin-top: 12px; margin-bottom: 12px;">
+              <span style="color: var(--alert-green); font-weight: 800; font-size: 18px;">✅ **APOSTA BOOSTER ATIVA!**</span>
+          </div>
+          <div style="margin-bottom: 12px;">
+              🎯 **SUGESTÃO DE COBERTURA TRIPLA**: Aposte nas Zonas 5 dos 3 **Sucessores Mais Frequentes** do ${triggerNum}:
+              <div style="margin-top: 5px; color: var(--accent); font-weight: 700; border: 1px solid var(--accent); padding: 8px; border-radius: 4px;">
+                  ${betZones.join('<br>')}
+              </div>
+          </div>
+          <div style="margin-bottom: 15px;">
+              <span style="font-weight: 700;">Cobertura Total Única:</span> <span style="color: var(--accent-secondary);">${finalTargetZones.join(', ')}</span>
+          </div>
+          <div>
+              ✨ **Probabilidade Histórica de Intersecção**: <span class="positive">${intersectionRate.toFixed(1)}%</span>
+          </div>
+          <div style="font-size: 14px; color: var(--zero); font-weight: bold; margin-top: 10px;">
+            🔴 INÍCIO DO ESTÁGIO DE CONFIRMAÇÃO: Aposta ativa por 3 Lançamentos!
+          </div>
       `;
       
-      if (intersectionRate >= SUGGESTION_THRESHOLD) {
-          const betZones = [];
-          const allTargetNumbers = new Set();
-          
-          sortedSuccessors.forEach(num => {
-              const zone = getNeighbors(num, 2); // ZONA 5
-              betZones.push(`Zona ${num}: ${zone.join(', ')}`);
-              zone.forEach(n => allTargetNumbers.add(n));
-          });
-          
-          const finalTargetZones = Array.from(allTargetNumbers).sort((a, b) => a - b);
-          
-          // ATIVAÇÃO DO NOVO ALERTA
-          betAlert = {
-              isActive: true, 
-              trigger: triggerNum,
-              zones: finalTargetZones,
-              confirmations: 0,
-              isSuccess: false
-          };
-          saveConfig();
-          
-          suggestionHTML += `
-              <div style="margin-top: 12px; margin-bottom: 12px;">
-                  <span style="color: var(--alert-green); font-weight: 800; font-size: 18px;">✅ **APOSTA BOOSTER ATIVA!**</span>
-              </div>
-              <div style="margin-bottom: 12px;">
-                  🎯 **SUGESTÃO DE COBERTURA TRIPLA**: Aposte nas Zonas 5 dos 3 **Sucessores Mais Frequentes** do ${triggerNum}:
-                  <div style="margin-top: 5px; color: var(--accent); font-weight: 700; border: 1px solid var(--accent); padding: 8px; border-radius: 4px;">
-                      ${betZones.join('<br>')}
-                  </div>
-              </div>
-              <div style="margin-bottom: 15px;">
-                  <span style="font-weight: 700;">Cobertura Total Única:</span> <span style="color: var(--accent-secondary);">${finalTargetZones.join(', ')}</span>
-              </div>
-              <div>
-                  ✨ **Probabilidade Histórica de Intersecção**: <span class="positive">${intersectionRate.toFixed(1)}%</span>
-              </div>
-              <div style="font-size: 14px; color: var(--zero); font-weight: bold; margin-top: 10px;">
-                🔴 INÍCIO DO ESTÁGIO DE CONFIRMAÇÃO: Aposta ativa por 3 Lançamentos!
-              </div>
-          `;
-      } else {
-          // 2. BLOQUEIO: Mensagem simplificada sem a taxa de intersecção e limite
-          suggestionHTML += `
-              <div style="margin-top: 12px; margin-bottom: 12px;">
-                  <span style="color: var(--alert-red); font-weight: 800; font-size: 18px;">🛑 APOSTA BOOSTER BLOQUEADA!</span>
-              </div>
-              <div>
-                  O padrão histórico de sucessão não atingiu a confiabilidade mínima (${SUGGESTION_THRESHOLD}%). A sugestão é desativada por segurança.
-              </div>
-          `;
-      }
 
       document.getElementById('betSuggestion').innerHTML = suggestionHTML; 
   }
@@ -1389,9 +1364,6 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             calculateStats();
             renderHistory();
-            // renderLatestSuccessors(); // REMOVIDO
-            // renderZoneAnalysis(); // REMOVIDO
-            // renderHotCold(); // REMOVIDO
             renderBankrollDashboard();
             renderBankrollHistory();
             renderBetSuggestion(); // Inclui o novo estado de alerta
@@ -1635,22 +1607,6 @@ document.addEventListener('DOMContentLoaded', () => {
   function initialize() {
       setInterval(updateClock, 1000);
       updateClock();
-      
-      loadConfig();
-      loadBankrollData();
-      loadHistoryData(); 
-      setupNumberGrid(); 
-      
-      checkLockStatus(); 
-      updateUI(); 
-  }
-
-  initialize();
-});
-</script>
-
-</body>
-</html>
       
       loadConfig();
       loadBankrollData();
