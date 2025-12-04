@@ -641,6 +641,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ================== VARIÁVEIS DE ESTADO ================== */
   let history = []; 
   let bankroll = { initial: 0, current: 0, profit: 0, wins: 0, losses: 0, totalBets: 0, streak: 0, lastResult: null, transactionHistory: [] };
+  // Inicialização do estado, incluindo o novo padrão
   let config = { 
     currentPattern: 'zoneSuccession',
     lockoutEndTime: 0 
@@ -670,12 +671,14 @@ document.addEventListener('DOMContentLoaded', () => {
       // Carregar Configurações (Padrão, Bloqueio)
       const storedConfig = localStorage.getItem(CONFIG_STORAGE_KEY);
       if (storedConfig) {
+          // Garante que o objeto config está completo, mesclando o default com o salvo
           config = { ...config, ...JSON.parse(storedConfig) };
       }
 
       // Definir o seletor de padrão com o valor salvo
       const patternSelector = document.getElementById('patternSelector');
       if(patternSelector) {
+        // Se a configuração tiver um padrão salvo, usa ele
         patternSelector.value = config.currentPattern || 'zoneSuccession';
         // Define o nome do padrão ativo
         document.getElementById('currentPatternName').textContent = patternSelector.options[patternSelector.selectedIndex].text.split('(')[0].trim();
@@ -774,14 +777,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ================== ANÁLISE DE PADRÕES ================== */
 
-  // ZONA 5: Lógica para encontrar vizinhos próximos (original do código)
+  // ZONA 5: Lógica para encontrar vizinhos próximos
   function getSuccessorDetails(lastNumber, history) {
       const MAX_LOOKBACK = 100;
-      const historyToAnalyze = history.slice(1, MAX_LOOKBACK + 1);
+      // Pega o histórico a partir do segundo elemento (o primeiro é o próprio lastNumber)
+      const historyToAnalyze = history.slice(1, MAX_LOOKBACK + 1); 
       const successorsMap = {};
 
       for (let i = 0; i < historyToAnalyze.length; i++) {
+          // Se o número anterior (historyToAnalyze[i]) é o gatilho (lastNumber)
           if (historyToAnalyze[i] === lastNumber && i > 0) {
+              // O sucessor é o número que veio APÓS a ocorrência do gatilho (historyToAnalyze[i - 1])
               const successor = historyToAnalyze[i - 1]; 
               successorsMap[successor] = (successorsMap[successor] || 0) + 1;
           }
@@ -806,7 +812,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return neighbors;
   }
   
-  // Função de Sugestão de ZONA 5 (Mantida como a lógica original de Zonas)
+  // Função de Sugestão de ZONA 5
   function getZoneSuccessionSuggestion(lastNumber, history) {
       const successors = getSuccessorDetails(lastNumber, history);
       const neighbors = getZoneNeighbors(lastNumber);
@@ -851,7 +857,7 @@ document.addEventListener('DOMContentLoaded', () => {
       };
   }
 
-  /* ================== NOVO PADRÃO: 4 SUCESSORES ================== */
+  /* ================== NOVO PADRÃO: 4 SUCESSORES (INTEGRADO) ================== */
 
   /**
    * Analisa o histórico para encontrar os 4 números que mais se repetiram após as últimas ocorrências do Gatilho.
@@ -1072,7 +1078,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function updateBetSuggestion(history) {
       const pattern = config.currentPattern;
-      // Note que os IDs foram mantidos como betSuggestion e patternAnalysisOutput
       const betSuggestionElement = document.getElementById('betSuggestion');
       const patternAnalysisOutput = document.getElementById('patternAnalysisOutput');
       const currentPatternNameElement = document.getElementById('currentPatternName');
@@ -1090,7 +1095,9 @@ document.addEventListener('DOMContentLoaded', () => {
           patternAnalysisOutput.innerHTML = `Adicione números ao histórico para ver a análise detalhada.`;
           // Atualiza o nome do padrão mesmo sem histórico
           const selector = document.getElementById('patternSelector');
-          currentPatternNameElement.textContent = selector.options[selector.selectedIndex].text.split('(')[0].trim();
+          if (selector && selector.selectedIndex !== -1) {
+             currentPatternNameElement.textContent = selector.options[selector.selectedIndex].text.split('(')[0].trim();
+          }
           return;
       }
 
@@ -1099,7 +1106,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Atualiza o nome do padrão no Booster
       const selector = document.getElementById('patternSelector');
-      currentPatternNameElement.textContent = selector.options[selector.selectedIndex].text.split('(')[0].trim();
+      if (selector && selector.selectedIndex !== -1) {
+        currentPatternNameElement.textContent = selector.options[selector.selectedIndex].text.split('(')[0].trim();
+      }
 
 
       // 3. Executar o Padrão Selecionado
@@ -1404,24 +1413,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // NOVO: Seletor de Padrões Listener
   const patternSelector = document.getElementById('patternSelector');
-  patternSelector.addEventListener('change', (e) => {
-      config.currentPattern = e.target.value;
-      localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(config));
-      updateBetSuggestion(history); // Recalcula a sugestão com o novo padrão
-  });
-
-  // Inicializa o nome do padrão ativo no booster (após o seletor existir)
-  const selector = document.getElementById('patternSelector');
-  if (selector && document.getElementById('currentPatternName')) {
-      document.getElementById('currentPatternName').textContent = selector.options[selector.selectedIndex].text.split('(')[0].trim();
+  if (patternSelector) {
+      patternSelector.addEventListener('change', (e) => {
+          config.currentPattern = e.target.value;
+          saveConfig();
+          updateBetSuggestion(history); // Recalcula a sugestão com o novo padrão
+      });
+      // Inicializa o nome do padrão ativo no booster (após o seletor existir)
+      if (document.getElementById('currentPatternName')) {
+          document.getElementById('currentPatternName').textContent = patternSelector.options[patternSelector.selectedIndex].text.split('(')[0].trim();
+      }
   }
-
 
   // Configuração inicial da tela de login
   document.getElementById('bodyTag').classList.add('login-active');
   document.getElementById('mainPanel').classList.add('hidden');
   
-  // Não carregamos o estado aqui, pois o login pode ser em modo "demo" ou "real"
   // A função `loadState()` é chamada dentro de `handleLogin()` em caso de sucesso.
 });
 </script>
