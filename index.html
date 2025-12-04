@@ -853,51 +853,53 @@ document.addEventListener('DOMContentLoaded', () => {
 
       return {
           suggestion: topZoneSuccessors.length > 0 ? topZoneSuccessors : neighbors.filter(n => n !== lastNumber).slice(0, 5), // Se não houver sucessores, sugere os 5 vizinhos mais próximos (excluindo o próprio gatilho)
-          analysisOutput: analysisOutput
+          analysisOutput: analysisOutput,
+          isEntryValid: true, // ZONA 5 não usa validação de quebra
+          validationMessage: ''
       };
   }
 
-  /* ================== NOVO PADRÃO: 4 SUCESSORES (INTEGRADO) ================== */
+  /* ================== PADRÃO: 4 SUCESSORES (REESCRITO) ================== */
 
   /**
    * Analisa o histórico para encontrar os 4 números que mais se repetiram após as últimas ocorrências do Gatilho.
-   * @param {number} triggerNum - O número gatilho (último número que caiu).
-   * @param {Array<number>} history - Array do histórico de números (mais recente na frente).
-   * @returns {{suggestion: Array<number>, analysisOutput: string}}
+   * A entrada é LIBERADA se o número atual (0) *NÃO* cair na zona dos 4 sucessores.
    */
-  function getFourSuccessorsSuggestion(triggerNum, history) {
+  function getFourSuccessorsSuggestion(lastNumber, history) {
       if (history.length < 2) {
           return { 
               suggestion: [], 
-              analysisOutput: `Aguardando mais dados. Padrão "4 Sucessores" precisa de pelo menos 2 números para definir o gatilho.`
+              analysisOutput: `Aguardando mais dados. Padrão "4 Sucessores" precisa de pelo menos 2 números para definir o gatilho.`,
+              isEntryValid: false,
+              validationMessage: 'Histórico insuficiente para definir o Gatilho e a Zona de Aposta.'
           };
       }
 
+      const TARGET_TRIGGER = history[1]; // O GATILHO é o penúltimo número (antes do lastNumber)
+      const CURRENT_NUMBER = history[0]; // O número atual (último que caiu) é a validação
+      
       const SUCCESSORS_TO_COLLECT = 4;
-      const LOOKBACK_COUNT = 5; // Olhar as últimas 5 ocorrências do gatilho
+      const LOOKBACK_COUNT = 100; // Analisar todo o histórico para sucessores
 
       const allSuccessors = [];
       let triggerCount = 0;
 
-      // Iterar o histórico para encontrar as ocorrências do gatilho (excluindo a última posição)
-      // O histórico está em ordem REVERSA (mais recente na frente), então iteramos do 2º elemento em diante
-      for (let i = 1; i < history.length; i++) {
-          if (history[i] === triggerNum) {
-              // O sucessor é o número que veio APÓS a ocorrência do gatilho (ou seja, history[i-1])
-              const successor = history[i - 1];
+      // Iterar o histórico a partir do 3º elemento (índice 2) para encontrar ocorrências do TARGET_TRIGGER
+      for (let i = 2; i < history.length && triggerCount < LOOKBACK_COUNT; i++) {
+          if (history[i] === TARGET_TRIGGER) {
+              // O sucessor é o número que veio APÓS a ocorrência do gatilho (history[i - 1])
+              const successor = history[i - 1]; 
               allSuccessors.push(successor);
               triggerCount++;
-              
-              if (triggerCount >= LOOKBACK_COUNT) {
-                  break; // Limita a análise às últimas N vezes que o gatilho caiu
-              }
           }
       }
 
       if (triggerCount === 0) {
           return { 
               suggestion: [], 
-              analysisOutput: `O número **${triggerNum}** (gatilho) ainda não caiu no histórico anterior para análise de sucessores.`
+              analysisOutput: `O número **${TARGET_TRIGGER}** (Gatilho) ainda não caiu no histórico anterior para análise de sucessores.`,
+              isEntryValid: false,
+              validationMessage: 'Gatilho não encontrado no histórico anterior.'
           };
       }
 
@@ -907,36 +909,80 @@ document.addEventListener('DOMContentLoaded', () => {
           successorCounts[num] = (successorCounts[num] || 0) + 1;
       });
 
-      // 2. Classificar e pegar os 4 mais frequentes
+      // 2. Classificar e pegar os 4 mais frequentes (Os 4 Sucessores)
       const sortedSuccessors = Object.keys(successorCounts).sort((a, b) => {
-          // Classifica por contagem (maior para menor)
           return successorCounts[b] - successorCounts[a];
-      }).slice(0, SUCCESSORS_TO_COLLECT).map(Number); // Pega apenas os top 4 e converte para número
+      }).slice(0, SUCCESSORS_TO_COLLECT).map(Number); 
 
-      // 3. Gerar a saída da análise
-      let analysisText = `<div class="pattern-line">**Gatilho:** <span class="pattern-trigger">${triggerNum}</span> (Caiu **${triggerCount}** vezes antes no histórico).</div>`;
-      analysisText += `<div class="pattern-line">**Sucessores Encontrados (${allSuccessors.length} total):**</div>`;
+      // 3. Lógica de Validação da Entrada
+      let isEntryValid = false;
+      let validationMessage = '';
 
+      if (sortedSuccessors.length < SUCCESSORS_TO_COLLECT) {
+          // Se não houver sucessores suficientes, não libera a entrada
+          isEntryValid = false;
+          validationMessage = `FALHA: Não há ${SUCCESSORS_TO_COLLECT} sucessores distintos para o Gatilho **${TARGET_TRIGGER}**.`;
+      } else if (sortedSuccessors.includes(CURRENT_NUMBER)) {
+          // Se o número atual (0) *CAIU* na zona dos 4 sucessores, a entrada é BLOQUEADA
+          isEntryValid = false;
+          validationMessage = `AGUARDANDO QUEBRA: O último número **${CURRENT_NUMBER}** (Validação) CAIU em um dos 4 Sucessores.`;
+      } else {
+          // Se o número atual (0) *NÃO CAIU* na zona, a entrada é LIBERADA
+          isEntryValid = true;
+          validationMessage = `QUEBRA DE PADRÃO: O último número **${CURRENT_NUMBER}** (Validação) CAIU **FORA** da Zona de Sucessores.`;
+      }
+
+
+      // 4. Gerar a saída da análise detalhada
+      let analysisText = `
+          <div class="pattern-line" style="font-size: 16px;">
+              **Gatilho Ativo:** <span class="chip ${getNumberColorClass(TARGET_TRIGGER)}">${TARGET_TRIGGER}</span>
+              <span style="font-size:12px;color:var(--muted);margin-left:10px;">(Ocorrências: ${triggerCount}x)</span>
+          </div>
+          <div class="pattern-line" style="font-size: 16px; margin-top: 10px;">
+              **Validação (Último Giro):** <span class="chip ${getNumberColorClass(CURRENT_NUMBER)}">${CURRENT_NUMBER}</span>
+          </div>
+      `;
+      
+      analysisText += `<div class="data-separator"></div>`;
+
+      // Renderizar a validação em destaque
+      const validationStatusHTML = isEntryValid 
+          ? `<div class="pattern-trigger" style="color:var(--alert-green); font-size: 18px;">✅ ENTRADA LIBERADA!</div>`
+          : `<div class="pattern-trigger" style="color:var(--zero); font-size: 18px;">⏳ AGUARDANDO QUEBRA...</div>`;
+      
+      analysisText += validationStatusHTML;
+
+      analysisText += `<div style="font-size: 14px; margin-top: 5px; color: ${isEntryValid ? 'var(--alert-green)' : 'var(--zero)'};">${validationMessage}</div>`;
+      
+      analysisText += `<div class="data-separator"></div>`;
+
+      analysisText += `<div class="pattern-line">**Os 4 Sucessores (Zona de Bloqueio/Aposta):**</div>`;
+
+      // Renderizar todos os sucessores contados
       Object.keys(successorCounts).sort((a, b) => successorCounts[b] - successorCounts[a]).forEach(numStr => {
           const num = Number(numStr);
           const count = successorCounts[num];
           const colorClass = getNumberColorClass(num);
+          const isTopFour = sortedSuccessors.includes(num);
           
-          analysisText += `<div class="pattern-line">  - Número <span class="chip ${colorClass}">${num}</span>: **${count}x** (${(count / allSuccessors.length * 100).toFixed(1)}%)</div>`;
+          analysisText += `<div class="pattern-line">  - ${isTopFour ? '🎯' : ''} Número <span class="chip ${colorClass}">${num}</span>: **${count}x** (${(count / allSuccessors.length * 100).toFixed(1)}%)</div>`;
       });
       
       analysisText += `<div class="data-separator"></div>`;
       
+      // A sugestão de aposta é sempre nos 4 sucessores (quando liberado)
       if (sortedSuccessors.length > 0) {
-          analysisText += `<div class="pattern-line">**🎯 Sugestão Top 4:** <span class="pattern-succession">${sortedSuccessors.join(', ')}</span></div>`;
+          analysisText += `<div class="pattern-line">**🔥 ZONA DE APOSTA:** <span class="pattern-succession">${sortedSuccessors.join(', ')}</span></div>`;
       } else {
-          analysisText += `<div class="pattern-line">**🎯 Sugestão Top 4:** <span class="pattern-succession">Nenhum sucessor encontrado.</span></div>`;
+          analysisText += `<div class="pattern-line">**🔥 ZONA DE APOSTA:** <span class="pattern-succession">Aguardando 4 sucessores.</span></div>`;
       }
 
-
       return {
-          suggestion: sortedSuccessors,
-          analysisOutput: analysisText
+          suggestion: sortedSuccessors, 
+          analysisOutput: analysisText,
+          isEntryValid: isEntryValid,
+          validationMessage: validationMessage
       };
   }
 
@@ -1102,7 +1148,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const lastNumber = history[0];
-      let result = { suggestion: [], analysisOutput: 'Nenhuma análise disponível para este padrão.' };
+      let result = { suggestion: [], analysisOutput: 'Nenhuma análise disponível para este padrão.', isEntryValid: false, validationMessage: '' };
 
       // Atualiza o nome do padrão no Booster
       const selector = document.getElementById('patternSelector');
@@ -1116,28 +1162,47 @@ document.addEventListener('DOMContentLoaded', () => {
           result = getZoneSuccessionSuggestion(lastNumber, history);
           
       } else if (pattern === 'fourSuccessors') {
-          result = getFourSuccessorsSuggestion(lastNumber, history);
+          // No 4 Sucessores, precisamos de pelo menos 2 para ter Gatilho e Validação
+          if (history.length < 2) {
+              result.analysisOutput = `Adicione mais ${2 - history.length} números para definir o Gatilho e iniciar a análise "4 Sucessores".`;
+              result.validationMessage = 'Histórico insuficiente.';
+          } else {
+              result = getFourSuccessorsSuggestion(lastNumber, history);
+          }
       } 
 
       // 4. Atualizar a UI
       patternAnalysisOutput.innerHTML = result.analysisOutput;
 
-      if (result.suggestion && result.suggestion.length > 0) {
+      // Se a entrada for válida (isEntryValid: true) ou for o padrão ZoneSuccession (que não usa validação)
+      if (result.suggestion && result.suggestion.length > 0 && (result.isEntryValid || pattern === 'zoneSuccession')) {
           const suggestionChips = result.suggestion.map(num => {
               const colorClass = getNumberColorClass(num);
               return `<div class="chip ${colorClass}">${num}</div>`;
           }).join('');
+          
+          // O Gatilho no 4 Sucessores é o penúltimo, na Zona 5 é o último.
+          const triggerDisplay = pattern === 'fourSuccessors' && history.length > 1 ? history[1] : lastNumber; 
 
+          const entryStatus = result.isEntryValid && pattern === 'fourSuccessors'
+              ? `<span style="font-weight:700; color:var(--alert-green);">ENTRADA LIBERADA! ✅</span>`
+              : `<span style="font-weight:700; color:var(--zero);">AGUARDANDO PADRÃO...</span>`;
+
+          // Conteúdo do Booster de Aposta
           betSuggestionElement.innerHTML = `
               <div style="font-size:14px;color:var(--black);margin-bottom:8px;">
-                  **Gatilho Ativo:** <span class="chip ${getNumberColorClass(lastNumber)}">${lastNumber}</span>
+                  **Gatilho:** <span class="chip ${getNumberColorClass(triggerDisplay)}">${triggerDisplay}</span>
               </div>
-              <div style="display:flex; flex-wrap:wrap; gap:10px;">
+              <div style="font-size:18px; color:var(--black); margin-bottom: 10px;">
+                  **STATUS:** ${pattern === 'fourSuccessors' ? entryStatus : ''}
+              </div>
+              <div style="display:flex; flex-wrap:wrap; gap:10px; border-top: 1px dashed var(--muted); padding-top: 10px;">
                   ${suggestionChips}
               </div>
           `;
       } else {
-          betSuggestionElement.innerHTML = `<span style="color:var(--alert-red)">⛔ Sem sugestão. Histórico insuficiente ou padrão não detectado.</span>`;
+          // Caso de bloqueio do 4 Sucessores ou Histórico Insuficiente
+          betSuggestionElement.innerHTML = `<span style="color:var(--alert-red)">⛔ ${result.validationMessage || 'Sem sugestão. Histórico insuficiente ou entrada bloqueada.'}</span>`;
       }
 
       updateHotCold(history);
