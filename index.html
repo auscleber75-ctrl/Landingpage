@@ -207,6 +207,7 @@ body.login-active {
     box-shadow:0 0 15px rgba(0,121,192,0.4);
     border-color: var(--accent-secondary);
 }
+.number-btn:active{transform:scale(0.95); }
 .red{background:var(--red);color:#fff}
 .black{background:var(--black);color:#fff}
 .zero, .green {background:var(--zero);color:var(--black)} 
@@ -654,7 +655,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const MIN_HISTORY_FOR_BOOSTER = 10; // Reduzido para testar o novo padrão
   const SUCCESSOR_DISPLAY_LIMIT = 10; 
   // NOVA CONSTANTE:
-  const CONFIRMATION_ROUNDS = 3; 
+  const CONFIRMATION_ROUNDS = 4; // ALTERADO: Mínimo de repetições do Gatilho como predecessor.
 
   
   /* ================== ELEMENTOS DOM (Mantidos) ================== */
@@ -722,7 +723,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /**
    * Obtém vizinhos de um número com um raio específico.
-   * Já estava presente no código base.
    */
   function getNeighbors(centerNum, radius) {
     const centerIndex = WHEEL_INDEX_MAP[centerNum];
@@ -1205,7 +1205,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   
   // =========================================================================================
-  // 🚀 NOVO CÓDIGO INCLUÍDO: LÓGICA DE BOOSTER I.A. (2 VIZINHOS)
+  // 🚀 NOVO CÓDIGO INCLUÍDO/MODIFICADO: LÓGICA DE BOOSTER I.A. (2 VIZINHOS)
   // =========================================================================================
 
   /**
@@ -1228,37 +1228,42 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
-   * 🆕 Identifica os sucessores mais prováveis para o Booster I.A.
-   * A lógica é: Encontrar os números que ocorreram como sucessores **mais de uma vez**
-   * nos últimos lances após a aparição do trigger atual.
+   * 🆕 Identifica os sucessores com base no novo critério: 
+   * 1. Confirma se o Gatilho se repetiu no mínimo CONFIRMATION_ROUNDS (4x) como predecessor.
+   * 2. Se SIM, retorna TODOS os números que o sucederam.
    *
    * @param {number} triggerNum O número do último lançamento (gatilho).
-   * @returns {number[]} Array dos sucessores mais prováveis.
+   * @returns {{triggerCount: number, successors: number[]}} Objeto com a contagem do gatilho e a lista de sucessores.
    */
   function findBoosterSuccessors(triggerNum) {
-    const recentSuccessors = [];
-    const successorsCount = {};
+    const allSuccessors = new Set();
+    let triggerCount = 0;
     const limit = Math.min(historyArr.length - 1, SUCCESSOR_LOOKBACK);
 
-    // 1. Coleta todos os sucessores após o trigger
+    // Itera do 1º lance anterior até o limite (SUCCESSOR_LOOKBACK)
     for (let i = 1; i <= limit; i++) {
         const predecessorNum = historyArr[i];
         const successorNum = historyArr[i - 1]; 
         
         if (predecessorNum === triggerNum) {
-            // Conta a ocorrência do sucessor
-            successorsCount[successorNum] = (successorsCount[successorNum] || 0) + 1;
-            // Adiciona à lista geral, mas garantimos que só consideraremos os que se repetem
+            triggerCount++;
+            allSuccessors.add(successorNum); // Adiciona todos os sucessores encontrados
         }
     }
     
-    // 2. Filtra sucessores que se repetiram pelo menos CONFIRMATION_ROUNDS vezes
-    const confirmedSuccessors = Object.entries(successorsCount)
-      .filter(([, count]) => count >= CONFIRMATION_ROUNDS)
-      .map(([numStr]) => parseInt(numStr, 10))
-      .sort((a, b) => successorsCount[b] - successorsCount[a]); // Ordena pelo mais frequente
-
-    return confirmedSuccessors;
+    // 1. Confirmação do Gatilho:
+    if (triggerCount < CONFIRMATION_ROUNDS) {
+        return { 
+            triggerCount: triggerCount, 
+            successors: [] // Retorna vazio se o Gatilho não se repetiu o suficiente
+        };
+    }
+    
+    // 2. Retorna todos os sucessores únicos se o Gatilho foi confirmado
+    return { 
+        triggerCount: triggerCount, 
+        successors: Array.from(allSuccessors).map(n => parseInt(n, 10))
+    };
   }
   
   /**
@@ -1278,33 +1283,38 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const triggerNum = historyArr[0];
-    // 1. Encontrar os sucessores que se repetiram (pelo menos CONFIRMATION_ROUNDS vezes)
-    const confirmedSuccessors = findBoosterSuccessors(triggerNum);
+    // 1. Encontrar sucessores e a contagem do gatilho
+    const { triggerCount, successors } = findBoosterSuccessors(triggerNum);
     
-    if (confirmedSuccessors.length === 0) {
+    if (triggerCount < CONFIRMATION_ROUNDS) {
         betSuggestionDiv.innerHTML = `
-            <span style="color:var(--muted)">
-                ⚠️ O GATILHO **${triggerNum}** não possui sucessores confirmados 
-                (repetidos ${CONFIRMATION_ROUNDS}x) nos últimos ${SUCCESSOR_LOOKBACK} lances.
+            <span style="color:var(--alert-red); font-weight: bold;">
+                ❌ GATILHO NÃO CONFIRMADO:
             </span>
+            <p style="margin-top: 5px; color: var(--muted); font-weight: normal;">
+                O último número **${triggerNum}** se repetiu apenas **${triggerCount}x** como predecessor nos últimos ${SUCCESSOR_LOOKBACK} lances.
+                <br>
+                **Mínimo Requerido:** **${CONFIRMATION_ROUNDS}x**. Aguarde uma confirmação mais forte.
+            </p>
         `;
         return;
     }
 
-    // 2. Calcular a Zona de Aposta com 2 Vizinhos para os sucessores confirmados
-    const betZone = calculateBetZone(confirmedSuccessors);
+    // 2. Calcular a Zona de Aposta com 2 Vizinhos
+    const betZone = calculateBetZone(successors);
 
     // 3. Renderizar o resultado
     let html = `
         <p style="margin-bottom: 5px;">
-            GATILHO: <span class="iaGlow" style="font-size: 1.2em;">${triggerNum}</span>
+            GATILHO CONFIRMADO: <span class="iaGlow" style="font-size: 1.2em;">${triggerNum}</span>
+            <span style="color: var(--alert-green); font-size: 14px; font-weight: bold;"> (Repetiu ${triggerCount}x)</span>
             <br>
-            SUCESSORES CONFIRMADOS (${CONFIRMATION_ROUNDS}x): 
-            <span style="color: var(--zero); font-weight: bold;">${confirmedSuccessors.join(', ')}</span>
+            SUCESSORES ENCONTRADOS: 
+            <span style="color: var(--zero); font-weight: bold; font-size: 1.1em;">${successors.length > 0 ? successors.join(', ') : 'NENHUM! (Risco Alto)'}</span>
         </p>
 
         <p style="font-size: 14px; margin-top: 10px; margin-bottom: 5px; color: var(--muted);">
-            🚀 Aposta Principal: **ZONA AMPLA (2 VIZINHOS)** da união dos sucessores.
+            🚀 Aposta Principal: **ZONA AMPLA (2 VIZINHOS)** da união de **TODOS** os sucessores.
         </p>
 
         <div class="bet-zone-list">
@@ -1319,7 +1329,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // =========================================================================================
-  // FIM DO NOVO CÓDIGO INCLUÍDO
+  // FIM DO NOVO CÓDIGO INCLUÍDO/MODIFICADO
   // =========================================================================================
   
   
