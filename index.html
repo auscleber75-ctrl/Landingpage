@@ -400,6 +400,30 @@ body.login-active {
 }
 .log-delete-btn:hover { color: var(--black); }
 
+/* Estilos para o Booster I.A. (Alerta de Estágio) */
+.booster-alert-stage {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-top: 15px;
+    padding: 10px;
+    background: rgba(0, 121, 192, 0.08);
+    border-radius: 8px;
+    border: 1px solid var(--accent-secondary);
+}
+.stage-status {
+    font-size: 14px;
+    font-weight: 700;
+}
+.stage-icon {
+    font-size: 24px;
+    line-height: 1;
+    transition: color 0.3s;
+}
+.stage-icon.orange { color: var(--zero); }
+.stage-icon.green { color: var(--alert-green); }
+.stage-icon.red { color: var(--alert-red); }
+
 /* ================== TELA DE BLOQUEIO (CADEADO) ================== */
 
 #lockScreen{
@@ -641,6 +665,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const SUCCESSOR_LOOKBACK = 100; // Analisa os últimos 100 lançamentos
   const SUGGESTION_THRESHOLD = 80; // Limite de ativação de 80%
   const SUCCESSOR_DISPLAY_LIMIT = 10; // Novo: Limite de sucessores para exibir no card
+  // NOVA REGRA: O Gatilho deve ter aparecido mais de 4x nos últimos 100
+  const TRIGGER_MIN_COUNT = 5; 
 
   
   /* ================== ELEMENTOS DOM ================== */
@@ -695,6 +721,15 @@ document.addEventListener('DOMContentLoaded', () => {
     history: [] 
   };
   const MAX_HISTORY = 100;
+
+  // NOVO ESTADO: Alerta de Aposta I.A.
+  let betAlert = {
+      isActive: false,       // O alerta está ativo (aguardando confirmação)?
+      trigger: null,         // O número do Gatilho que ativou (ex: 3)
+      zones: [],             // Array de números de aposta (successors + 2 vizinhos, únicos)
+      confirmations: 0,      // Contador de 0 a 3 (máximo de chances)
+      isSuccess: false       // Resultado da aposta (WIN/LOSS)
+  };
   
   /* ================== UTILITÁRIOS OTIMIZADOS ================== */
   const formatCurrency = (value) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -711,7 +746,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   /**
-   * Função auxiliar para encontrar vizinhos em um determinado range (Vizinhos 2 para Zona 5).
+   * Função auxiliar para encontrar vizinhos em um determinado range (Zona 5 = radius 2).
    */
   function getNeighbors(centerNum, radius) {
     const centerIndex = WHEEL_INDEX_MAP[centerNum];
@@ -728,6 +763,8 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ================== PERSISTÊNCIA E SESSÃO ================== */
   
   function saveConfig() {
+    // Salva o estado do betAlert no config para persistir o alerta
+    config.betAlert = betAlert;
     localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(config));
   }
   function loadConfig() {
@@ -741,6 +778,11 @@ document.addEventListener('DOMContentLoaded', () => {
           config.lockUntil = loaded.lockUntil || 0;
           config.lockReason = loaded.lockReason || '';
           config.sessionStart = loaded.sessionStart || 0; 
+          
+          // Carrega o estado do betAlert
+          if (loaded.betAlert) {
+            betAlert = { ...betAlert, ...loaded.betAlert };
+          }
         }
     } catch (e) {
         console.error("Erro ao carregar configuração:", e);
@@ -779,7 +821,7 @@ document.addEventListener('DOMContentLoaded', () => {
           let titleText = '';
           if (config.lockReason === 'STOP_LOSS') { titleText = 'ZONA SEGURA ATINGIDA (STOP LOSS)'; }
           else if (config.lockReason === 'STOP_WIN') { titleText = 'ZONA SEGURA ATINGIDA (STOP WIN)'; }
-          else if (config.lockReason === 'SKIPPED') { titleText = 'BLOQUEIO INTERROMPIDO'; } // Pouco provável de aparecer aqui
+          else if (config.lockReason === 'SKIPPED') { titleText = 'BLOQUEIO INTERROMPIDO'; } 
 
           lockTitle.textContent = titleText;
           lockTitle.classList.toggle('win', config.lockReason === 'STOP_WIN');
@@ -813,7 +855,7 @@ document.addEventListener('DOMContentLoaded', () => {
           mainPanel.classList.remove('hidden');
           loginScreen.classList.add('hidden');
           bodyTag.classList.remove('login-active');
-          sessionTimerDiv.textContent = `Sessão: -:-`; // Define o texto como "sem contagem"
+          sessionTimerDiv.textContent = `Sessão: -:-`; 
       } else {
           // Não logado
           loginScreen.classList.remove('hidden');
@@ -1016,22 +1058,66 @@ document.addEventListener('DOMContentLoaded', () => {
     numberStats = stats;
   }
   
+  /**
+   * NOVO: Verifica se o novo número lançado finaliza ou avança o alerta de aposta.
+   */
+  function checkBetFinalization(newNum) {
+    if (!betAlert.isActive) return;
+
+    // 1. O novo número (newNum) está em alguma zona de sucesso?
+    const isSuccessful = betAlert.zones.includes(newNum);
+
+    if (isSuccessful) {
+        // WIN: A aposta foi bem-sucedida!
+        betAlert.confirmations = 3; // Marcar confirmação máxima para visualização de sucesso
+        betAlert.isActive = false;  // Finaliza o alerta
+        betAlert.isSuccess = true;  // Define o resultado como sucesso
+        
+        // Alerta o usuário para registrar o GREEN
+        alert(`🎯 ACERTO DETECTADO! O número ${newNum} caiu na zona de aposta. Registre seu GREEN (+).`);
+
+    } else {
+        // LOSS: O número não foi um acerto na zona.
+        betAlert.confirmations++;
+        
+        if (betAlert.confirmations >= 3) {
+            // 3 chances esgotadas, fim da aposta.
+            betAlert.isActive = false; // Finaliza o alerta
+            betAlert.isSuccess = false; // Define o resultado como falha
+            
+            // Alerta o usuário para registrar o RED
+            alert(`🛑 3 TENTATIVAS ESGOTADAS. O número ${newNum} não acertou a zona na última tentativa. Registre seu RED (-).`);
+        }
+    }
+
+    saveConfig();
+    renderBetSuggestion(); // Força a re-renderização do Booster para mostrar o status final/progresso
+  }
+  
   function addNumber(num) {
     if (num < 0 || num > 36 || isNaN(num)) {
         console.error("Tentativa de adicionar número inválido:", num);
         return;
     }
+    
+    // 1. Verifica e Finaliza/Avança o Alerta (DEVE SER ANTES DE ADICIONAR AO HISTORYARR)
+    // O novo número (num) é o resultado do lançamento que finaliza o estágio anterior.
+    checkBetFinalization(num); 
+    
+    // 2. Adiciona o número ao histórico
     if (historyArr.length >= MAX_HISTORY) { historyArr.pop(); }
     historyArr.unshift(Number(num)); 
     saveHistoryData();
+    
+    // 3. Renderiza UI
     updateUI(); 
   }
   
   /**
    * Adiciona números lidos em lote, garantindo que o mais recente vá para o topo.
+   * Não aplica checkBetFinalization em lote, apenas no último número.
    */
   function addMultipleNumbers(numArray) {
-    // Garante que apenas números válidos sejam adicionados (entre 0 e 36)
     const validNumbers = numArray
       .map(n => parseInt(n, 10))
       .filter(n => !isNaN(n) && n >= 0 && n <= 36);
@@ -1041,9 +1127,16 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
     
+    // O número mais recente lido no OCR é o primeiro do array
+    const newLatestNumber = validNumbers[0]; 
+
+    // 1. Verifica e Finaliza/Avança o Alerta (APENAS PARA O LANÇAMENTO MAIS RECENTE)
+    // Os demais números lidos são apenas histórico.
+    checkBetFinalization(newLatestNumber); 
+
     const correctlyOrderedNumbers = validNumbers; 
     
-    // Adiciona os números (Recente -> Antigo) no início do histórico
+    // 2. Adiciona os números (Recente -> Antigo) no início do histórico
     historyArr = [...correctlyOrderedNumbers, ...historyArr];
     
     if (historyArr.length > MAX_HISTORY) {
@@ -1109,7 +1202,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==================== FIM NOVA FUNÇÃO ====================
 
   
-  // ==================== LÓGICA DE ANÁLISE DE SUCESSÃO DE ZONAS (ZONA 5) - MODIFICADA ====================
+  // ==================== LÓGICA DE ANÁLISE DE SUCESSÃO DE ZONAS (ZONA 5) ====================
   function renderZoneAnalysis() {
     if (historyArr.length < 2) { 
       zoneAnalysisDiv.innerHTML = '<span style="color:var(--muted)">Adicione pelo menos 2 números ao histórico para análise de Sucessão de Zonas.</span>';
@@ -1118,7 +1211,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const LOOKBACK_ZONA = 100;
     const triggerNum = historyArr[0]; 
-    const triggerZone = getNeighbors(triggerNum, 2); 
+    const triggerZone = getNeighbors(triggerNum, 2); // ZONA 5
     
     const zoneFollowers = {};
     const lastAppearanceIndex = {}; // Rastreia o índice (atraso) de aparição mais recente
@@ -1257,7 +1350,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const count = groupInfo.count;
             const group = groupInfo.numbers;
             const targetAnchor = groupInfo.first; 
-            const coverageRadius = 2; 
+            const coverageRadius = 2; // ZONA 5
             const coveredNumbers = getNeighbors(targetAnchor, coverageRadius);
             
             let suggestionText;
@@ -1292,7 +1385,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   
   // =========================================================================================
-  // LOGICA PRINCIPAL DO BOOSTER I.A.
+  // LOGICA PRINCIPAL DO BOOSTER I.A. (ATUALIZADA)
   // =========================================================================================
 
   function renderBetSuggestion() {
@@ -1311,7 +1404,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const triggerNum = historyArr[0];
-      const targetZoneArr = getNeighbors(triggerNum, 2); 
+      const targetZoneArr = getNeighbors(triggerNum, 2); // ZONA 5
       const targetZone = new Set(targetZoneArr); 
 
       const triggerSuccessors = []; 
@@ -1331,16 +1424,61 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const totalTriggerCount = triggerSuccessors.length;
       
-      if (totalTriggerCount < 5) {
-          betSuggestionDiv.innerHTML = `<span style="color:var(--muted)">Aguardando mais ocorrências do **${triggerNum}** para análise confiável (Mínimo 5).</span>`;
+      // NOVO CRITÉRIO 1: Gatilho deve ter aparecido mais de 4x (>= 5x)
+      if (totalTriggerCount < TRIGGER_MIN_COUNT) {
+          betSuggestionDiv.innerHTML = `<span style="color:var(--muted)">Aguardando mais ocorrências do **${triggerNum}** para análise confiável (Mínimo ${TRIGGER_MIN_COUNT}x - Encontrado: ${totalTriggerCount}x).</span>`;
           return;
       }
 
+      // ----------------------------------------------------------------------
+      // Se o alerta de aposta estiver ATIVO (aguardando confirmação)
+      // ----------------------------------------------------------------------
+      if (betAlert.isActive || betAlert.confirmations > 0) {
+          let statusText = '';
+          let statusColor = '';
+          
+          if (betAlert.isSuccess) {
+              statusText = '✅ **SUCESSO!** O GREEN CAIU NA ZONA. Registre a entrada.';
+              statusColor = 'var(--alert-green)';
+          } else if (betAlert.confirmations >= 3) {
+              statusText = '🛑 **FALHA!** 3 Tentativas esgotadas. Registre o RED.';
+              statusColor = 'var(--alert-red)';
+          } else {
+              statusText = `🟠 **PADRÃO DETECTADO** no Gatilho **${betAlert.trigger}**. Aguardando Confirmações.`;
+              statusColor = 'var(--zero)';
+          }
+          
+          // Renderiza o painel de status e confirmações
+          let confirmationHTML = `
+              <div style="font-size: 14px; margin-bottom: 8px; color: ${statusColor};">
+                  ${statusText}
+              </div>
+              <div style="font-weight: 700; margin-bottom: 10px;">
+                  Cobertura: <span style="color: var(--accent-secondary);">${betAlert.zones.join(', ')}</span>
+              </div>
+              <div class="booster-alert-stage">
+                  <div class="stage-status">STATUS DA APOSTA (3 TENTATIVAS):</div>
+                  <div>
+                      <span class="stage-icon ${betAlert.confirmations >= 1 ? 'green' : 'orange'} material-symbols-outlined">circle</span>
+                      <span class="stage-icon ${betAlert.confirmations >= 2 ? 'green' : betAlert.confirmations === 1 ? 'orange' : 'orange'} material-symbols-outlined">circle</span>
+                      <span class="stage-icon ${betAlert.confirmations >= 3 ? 'green' : betAlert.confirmations === 2 ? 'orange' : 'orange'} material-symbols-outlined">circle</span>
+                  </div>
+              </div>
+          `;
+          
+          betSuggestionDiv.innerHTML = confirmationHTML;
+          return;
+      }
+      
+      // ----------------------------------------------------------------------
+      // Lógica Padrão: Cálculo e Ativação de Novo Alerta
+      // ----------------------------------------------------------------------
+      
       let intersectionCount = 0;
       
       // Itera sobre os sucessores históricos do GATILHO (triggerNum)
       for (const historicSuccessor of triggerSuccessors) {
-          const successorZone = getNeighbors(historicSuccessor, 2); 
+          const successorZone = getNeighbors(historicSuccessor, 2); // ZONA 5
           
           let hasIntersection = false;
           // Verifica se a Zona do Sucessor Intercepta a Zona do GATILHO Atual (targetZone)
@@ -1365,7 +1503,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       let suggestionHTML = `
           <div style="font-size: 14px; margin-bottom: 8px; color: var(--muted);">
-              O GATILHO atual (último número) é: <span style="color: var(--zero); font-weight: 700;">${triggerNum}</span>.
+              O GATILHO atual (último número) é: <span style="color: var(--zero); font-weight: 700;">${triggerNum}</span> (Apareceu ${totalTriggerCount}x).
           </div>
           <div style="font-family: 'Passion One', cursive; font-size: 16px;">
               🔗 **Taxa de Intersecção da Zona** (Baseada em ${totalTriggerCount} sucessores): 
@@ -1374,11 +1512,30 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
       
       if (intersectionRate >= SUGGESTION_THRESHOLD) {
-          const betZones = sortedSuccessors.map(num => `Zona ${num}: ${getNeighbors(num, 2).join(', ')}`);
+          const betZones = [];
+          const allTargetNumbers = new Set();
+          
+          sortedSuccessors.forEach(num => {
+              const zone = getNeighbors(num, 2); // ZONA 5
+              betZones.push(`Zona ${num}: ${zone.join(', ')}`);
+              zone.forEach(n => allTargetNumbers.add(n));
+          });
+          
+          const finalTargetZones = Array.from(allTargetNumbers).sort((a, b) => a - b);
+          
+          // ATIVAÇÃO DO NOVO ALERTA
+          betAlert = {
+              isActive: true, 
+              trigger: triggerNum,
+              zones: finalTargetZones,
+              confirmations: 0,
+              isSuccess: false
+          };
+          saveConfig();
           
           suggestionHTML += `
               <div style="margin-top: 12px; margin-bottom: 12px;">
-                  <span style="color: var(--alert-green); font-weight: 800; font-size: 18px;">✅ APOSTA BOOSTER ATIVA!</span>
+                  <span style="color: var(--alert-green); font-weight: 800; font-size: 18px;">✅ **APOSTA BOOSTER ATIVA!**</span>
               </div>
               <div style="margin-bottom: 12px;">
                   🎯 **SUGESTÃO DE COBERTURA TRIPLA**: Aposte nas Zonas 5 dos 3 **Sucessores Mais Frequentes** do ${triggerNum}:
@@ -1386,8 +1543,14 @@ document.addEventListener('DOMContentLoaded', () => {
                       ${betZones.join('<br>')}
                   </div>
               </div>
+              <div style="margin-bottom: 15px;">
+                  <span style="font-weight: 700;">Cobertura Total Única:</span> <span style="color: var(--accent-secondary);">${finalTargetZones.join(', ')}</span>
+              </div>
               <div>
                   ✨ **Probabilidade Histórica de Intersecção**: <span class="positive">${intersectionRate.toFixed(1)}%</span>
+              </div>
+              <div style="font-size: 14px; color: var(--zero); font-weight: bold; margin-top: 10px;">
+                🔴 INÍCIO DO ESTÁGIO DE CONFIRMAÇÃO: Aposta ativa por 3 Lançamentos!
               </div>
           `;
       } else {
@@ -1560,12 +1723,12 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             calculateStats();
             renderHistory();
-            renderLatestSuccessors(); // <--- CHAMADA para renderizar o card de sucessores imediatos
+            renderLatestSuccessors(); 
             renderZoneAnalysis();
             renderHotCold();
             renderBankrollDashboard();
             renderBankrollHistory();
-            renderBetSuggestion(); 
+            renderBetSuggestion(); // Inclui o novo estado de alerta
             
             // Bloqueia inputs/botões se estiver no modo DEMO para reforçar
             const isDemo = config.mode === 'DEMO';
