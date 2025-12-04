@@ -1,3 +1,22 @@
+🚀 Animação e Lógica de Confirmação para o Booster I.A.
+Compreendido! Você quer uma melhoria visual e uma nova camada de gestão de risco e confirmação de padrão para o Booster I.A.
+A nova lógica será:
+ * O Booster só sugere a aposta quando o Gatilho for confirmado (repetição \ge 4\text{x}) e a I.A. tiver calculado a Zona de Aposta.
+ * Após a sugestão, a I.A. entra em modo de Confirmação e espera que o próximo lançamento caia FORA da Zona de Aposta para confirmar o padrão.
+ * Serão necessárias 3 Confirmações (CONFIRMATION_ROUNDS_UI = 3).
+ * Se o número cair DENTRO da Zona de Aposta antes de atingir 3 confirmações, o padrão é considerado QUEBRADO (falha), e a I.A. deve Avançar para o Próximo Padrão (o que, neste contexto, significa aguardar o próximo Gatilho/Lançamento, resetando a contagem de confirmações).
+Para implementar isso, precisaremos de:
+ * Uma nova constante para o número de confirmações da UI (CONFIRMATION_ROUNDS_UI = 3).
+ * Um novo estado para rastrear as confirmações (config.boosterConfirmations).
+ * Uma atualização na função addNumber para gerenciar a lógica de quebra/avanço de padrão.
+ * Uma atualização na função renderBetSuggestion para exibir a animação de confirmação.
+💻 Atualização do Código JavaScript Completo
+As alterações foram feitas em:
+ * Constantes: Adição de CONFIRMATION_ROUNDS_UI.
+ * Configuração: Adição de boosterConfirmations ao objeto config.
+ * Lógica de Renderização (renderBetSuggestion): Exibição da animação de confirmação.
+ * Lógica Central (addNumber): Contagem e reset das confirmações.
+Aqui está o código completo e modificado:
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -26,6 +45,10 @@
   --alert-red:#D83C3C;
   --alert-green:#00A859; /* Verde Bandeira */
   --lock-bg:rgba(255, 255, 255, 0.95); /* Bloqueio Claro com Blur */
+
+  --status-pending: #FFC300; /* Laranja para Pendente */
+  --status-success: var(--alert-green); /* Verde para Sucesso */
+  --status-fail: var(--alert-red); /* Vermelho para Falha */
 }
 *{box-sizing:border-box}
 body{
@@ -453,6 +476,58 @@ body.login-active {
     margin-top: 10px;
     line-height: 1.5;
 }
+
+/* ================== ANIMAÇÃO DE CONFIRMAÇÃO ================== */
+
+.confirmation-animation {
+    margin-top: 15px;
+    padding: 10px;
+    border: 1px dashed var(--muted);
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.conf-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 5px;
+    font-weight: 700;
+}
+.conf-icon {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: 10px;
+    font-weight: 900;
+    transition: background-color 0.5s;
+    flex-shrink: 0;
+}
+.conf-pending { background-color: var(--status-pending); animation: pulse 1s infinite alternate; }
+.conf-success { background-color: var(--status-success); }
+.conf-fail { background-color: var(--status-fail); }
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(255, 195, 0, 0.7); }
+    100% { box-shadow: 0 0 0 5px rgba(255, 195, 0, 0); }
+}
+
+.status-text-ready {
+    color: var(--status-success);
+    font-size: 1.5em;
+    font-family: 'Passion One', cursive;
+    text-shadow: 0 0 5px var(--status-success);
+}
+.status-text-fail {
+    color: var(--status-fail);
+    font-size: 1.3em;
+    font-weight: 700;
+}
+
 </style>
 </head>
 <body id="bodyTag">
@@ -649,13 +724,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const LOCK_DURATION = 2 * 60 * 60 * 1000; // 2 horas em milis
 
   /* =========================================================================================
-   * CONFIGURAÇÕES ESPECÍFICAS DO NOVO BOOSTER I.A. (Quebra de Sucessão)
+   * CONFIGURAÇÕES ESPECÍFICAS DO BOOSTER I.A. (Quebra de Sucessão)
    ========================================================================================= */
   const SUCCESSOR_LOOKBACK = 100; 
-  const MIN_HISTORY_FOR_BOOSTER = 10; // Reduzido para testar o novo padrão
+  const MIN_HISTORY_FOR_BOOSTER = 10; 
   const SUCCESSOR_DISPLAY_LIMIT = 10; 
-  // NOVA CONSTANTE:
-  const CONFIRMATION_ROUNDS = 4; // ALTERADO: Mínimo de repetições do Gatilho como predecessor.
+  const CONFIRMATION_ROUNDS = 4; // Mínimo de repetições do Gatilho como predecessor.
+  const CONFIRMATION_ROUNDS_UI = 3; // NOVO: Quantas confirmações de "fora da zona" são necessárias.
+
 
   
   /* ================== ELEMENTOS DOM (Mantidos) ================== */
@@ -691,7 +767,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const uploadPhotoInput = document.getElementById('uploadPhoto');
   const clearBtn = document.getElementById('clearBtn');
   
-  /* ================== ESTADO DA APLICAÇÃO (Mantidos) ================== */
+  /* ================== ESTADO DA APLICAÇÃO ================== */
   let historyArr = []; 
   let numberStats = {}; 
   let config = {
@@ -701,6 +777,7 @@ document.addEventListener('DOMContentLoaded', () => {
       lockUntil: 0,
       lockReason: '', 
       sessionStart: 0, 
+      boosterConfirmations: 0, // NOVO: Contador de confirmações de "fora da zona"
   };
   
   let bankrollState = {
@@ -710,7 +787,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   const MAX_HISTORY = 100;
   
-  /* ================== UTILITÁRIOS OTIMIZADOS (Mantidos) ================== */
+  /* ================== UTILITÁRIOS OTIMIZADOS ================== */
   const formatCurrency = (value) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 });
   function getColor(num) {
     if (num === 0) return 'zero';
@@ -736,7 +813,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return neighbors; 
   }
   
-  /* ================== PERSISTÊNCIA E SESSÃO (Mantidos) ================== */
+  /* ================== PERSISTÊNCIA E SESSÃO ================== */
   
   function saveConfig() {
     localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(config));
@@ -751,7 +828,8 @@ document.addEventListener('DOMContentLoaded', () => {
           config.isLocked = loaded.isLocked || false;
           config.lockUntil = loaded.lockUntil || 0;
           config.lockReason = loaded.lockReason || '';
-          config.sessionStart = loaded.sessionStart || 0; 
+          config.sessionStart = loaded.sessionStart || 0;
+          config.boosterConfirmations = loaded.boosterConfirmations || 0; // NOVO
         }
     } catch (e) {
         console.error("Erro ao carregar configuração:", e);
@@ -774,7 +852,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return config.isLoggedIn; 
   }
   
-  /* ================== LÓGICA DE BLOQUEIO / STOP / SESSÃO (Mantidas) ================== */
+  /* ================== LÓGICA DE BLOQUEIO / STOP / SESSÃO ================== */
 
   let countdownInterval;
 
@@ -1016,11 +1094,35 @@ document.addEventListener('DOMContentLoaded', () => {
     numberStats = stats;
   }
   
+  // ==================== LÓGICA DE ADIÇÃO DE NÚMEROS (MODIFICADA) ====================
+  
   function addNumber(num) {
     if (num < 0 || num > 36 || isNaN(num)) {
         console.error("Tentativa de adicionar número inválido:", num);
         return;
     }
+    
+    // --- LÓGICA DE CONFIRMAÇÃO DO BOOSTER I.A. ---
+    // 1. Verificar se a I.A. estava ativa e sugerindo uma aposta (config.boosterBetZone existe)
+    if (config.boosterConfirmations < CONFIRMATION_ROUNDS_UI && config.boosterBetZone && config.boosterBetZone.length > 0) {
+        const currentZone = config.boosterBetZone;
+        const numberLandedInZone = currentZone.includes(Number(num));
+
+        if (!numberLandedInZone) {
+            // Confirmado: o número caiu FORA da zona sugerida.
+            config.boosterConfirmations++;
+        } else {
+            // Padrão Quebrado/Falha: o número caiu DENTRO da zona.
+            config.boosterConfirmations = 0; // Reset para avançar para o próximo padrão
+            delete config.boosterBetZone; // Limpa a zona de aposta anterior
+            delete config.boosterTriggerNum; // Limpa o Gatilho anterior
+        }
+        saveConfig();
+    } 
+    // Se as confirmações chegaram a 3, elas serão resetadas no renderBetSuggestion para indicar "Apostar" e liberar o próximo ciclo.
+    
+    // ----------------------------------------------
+    
     if (historyArr.length >= MAX_HISTORY) { historyArr.pop(); }
     historyArr.unshift(Number(num)); 
     saveHistoryData();
@@ -1039,11 +1141,28 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const correctlyOrderedNumbers = validNumbers; 
     
-    historyArr = [...correctlyOrderedNumbers, ...historyArr];
+    // Como a lógica de confirmação é baseada no LANCE ANTERIOR, 
+    // não aplicaremos a lógica de confirmação aqui, apenas a adição.
+    // A lógica de confirmação será aplicada ao adicionar número por número.
     
-    if (historyArr.length > MAX_HISTORY) {
-      historyArr = historyArr.slice(0, MAX_HISTORY);
-    }
+    let numbersToAdd = [...correctlyOrderedNumbers];
+    
+    // Adiciona um por um para que a lógica do addNumber (que é baseada no ultimo lance) funcione corretamente.
+    // Inverte para processar do mais antigo do lote para o mais recente do lote.
+    numbersToAdd.reverse().forEach(n => {
+         // Temporariamente desativamos a lógica de confirmação para o lote.
+         // Senão teríamos que recriar toda a lógica de estado intermediário aqui.
+         // A confirmação é mais relevante para input em tempo real.
+         
+         // Limpamos o estado de confirmação para evitar contagens estranhas em input de lote.
+         config.boosterConfirmations = 0;
+         delete config.boosterBetZone;
+         delete config.boosterTriggerNum;
+         saveConfig();
+         
+         if (historyArr.length >= MAX_HISTORY) { historyArr.pop(); }
+         historyArr.unshift(Number(n)); 
+    });
     
     saveHistoryData();
     updateUI();
@@ -1205,14 +1324,11 @@ document.addEventListener('DOMContentLoaded', () => {
   
   
   // =========================================================================================
-  // 🚀 NOVO CÓDIGO INCLUÍDO/MODIFICADO: LÓGICA DE BOOSTER I.A. (2 VIZINHOS)
+  // 🚀 CÓDIGO DO BOOSTER I.A. (MODIFICADO COM LÓGICA DE CONFIRMAÇÃO)
   // =========================================================================================
 
   /**
-   * 🆕 Calcula a Zona de Aposta com '2 Vizinhos' para cada número sucessor.
-   *
-   * @param {number[]} successors Array de números sucessores identificados.
-   * @returns {number[]} Um Array de números ordenados que formam a zona de aposta final.
+   * Calcula a Zona de Aposta com '2 Vizinhos' para cada número sucessor.
    */
   function calculateBetZone(successors) {
     const finalZone = new Set();
@@ -1228,38 +1344,30 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
-   * 🆕 Identifica os sucessores com base no novo critério: 
-   * 1. Confirma se o Gatilho se repetiu no mínimo CONFIRMATION_ROUNDS (4x) como predecessor.
-   * 2. Se SIM, retorna TODOS os números que o sucederam.
-   *
-   * @param {number} triggerNum O número do último lançamento (gatilho).
-   * @returns {{triggerCount: number, successors: number[]}} Objeto com a contagem do gatilho e a lista de sucessores.
+   * Identifica os sucessores com base na confirmação do gatilho.
    */
   function findBoosterSuccessors(triggerNum) {
     const allSuccessors = new Set();
     let triggerCount = 0;
     const limit = Math.min(historyArr.length - 1, SUCCESSOR_LOOKBACK);
 
-    // Itera do 1º lance anterior até o limite (SUCCESSOR_LOOKBACK)
     for (let i = 1; i <= limit; i++) {
         const predecessorNum = historyArr[i];
         const successorNum = historyArr[i - 1]; 
         
         if (predecessorNum === triggerNum) {
             triggerCount++;
-            allSuccessors.add(successorNum); // Adiciona todos os sucessores encontrados
+            allSuccessors.add(successorNum); 
         }
     }
     
-    // 1. Confirmação do Gatilho:
     if (triggerCount < CONFIRMATION_ROUNDS) {
         return { 
             triggerCount: triggerCount, 
-            successors: [] // Retorna vazio se o Gatilho não se repetiu o suficiente
+            successors: [] 
         };
     }
     
-    // 2. Retorna todos os sucessores únicos se o Gatilho foi confirmado
     return { 
         triggerCount: triggerCount, 
         successors: Array.from(allSuccessors).map(n => parseInt(n, 10))
@@ -1271,6 +1379,7 @@ document.addEventListener('DOMContentLoaded', () => {
    */
   function renderBetSuggestion() {
     if (config.isLocked || historyArr.length < MIN_HISTORY_FOR_BOOSTER) {
+        // ... (Mensagem de Bloqueio/Aguardando Dados - Sem alteração)
         let msg = '<span style="color:var(--muted)">';
         if (config.isLocked) {
             msg += `⛔ **ANALISADOR BLOQUEADO:** Motivo: ${config.lockReason === 'STOP_LOSS' ? 'Stop Loss' : 'Stop Win'}.`;
@@ -1283,49 +1392,142 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const triggerNum = historyArr[0];
-    // 1. Encontrar sucessores e a contagem do gatilho
-    const { triggerCount, successors } = findBoosterSuccessors(triggerNum);
+    let betZone = [];
+    let triggerCount = 0;
+    let successors = [];
+
+    // Tenta obter dados do estado (se o padrão já foi detectado) ou recalcula.
+    if (config.boosterBetZone && config.boosterBetZone.length > 0 && config.boosterTriggerNum === triggerNum) {
+        // Se a zona já existe para este gatilho, a I.A. está no modo de confirmação ou pronta para apostar.
+        betZone = config.boosterBetZone;
+        
+        // Recalcula o triggerCount e successors apenas para exibição
+        const result = findBoosterSuccessors(triggerNum);
+        triggerCount = result.triggerCount;
+        successors = result.successors;
+
+    } else {
+        // Se a zona não existe, recalcula o padrão.
+        const result = findBoosterSuccessors(triggerNum);
+        triggerCount = result.triggerCount;
+        successors = result.successors;
+        
+        if (triggerCount >= CONFIRMATION_ROUNDS && successors.length > 0) {
+            // Padrão Detectado e Confirmado pelo histórico (>= 4x)
+            betZone = calculateBetZone(successors);
+            
+            // Salva a zona no estado e reseta confirmações para iniciar o ciclo de espera/confirmação
+            config.boosterBetZone = betZone;
+            config.boosterTriggerNum = triggerNum;
+            config.boosterConfirmations = 0;
+            saveConfig();
+        } else {
+            // Gatilho não confirmado ou sem sucessores. Limpa o estado.
+            delete config.boosterBetZone;
+            delete config.boosterTriggerNum;
+            config.boosterConfirmations = 0;
+            saveConfig();
+            
+            betSuggestionDiv.innerHTML = `
+                <span style="color:var(--alert-red); font-weight: bold;">
+                    ❌ GATILHO NÃO CONFIRMADO:
+                </span>
+                <p style="margin-top: 5px; color: var(--muted); font-weight: normal;">
+                    O último número **${triggerNum}** se repetiu apenas **${triggerCount}x** como predecessor nos últimos ${SUCCESSOR_LOOKBACK} lances.
+                    <br>
+                    **Mínimo Requerido:** **${CONFIRMATION_ROUNDS}x**.
+                </p>
+            `;
+            return;
+        }
+    }
+
+    // --- RENDERIZAÇÃO DA ANIMAÇÃO DE CONFIRMAÇÃO ---
     
-    if (triggerCount < CONFIRMATION_ROUNDS) {
+    // Confirmação Bem-sucedida! Sugere a APOSTA.
+    if (config.boosterConfirmations >= CONFIRMATION_ROUNDS_UI) {
+        // Limpa o estado de confirmação para forçar o próximo ciclo a recomeçar (Avançar para o Próximo Padrão)
+        delete config.boosterBetZone;
+        delete config.boosterTriggerNum;
+        config.boosterConfirmations = 0;
+        saveConfig();
+        
         betSuggestionDiv.innerHTML = `
-            <span style="color:var(--alert-red); font-weight: bold;">
-                ❌ GATILHO NÃO CONFIRMADO:
-            </span>
-            <p style="margin-top: 5px; color: var(--muted); font-weight: normal;">
-                O último número **${triggerNum}** se repetiu apenas **${triggerCount}x** como predecessor nos últimos ${SUCCESSOR_LOOKBACK} lances.
-                <br>
-                **Mínimo Requerido:** **${CONFIRMATION_ROUNDS}x**. Aguarde uma confirmação mais forte.
+            <p style="margin-bottom: 5px;">
+                GATILHO: <span class="iaGlow" style="font-size: 1.2em;">${triggerNum}</span> 
+                <span style="color: var(--alert-green); font-size: 14px; font-weight: bold;"> (Confirmado ${triggerCount}x)</span>
+            </p>
+            
+            <p class="status-text-ready">
+                ✅ CONFIRMAÇÕES OBTIDAS!
+            </p>
+
+            <p style="font-size: 14px; margin-top: 10px; margin-bottom: 5px; color: var(--muted);">
+                🎯 **APOSTE AGORA:** Zona Ampla (2 Vizinhos) dos Sucessores.
+            </p>
+
+            <div class="bet-zone-list">
+                ${betZone.join(', ')}
+            </div>
+            <p style="font-size: 14px; margin-top: 5px; color: var(--muted);">
+                Total de números na zona: **${betZone.length}**
+            </p>
+            
+            <p style="font-size: 14px; margin-top: 10px; color: var(--alert-green); font-weight: bold;">
+                PRÓXIMO CICLO: A I.A. irá procurar um novo gatilho.
             </p>
         `;
         return;
     }
 
-    // 2. Calcular a Zona de Aposta com 2 Vizinhos
-    const betZone = calculateBetZone(successors);
+    // Renderização no Modo de Confirmação (Padrão Detectado)
+    let confirmationHtml = `<div class="confirmation-animation">
+        <div class="conf-line" style="color: var(--status-pending); font-size: 1.1em;">
+            <span class="conf-icon conf-pending">...</span>
+            PADRÃO DETECTADO 🟠
+        </div>
+        <p style="font-size: 12px; color: var(--muted); margin: 5px 0 10px 26px;">
+            Gatilho: ${triggerNum} (Zona: ${betZone.length} números)
+        </p>
+        <div style="margin-left: 10px;">
+    `;
 
-    // 3. Renderizar o resultado
-    let html = `
+    for (let i = 1; i <= CONFIRMATION_ROUNDS_UI; i++) {
+        const isConfirmed = i <= config.boosterConfirmations;
+        const statusClass = isConfirmed ? 'conf-success' : 'conf-pending';
+        const iconContent = isConfirmed ? '✔' : '...';
+        const colorStyle = isConfirmed ? 'color: var(--status-success);' : 'color: var(--muted);';
+
+        confirmationHtml += `
+            <div class="conf-line" style="${colorStyle}">
+                <span class="conf-icon ${statusClass}">${iconContent}</span>
+                Aguardando Confirmação ${i} ${isConfirmed ? '🟢 (OK)' : '...'}
+            </div>
+        `;
+    }
+    
+    confirmationHtml += `</div></div>`;
+    
+    betSuggestionDiv.innerHTML = `
         <p style="margin-bottom: 5px;">
-            GATILHO CONFIRMADO: <span class="iaGlow" style="font-size: 1.2em;">${triggerNum}</span>
-            <span style="color: var(--alert-green); font-size: 14px; font-weight: bold;"> (Repetiu ${triggerCount}x)</span>
-            <br>
-            SUCESSORES ENCONTRADOS: 
-            <span style="color: var(--zero); font-weight: bold; font-size: 1.1em;">${successors.length > 0 ? successors.join(', ') : 'NENHUM! (Risco Alto)'}</span>
+            GATILHO: <span class="iaGlow" style="font-size: 1.2em;">${triggerNum}</span> 
+            <span style="color: var(--alert-green); font-size: 14px; font-weight: bold;"> (Confirmado ${triggerCount}x)</span>
         </p>
 
-        <p style="font-size: 14px; margin-top: 10px; margin-bottom: 5px; color: var(--muted);">
-            🚀 Aposta Principal: **ZONA AMPLA (2 VIZINHOS)** da união de **TODOS** os sucessores.
+        <p style="font-size: 14px; margin-top: 10px; margin-bottom: 5px; color: var(--muted); font-weight: bold;">
+            PRÓXIMA AÇÃO: Aguardar **${CONFIRMATION_ROUNDS_UI - config.boosterConfirmations}** lances **FORA** desta Zona.
         </p>
-
-        <div class="bet-zone-list">
+        
+        <div class="bet-zone-list" style="border-color: var(--status-pending); color: var(--status-pending); text-shadow: 0 0 8px rgba(255,195,0,0.8);">
             ${betZone.join(', ')}
         </div>
         <p style="font-size: 14px; margin-top: 5px; color: var(--muted);">
             Total de números na zona: **${betZone.length}**
         </p>
+
+        ${confirmationHtml}
     `;
 
-    betSuggestionDiv.innerHTML = html;
   }
 
   // =========================================================================================
@@ -1364,6 +1566,13 @@ document.addEventListener('DOMContentLoaded', () => {
   function removeNumberByIndex(index) {
     if (confirm(`Tem certeza que deseja remover o número ${historyArr[index]} da posição ${index + 1} (o ${index + 1}º mais recente)?`)) {
         historyArr.splice(index, 1);
+        
+        // Resetamos as confirmações se o número removido for o último (gatilho) ou afetar a ordem.
+        config.boosterConfirmations = 0;
+        delete config.boosterBetZone;
+        delete config.boosterTriggerNum;
+        saveConfig();
+        
         saveHistoryData();
         updateUI();
     }
@@ -1508,7 +1717,7 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
   }
   
-  /* ================== EVENT LISTENERS (Mantidos) ================== */
+  /* ================== EVENT LISTENERS ================== */
   
   // Login
   document.getElementById('btnSignInReal').addEventListener('click', () => {
@@ -1575,12 +1784,18 @@ document.addEventListener('DOMContentLoaded', () => {
   clearBtn.addEventListener('click', () => {
     if (confirm('Tem certeza que deseja limpar todo o Histórico de Números?')) {
         historyArr = [];
+        // Limpa estado do Booster
+        config.boosterConfirmations = 0;
+        delete config.boosterBetZone;
+        delete config.boosterTriggerNum;
+        saveConfig();
+        
         saveHistoryData();
         updateUI();
     }
   });
 
-  // Upload/OCR (Mantidos)
+  // Upload/OCR
   btnUpload.addEventListener('click', () => { uploadPhotoInput.click(); });
 
   uploadPhotoInput.addEventListener('change', async (event) => {
@@ -1649,3 +1864,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </body>
 </html>
+
