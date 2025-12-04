@@ -555,7 +555,7 @@ body.login-active {
     </select>
   </div>
   
-  <div class="card" id="boosterCard">
+  <div class="card" id="latestSuccessorsCard">
     <div class="suggestionTitle iaGlow">
         <span class="material-symbols-outlined">magic_button</span>
         BOOSTER DE APOSTA I.A. (<span id="currentPatternName">ZONA 5</span>)
@@ -565,7 +565,7 @@ body.login-active {
     </div>
   </div>
 
-  <div class="card" id="patternAnalysisCard">
+  <div class="card">
     <div class="suggestionTitle">
         <span class="material-symbols-outlined">auto_fix</span>
         ANÁLISE DETALHADA DO GATILHO
@@ -677,6 +677,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const patternSelector = document.getElementById('patternSelector');
       if(patternSelector) {
         patternSelector.value = config.currentPattern || 'zoneSuccession';
+        // Define o nome do padrão ativo
         document.getElementById('currentPatternName').textContent = patternSelector.options[patternSelector.selectedIndex].text.split('(')[0].trim();
       }
 
@@ -1071,6 +1072,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function updateBetSuggestion(history) {
       const pattern = config.currentPattern;
+      // Note que os IDs foram mantidos como betSuggestion e patternAnalysisOutput
       const betSuggestionElement = document.getElementById('betSuggestion');
       const patternAnalysisOutput = document.getElementById('patternAnalysisOutput');
       const currentPatternNameElement = document.getElementById('currentPatternName');
@@ -1086,7 +1088,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (history.length < 1) {
           betSuggestionElement.innerHTML = `<span style="color:var(--muted)">Adicione o primeiro número para iniciar a análise.</span>`;
           patternAnalysisOutput.innerHTML = `Adicione números ao histórico para ver a análise detalhada.`;
-          currentPatternNameElement.textContent = document.getElementById('patternSelector').options[document.getElementById('patternSelector').selectedIndex].text.split('(')[0].trim();
+          // Atualiza o nome do padrão mesmo sem histórico
+          const selector = document.getElementById('patternSelector');
+          currentPatternNameElement.textContent = selector.options[selector.selectedIndex].text.split('(')[0].trim();
           return;
       }
 
@@ -1094,7 +1098,8 @@ document.addEventListener('DOMContentLoaded', () => {
       let result = { suggestion: [], analysisOutput: 'Nenhuma análise disponível para este padrão.' };
 
       // Atualiza o nome do padrão no Booster
-      currentPatternNameElement.textContent = document.getElementById('patternSelector').options[document.getElementById('patternSelector').selectedIndex].text.split('(')[0].trim();
+      const selector = document.getElementById('patternSelector');
+      currentPatternNameElement.textContent = selector.options[selector.selectedIndex].text.split('(')[0].trim();
 
 
       // 3. Executar o Padrão Selecionado
@@ -1404,6 +1409,12 @@ document.addEventListener('DOMContentLoaded', () => {
       localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(config));
       updateBetSuggestion(history); // Recalcula a sugestão com o novo padrão
   });
+
+  // Inicializa o nome do padrão ativo no booster (após o seletor existir)
+  const selector = document.getElementById('patternSelector');
+  if (selector && document.getElementById('currentPatternName')) {
+      document.getElementById('currentPatternName').textContent = selector.options[selector.selectedIndex].text.split('(')[0].trim();
+  }
 
 
   // Configuração inicial da tela de login
