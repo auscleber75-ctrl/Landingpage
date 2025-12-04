@@ -598,6 +598,1708 @@ body.login-active {
 document.addEventListener('DOMContentLoaded', () => {
 
   /* ================== CONSTANTES DE CONFIGURAÇÃO ================== */
+  const BANKROLL_STORAGE_KEY = 'roletaIAPBankroll_main';
+  const HISTORY_STORAGE_KEY = 'roletaIAPHistory'; 
+  const CONFIG_STORAGE_KEY = 'roletaIAPConfig'; 
+  
+  const WHEEL_ORDER = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
+  const WHEEL_INDEX_MAP = {};
+  WHEEL_ORDER.forEach((num, index) => { WHEEL_INDEX_MAP[num] = index; });
+
+  const RED_NUMBERS = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
+  
+  // Constantes de Stop Loss/Win/Sessão
+  const STOP_LOSS_COUNT = 2; // 2 REDs consecutivos
+  const STOP_LOSS_AMOUNT = 35.00; // R$35,00 de prejuízo total
+  const STOP_WIN_COUNT = 3; // 3 WINs consecutivos
+  const STOP_WIN_AMOUNT = 35.00; // R$35,00 de lucro total
+  const LOCK_DURATION = 2 * 60 * 60 * 1000; // 2 horas em milis
+
+  /* =========================================================================================
+   * CONFIGURAÇÕES ESPECÍFICAS DO BOOSTER I.A. (Quebra de Sucessão)
+   ========================================================================================= */
+  const SUCCESSOR_LOOKBACK = 100; 
+  const MIN_HISTORY_FOR_BOOSTER = 10; 
+  const SUCCESSOR_DISPLAY_LIMIT = 10; 
+  const CONFIRMATION_ROUNDS = 4; // Mínimo de repetições do Gatilho como predecessor.
+  const CONFIRMATION_ROUNDS_UI = 3; // Quantas confirmações de "fora da zona" são necessárias.
+
+  
+  /* ================== ELEMENTOS DOM ================== */
+  const bodyTag = document.getElementById('bodyTag');
+  const mainPanel = document.getElementById('mainPanel');
+  const lockScreen = document.getElementById('lockScreen');
+  const lockTitle = document.getElementById('lockTitle');
+  const countdownTimer = document.getElementById('countdownTimer');
+  const btnSkipLock = document.getElementById('btnSkipLock');
+  const sessionTimerDiv = document.getElementById('sessionTimer'); 
+  const boosterCard = document.getElementById('boosterCard');
+  
+  const historyDiv = document.getElementById('history');
+  const historyCount = document.getElementById('historyCount');
+  const zoneAnalysisDiv = document.getElementById('zoneAnalysis');
+  const hotColdDiv = document.getElementById('hotCold');
+  const betSuggestionDiv = document.getElementById('betSuggestion'); 
+  const gridNumbers = document.getElementById('gridNumbers');
+  
+  const latestSuccessorsCard = document.getElementById('latestSuccessorsCard');
+  const latestSuccessorsList = document.getElementById('latestSuccessorsList');
+  const successorTriggerNumDiv = document.getElementById('successorTriggerNum');
+
+
+  const btnRegisterWin = document.getElementById('btnRegisterWin');
+  const btnRegisterLoss = document.getElementById('btnRegisterLoss');
+  const betAmountInput = document.getElementById('betAmountInput');
+  const initialBankrollInput = document.getElementById('initialBankrollInput');
+  const bankrollHistoryDiv = document.getElementById('bankrollHistory');
+  const btnUpload = document.getElementById('btnUpload'); 
+  const uploadPhotoInput = document.getElementById('uploadPhoto');
+  const clearBtn = document.getElementById('clearBtn');
+
+  /* ================== ESTADO DA APLICAÇÃO ================== */
+  let historyArr = []; 
+  let numberStats = {}; 
+  let config = {
+      mode: 'REAL', 
+      isLoggedIn: true, // <<< CORREÇÃO DE LOGIN: FORÇADO PARA TRUE
+      isLocked: false,
+      lockUntil: 0,
+      lockReason: '', 
+      sessionStart: 0, 
+      boosterConfirmations: 0, 
+      boosterIsLocked: false, 
+  };
+  
+  let bankrollState = {
+    initial: 0,
+    current: 0,
+    history: [] 
+  };
+  const MAX_HISTORY = 100;
+  
+  /* ================== UTILITÁRIOS OTIMIZADOS ================== */
+  const formatCurrency = (value) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  function getColor(num) {
+    if (num === 0) return 'zero';
+    if (RED_NUMBERS.has(num)) return 'red';
+    return 'black';
+  }
+  
+  const safeMath = (num) => parseFloat(num.toFixed(2));
+
+
+  /**
+   * Obtém vizinhos de um número com um raio específico.
+   */
+  function getNeighbors(centerNum, radius) {
+    const centerIndex = WHEEL_INDEX_MAP[centerNum];
+    const neighbors = [];
+    const len = WHEEL_ORDER.length;
+
+    for (let i = -radius; i <= radius; i++) {
+        const index = (centerIndex + i + len) % len;
+        neighbors.push(WHEEL_ORDER[index]);
+    }
+    return neighbors; 
+  }
+  
+  /* ================== PERSISTÊNCIA E SESSÃO ================== */
+  
+  function saveConfig() {
+    localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(config));
+  }
+  function loadConfig() {
+    try {
+        const savedConfig = localStorage.getItem(CONFIG_STORAGE_KEY);
+        if (savedConfig) {
+          const loaded = JSON.parse(savedConfig);
+          config.mode = 'REAL'; 
+          config.isLoggedIn = true; // <<< CORREÇÃO DE LOGIN: FORÇADO PARA TRUE
+          
+          config.isLocked = loaded.isLocked || false;
+          config.lockUntil = loaded.lockUntil || 0;
+          config.lockReason = loaded.lockReason || '';
+          config.sessionStart = loaded.sessionStart || 0;
+          config.boosterConfirmations = loaded.boosterConfirmations || 0;
+          config.boosterIsLocked = loaded.boosterIsLocked || false; 
+          
+          if (config.sessionStart === 0) {
+              config.sessionStart = Date.now(); // Inicia a sessão automaticamente
+          }
+        } else {
+             config.sessionStart = Date.now(); // Inicia a sessão na primeira carga
+        }
+    } catch (e) {
+        console.error("Erro ao carregar configuração:", e);
+    }
+  }
+  
+  function getLoginStatus() {
+      return config.isLoggedIn; 
+  }
+  
+  /* ================== LÓGICA DE BLOQUEIO / STOP / SESSÃO ================== */
+
+  let countdownInterval;
+
+  function checkLockStatus() {
+      const now = Date.now();
+      
+      // 1. Verifica se o bloqueio existente terminou
+      if (config.isLocked && config.lockUntil > now) {
+          lockScreen.classList.remove('hidden');
+          mainPanel.classList.add('hidden');
+          bodyTag.classList.add('login-active'); 
+          
+          let titleText = '';
+          if (config.lockReason === 'STOP_LOSS') { titleText = 'ZONA SEGURA ATINGIDA (STOP LOSS)'; }
+          else if (config.lockReason === 'STOP_WIN') { titleText = 'ZONA SEGURA ATINGIDA (STOP WIN)'; }
+          else if (config.lockReason === 'SKIPPED') { titleText = 'BLOQUEIO INTERROMPIDO'; } 
+
+          lockTitle.textContent = titleText;
+          lockTitle.classList.toggle('win', config.lockReason === 'STOP_WIN');
+          document.getElementById('lockIcon').style.color = (config.lockReason === 'STOP_WIN') ? 'var(--alert-green)' : 'var(--alert-red)';
+
+          startLockCountdown();
+          return true; 
+      }
+
+      // 2. Se o bloqueio terminou (ou não existia), desbloqueia/mantém desbloqueado
+      if (config.isLocked && config.lockUntil <= now) {
+          // Bloqueio terminou! Resetamos o estado.
+          config.isLocked = false;
+          config.lockUntil = 0;
+          config.lockReason = '';
+          
+          // **AJUSTE CRÍTICO**: Reset da banca e do histórico de transações.
+          if (bankrollState.initial > 0) {
+            bankrollState.initial = bankrollState.current; 
+            bankrollState.history = []; // RESET DO HISTÓRICO PARA NOVO CICLO
+            saveBankrollData();
+          }
+
+          config.sessionStart = Date.now(); 
+          saveConfig();
+      }
+      
+      // 3. Estado Desbloqueado e Logado (Sempre True agora)
+      lockScreen.classList.add('hidden');
+      mainPanel.classList.remove('hidden');
+      bodyTag.classList.remove('login-active');
+      sessionTimerDiv.textContent = `Sessão: -:-`; 
+
+      stopLockCountdown();
+      return false; 
+  }
+  
+  function startLockCountdown() {
+      stopLockCountdown(); 
+      
+      countdownInterval = setInterval(() => {
+          const remainingTime = config.lockUntil - Date.now();
+          if (remainingTime <= 0) {
+              checkLockStatus(); 
+              return;
+          }
+
+          const totalSeconds = Math.floor(remainingTime / 1000);
+          const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+          const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+          const seconds = String(totalSeconds % 60).padStart(2, '0');
+          
+          countdownTimer.textContent = `${hours}:${minutes}:${seconds}`;
+
+      }, 1000);
+  }
+
+  function stopLockCountdown() {
+      if (countdownInterval) {
+          clearInterval(countdownInterval);
+          countdownInterval = null; 
+      }
+  }
+  
+  function triggerLock(reason) {
+      if (config.isLocked) return;
+
+      config.isLocked = true;
+      config.lockUntil = Date.now() + LOCK_DURATION;
+      config.lockReason = reason;
+      saveConfig();
+      
+      checkLockStatus();
+  }
+  
+  function skipLock() {
+    if (!config.isLocked) return;
+
+    if (confirm('ATENÇÃO! Você está prestes a quebrar a regra de Stop Loss/Win. Isso pode comprometer sua gestão de risco. Tem certeza que deseja pular o bloqueio?')) {
+        config.lockUntil = Date.now() - 1; 
+        config.isLocked = false;
+        config.lockReason = 'SKIPPED';
+        saveConfig();
+        
+        if (bankrollState.initial > 0) {
+            bankrollState.initial = bankrollState.current; 
+            bankrollState.history = []; 
+            saveBankrollData();
+        }
+
+        config.sessionStart = Date.now(); 
+        stopLockCountdown(); 
+        checkLockStatus(); 
+        updateUI(); 
+    }
+}
+
+  function checkStopCondition() {
+      if (config.isLocked || bankrollState.initial === 0) return;
+
+      const { current, initial, history } = bankrollState;
+      const totalProfit = safeMath(current - initial); 
+      
+      if (totalProfit <= -STOP_LOSS_AMOUNT) {
+          triggerLock('STOP_LOSS');
+          return;
+      }
+      if (totalProfit >= STOP_WIN_AMOUNT) {
+          triggerLock('STOP_WIN');
+          return;
+      }
+      
+      let consecutiveLoss = 0;
+      let consecutiveWin = 0;
+      
+      for (let i = history.length - 1; i >= 0; i--) {
+          const amount = history[i].amount;
+          
+          if (amount === 0) continue; 
+          
+          if (amount < 0) {
+              consecutiveLoss++;
+              consecutiveWin = 0; 
+          } else if (amount > 0) {
+              consecutiveWin++;
+              consecutiveLoss = 0; 
+          }
+          
+          if (consecutiveLoss >= STOP_LOSS_COUNT) {
+              triggerLock('STOP_LOSS');
+              return;
+          }
+          if (consecutiveWin >= STOP_WIN_COUNT) {
+              triggerLock('STOP_WIN');
+              return;
+          }
+      }
+  }
+
+  function saveBankrollData() {
+    localStorage.setItem(BANKROLL_STORAGE_KEY, JSON.stringify(bankrollState));
+  }
+  function loadBankrollData() {
+    try {
+        const savedData = localStorage.getItem(BANKROLL_STORAGE_KEY);
+        if (savedData) {
+          bankrollState = JSON.parse(savedData);
+          bankrollState.initial = safeMath(bankrollState.initial || 0); 
+          bankrollState.current = safeMath(bankrollState.current || 0); 
+          bankrollState.history = bankrollState.history || [];
+          bankrollState.history = bankrollState.history.map(item => ({
+              amount: safeMath(item.amount),
+              timestamp: item.timestamp 
+          }));
+        } else {
+          bankrollState = { initial: 0, current: 0, history: [] };
+        }
+        initialBankrollInput.value = bankrollState.initial > 0 ? bankrollState.initial : '';
+    } catch (e) {
+        console.error("Erro ao carregar dados da Banca:", e);
+    }
+  }
+
+  function saveHistoryData() {
+    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(historyArr));
+  }
+  function loadHistoryData() {
+    try {
+        const savedHistory = localStorage.getItem(HISTORY_STORAGE_KEY);
+        if (savedHistory) {
+          historyArr = JSON.parse(savedHistory)
+            .map(n => parseInt(n, 10))
+            .filter(n => !isNaN(n) && n >= 0 && n <= 36);
+        } else {
+          historyArr = [];
+        }
+    } catch (e) {
+        console.error("Erro ao carregar Histórico:", e);
+    }
+  }
+
+  function calculateStats() {
+    const allNumbers = [...Array(37).keys()]; 
+    const stats = {
+      counts: {},
+      zoneSuccessionMap: {}, 
+      hotList: [],
+      coldList: [],
+    };
+    allNumbers.forEach(n => { stats.counts[n] = { count: 0 }; });
+
+    for (let i = 0; i < historyArr.length; i++) {
+      const currentNum = historyArr[i];
+      stats.counts[currentNum].count++;
+      
+      if (i < historyArr.length - 1) {
+        const nextNum = historyArr[i + 1]; 
+        if (!stats.zoneSuccessionMap[currentNum]) { stats.zoneSuccessionMap[currentNum] = []; }
+        stats.zoneSuccessionMap[currentNum].push(nextNum);
+      }
+    }
+    
+    const allCounts = allNumbers.map(n => stats.counts[n].count);
+    const avgCount = allCounts.length > 0 ? allCounts.reduce((a, b) => a + b, 0) / allCounts.length : 0;
+
+    stats.hotList = allNumbers
+      .filter(n => stats.counts[n].count > avgCount) 
+      .sort((a, b) => stats.counts[b].count - stats.counts[a].count) 
+      .slice(0, 4);
+    
+    stats.coldList = allNumbers
+      .filter(n => stats.counts[n].count < avgCount)
+      .sort((a, b) => stats.counts[a].count - stats.counts[b].count) 
+      .slice(0, 4);
+
+    numberStats = stats;
+  }
+  
+  // ==================== LÓGICA DE ADIÇÃO DE NÚMEROS (Corrigida) ====================
+  
+  function addNumber(num) {
+    if (num < 0 || num > 36 || isNaN(num)) {
+        console.error("Tentativa de adicionar número inválido:", num);
+        return;
+    }
+    
+    // --- LÓGICA DE QUEBRA/CONFIRMAÇÃO DO BOOSTER I.A. ---
+    
+    if (config.boosterIsLocked && config.boosterBetZone && config.boosterBetZone.length > 0) {
+        
+        const currentZone = config.boosterBetZone;
+        const triggerNum = config.boosterTriggerNum;
+        
+        const numberLandedInBetZone = currentZone.includes(Number(num));
+        const isDoublet = (Number(num) === triggerNum);
+
+        if (numberLandedInBetZone || isDoublet) {
+            // Padrão Quebrado/Falha
+            config.boosterConfirmations = 0; 
+            config.boosterIsLocked = false; 
+            delete config.boosterBetZone; 
+            delete config.boosterTriggerNum; 
+        } else {
+            // Confirmação: o número caiu FORA da Zona de Aposta/Risco.
+            config.boosterConfirmations++;
+        }
+        
+        saveConfig();
+    } 
+    
+    // ----------------------------------------------
+    
+    if (historyArr.length >= MAX_HISTORY) { historyArr.pop(); }
+    historyArr.unshift(Number(num)); 
+    saveHistoryData();
+    updateUI(); 
+  }
+  
+  // CORREÇÃO: Removido o .reverse() desnecessário.
+  function addMultipleNumbers(numArray) {
+    const validNumbers = numArray
+      .map(n => parseInt(n, 10))
+      .filter(n => !isNaN(n) && n >= 0 && n <= 36);
+      
+    if (validNumbers.length === 0) {
+        alert('Nenhum número de 0 a 36 válido identificado.');
+        return;
+    }
+    
+    config.boosterConfirmations = 0;
+    config.boosterIsLocked = false;
+    delete config.boosterBetZone;
+    delete config.boosterTriggerNum;
+    saveConfig();
+         
+    // Adiciona os números na ordem em que foram passados (do mais recente para o mais antigo)
+    validNumbers.forEach(n => {
+         if (historyArr.length >= MAX_HISTORY) { historyArr.pop(); }
+         historyArr.unshift(Number(n)); 
+    });
+    
+    saveHistoryData();
+    updateUI();
+  }
+
+  function renderLatestSuccessors() {
+    if (historyArr.length < 2) {
+        latestSuccessorsCard.style.display = 'none';
+        return;
+    }
+
+    const triggerNum = historyArr[0];
+    const recentSuccessors = [];
+    const limit = Math.min(historyArr.length - 1, SUCCESSOR_LOOKBACK);
+
+    for (let i = 1; i <= limit; i++) {
+        const predecessorNum = historyArr[i];
+        const successorNum = historyArr[i - 1]; 
+        
+        if (predecessorNum === triggerNum) {
+            recentSuccessors.push(successorNum);
+        }
+    }
+
+    latestSuccessorsCard.style.display = 'block';
+    successorTriggerNumDiv.textContent = triggerNum;
+    latestSuccessorsList.innerHTML = ''; 
+
+    if (recentSuccessors.length === 0) {
+        latestSuccessorsList.innerHTML = `<span style="color:var(--muted)">O número **${triggerNum}** não se repetiu como predecessor nos últimos ${limit} lançamentos.</span>`;
+        return;
+    }
+    
+    const displaySuccessors = recentSuccessors.slice(0, SUCCESSOR_DISPLAY_LIMIT); 
+    
+    let html = `
+        <span style="color: var(--black); font-weight: 700; flex-shrink: 0;">Total: ${recentSuccessors.length}x</span>
+    `;
+
+    displaySuccessors.forEach((num, index) => {
+        html += `<div class="chip ${getColor(num)}" 
+                     style="width: 30px; height: 30px; font-size: 12px; font-weight: 700; flex-shrink: 0;" 
+                     title="Ordem de Aparição: ${index + 1}º mais recente (Recente → Antigo)">
+                     ${num}
+                 </div>`;
+    });
+    
+    if (recentSuccessors.length > SUCCESSOR_DISPLAY_LIMIT) {
+         html += `<span style="font-size: 12px; color: var(--muted); align-self: flex-end; flex-shrink: 0;">...e mais ${recentSuccessors.length - SUCCESSOR_DISPLAY_LIMIT}</span>`;
+    }
+
+    latestSuccessorsList.innerHTML = html;
+  }
+  
+  
+  // ==================== LÓGICA DE ANÁLISE DE SUCESSÃO DE ZONAS ====================
+  function renderZoneAnalysis() {
+    if (historyArr.length < 2) { 
+      zoneAnalysisDiv.innerHTML = '<span style="color:var(--muted)">Adicione pelo menos 2 números ao histórico para análise de Sucessão de Zonas.</span>';
+      return;
+    }
+    
+    const LOOKBACK_ZONA = 100;
+    const triggerNum = historyArr[0]; 
+    const triggerZone = getNeighbors(triggerNum, 2); 
+    
+    const zoneFollowers = {};
+    const lastAppearanceIndex = {}; 
+    let totalOccurrences = 0;
+    
+    for (let i = 1; i < historyArr.length && i <= LOOKBACK_ZONA; i++) {
+        const predecessorNum = historyArr[i];
+        const successorNum = historyArr[i - 1];
+        
+        if (triggerZone.includes(predecessorNum)) {
+            zoneFollowers[successorNum] = (zoneFollowers[successorNum] || 0) + 1;
+            totalOccurrences++;
+            
+            if (!lastAppearanceIndex[successorNum] || i < lastAppearanceIndex[successorNum]) {
+                lastAppearanceIndex[successorNum] = i; 
+            }
+        }
+    }
+
+    if (totalOccurrences === 0) { 
+      zoneAnalysisDiv.innerHTML = `<span style="color:var(--muted)">A **Zona ${triggerNum}** (${triggerZone.join(', ')} ) não teve ocorrências registradas como predecessor nos últimos ${Math.min(historyArr.length, LOOKBACK_ZONA)} lançamentos.</span>`;
+      return;
+    }
+    
+    const processed = new Set();
+    const successorGroups = [];
+
+    for (const num of WHEEL_ORDER) {
+        if (zoneFollowers[num] && !processed.has(num)) {
+            let group = [num];
+            let groupCount = zoneFollowers[num];
+            processed.add(num);
+
+            let currentIdx = WHEEL_INDEX_MAP[num];
+            let groupLastAppearance = lastAppearanceIndex[num]; 
+
+            let isContiguous = true;
+            while (isContiguous) {
+                let nextIdx = (currentIdx + 1) % WHEEL_ORDER.length;
+                let nextNum = WHEEL_ORDER[nextIdx];
+                
+                if (zoneFollowers[nextNum] && !processed.has(nextNum)) {
+                    group.push(nextNum);
+                    groupCount += zoneFollowers[nextNum];
+                    processed.add(nextNum);
+                    currentIdx = nextIdx;
+                    if (lastAppearanceIndex[nextNum] < groupLastAppearance) {
+                        groupLastAppearance = lastAppearanceIndex[nextNum];
+                    }
+                } else {
+                    isContiguous = false; 
+                }
+                
+                if (group.length === WHEEL_ORDER.length) break; 
+            }
+            
+            successorGroups.push({ 
+                numbers: group, 
+                count: groupCount,
+                first: group[0],
+                last: group[group.length - 1],
+                recentIndex: groupLastAppearance 
+            });
+        }
+    }
+
+    successorGroups.sort((a, b) => {
+        if (a.recentIndex !== b.recentIndex) {
+            return a.recentIndex - b.recentIndex; 
+        }
+        return b.count - a.count; 
+    });
+    
+    let html = `
+        <div class="analysis-output">
+            <div class="pattern-line">Último lançamento (GATILHO): <span class="pattern-trigger">${triggerNum}</span></div>
+            <div class="pattern-line pattern-count">**ZONA DE ANÁLISE (5 Números):** <span style="font-weight: bold; color: var(--accent);">${triggerZone.join(', ')}</span></div>
+            <div class="data-separator" style="margin: 8px 0;"></div>
+    `;
+
+    successorGroups.forEach(group => {
+        const percentage = safeMath((group.count / totalOccurrences) * 100);
+        html += `
+            <div class="pattern-line">
+                SUCESSÃO DE ${group.numbers.length} NÚMERO(S): 
+                <span class="pattern-succession">${group.numbers.join(', ')}</span>
+                <span class="pattern-count">(${group.count}x, ${percentage}%) | Mais recente: ${group.recentIndex}º</span>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    zoneAnalysisDiv.innerHTML = html;
+  }
+  
+  
+  // =========================================================================================
+  // 🚀 CÓDIGO DO BOOSTER I.A.
+  // =========================================================================================
+
+  /**
+   * Pega os 4 sucessores da ÚLTIMA aparição do Gatilho.
+   */
+  function findBoosterSuccessors(triggerNum) {
+    let triggerCount = 0;
+    const limit = SUCCESSOR_LOOKBACK;
+    let lastTriggerIndex = -1; 
+    
+    for (let i = 0; i < historyArr.length && i < limit; i++) {
+        const num = historyArr[i];
+        if (num === triggerNum) {
+            triggerCount++;
+            if (lastTriggerIndex === -1) {
+                lastTriggerIndex = i;
+            }
+        }
+    }
+    
+    if (triggerCount < CONFIRMATION_ROUNDS) {
+        return { 
+            triggerCount: triggerCount, 
+            successors: [], 
+            lastTriggerIndex: -1
+        };
+    }
+    
+    let successors = [];
+    
+    // O Gatilho está em historyArr[lastTriggerIndex]. 
+    // O primeiro sucessor é historyArr[lastTriggerIndex - 1].
+    const startIndexForSuccessors = lastTriggerIndex - 1; 
+
+    for (let i = 0; i < 4; i++) {
+        const index = startIndexForSuccessors - i;
+        if (index >= 0) {
+            successors.push(historyArr[index]);
+        }
+    }
+
+    if (successors.length < 4) {
+        return { 
+            triggerCount: triggerCount, 
+            successors: [],
+            lastTriggerIndex: lastTriggerIndex
+        };
+    }
+
+    return { 
+        triggerCount: triggerCount, 
+        successors: successors.reverse(), 
+        lastTriggerIndex: lastTriggerIndex
+    };
+  }
+  
+  /**
+   * ⚙️ Função principal para renderizar a Sugestão de Aposta (Booster I.A.).
+   */
+  function renderBetSuggestion() {
+    if (config.isLocked || historyArr.length < MIN_HISTORY_FOR_BOOSTER) {
+        let msg = '<span style="color:var(--muted)">';
+        if (config.isLocked) {
+            msg += `⛔ **ANALISADOR BLOQUEADO:** Motivo: ${config.lockReason === 'STOP_LOSS' ? 'Stop Loss' : 'Stop Win'}.`;
+        } else {
+            msg += `⏳ **AGUARDANDO DADOS:** Mínimo de ${MIN_HISTORY_FOR_BOOSTER} lançamentos necessários. (${historyArr.length} / ${MIN_HISTORY_FOR_BOOSTER})`;
+        }
+        msg += '</span>';
+        betSuggestionDiv.innerHTML = msg;
+        
+        config.boosterConfirmations = 0;
+        config.boosterIsLocked = false;
+        delete config.boosterBetZone;
+        delete config.boosterTriggerNum;
+        saveConfig();
+        return;
+    }
+
+    const currentTriggerNum = historyArr[0];
+
+    // --- MODO TRAVADO: A aposta anterior precisa ser resolvida ---
+    if (config.boosterIsLocked) {
+        
+        const triggerNum = config.boosterTriggerNum;
+        const betZone = config.boosterBetZone;
+        
+        if (!betZone || betZone.length === 0) {
+            config.boosterIsLocked = false;
+            saveConfig();
+            return renderBetSuggestion(); 
+        }
+        
+        const result = findBoosterSuccessors(triggerNum);
+        const triggerCount = result.triggerCount;
+
+        // Confirmação Bem-sucedida! Sugere a APOSTA.
+        if (config.boosterConfirmations >= CONFIRMATION_ROUNDS_UI) {
+            
+            config.boosterConfirmations = 0;
+            config.boosterIsLocked = false;
+            delete config.boosterBetZone;
+            delete config.boosterTriggerNum;
+            saveConfig();
+            
+            betSuggestionDiv.innerHTML = `
+                <p style="margin-bottom: 5px;">
+                    GATILHO: <span class="iaGlow" style="font-size: 1.2em;">${triggerNum}</span> 
+                    <span style="color: var(--alert-green); font-size: 14px; font-weight: bold;"> (Confirmado ${triggerCount}x)</span>
+                </p>
+                
+                <p class="status-text-ready">
+                    ✅ CONFIRMAÇÕES OBTIDAS! APOSTE!
+                </p>
+
+                <p style="font-size: 14px; margin-top: 10px; margin-bottom: 5px; color: var(--muted);">
+                    🎯 **ZONA DE APOSTA (4 SUCESSORES):**
+                </p>
+
+                <div class="bet-zone-list">
+                    ${betZone.join(', ')}
+                </div>
+                
+                <p style="font-size: 14px; margin-top: 10px; color: var(--alert-green); font-weight: bold;">
+                    PRÓXIMO CICLO: A I.A. irá procurar um novo gatilho.
+                </p>
+            `;
+            return;
+        }
+        
+        // Renderização no Modo de Confirmação (Travado)
+        let confirmationHtml = `<div class="confirmation-animation">
+            <div class="conf-line" style="color: var(--status-pending); font-size: 1.1em;">
+                <span class="conf-icon conf-pending">🟠</span>
+                PADRÃO DETECTADO 🟠
+            </div>
+            <p style="font-size: 12px; color: var(--muted); margin: 5px 0 10px 26px;">
+                Gatilho Travado: **${triggerNum}** | Repetições: **${triggerCount}x** | Sucessores (4): **${betZone.join(', ')}**
+            </p>
+            <div style="margin-left: 10px;">
+        `;
+
+        for (let i = 1; i <= CONFIRMATION_ROUNDS_UI; i++) {
+            const isConfirmed = i <= config.boosterConfirmations;
+            const statusClass = isConfirmed ? 'conf-success' : 'conf-pending';
+            const iconContent = isConfirmed ? '✔' : '...';
+            const colorStyle = isConfirmed ? 'color: var(--status-success);' : 'color: var(--muted);';
+
+            confirmationHtml += `
+                <div class="conf-line" style="${colorStyle}">
+                    <span class="conf-icon ${statusClass}">${iconContent}</span>
+                    Confirmação ${i} ${isConfirmed ? '🟢' : '...'}
+                </div>
+            `;
+        }
+        
+        confirmationHtml += `</div></div>`;
+        
+        betSuggestionDiv.innerHTML = `
+            <p style="margin-bottom: 5px;">
+                GATILHO **TRAVADO** (Para ${triggerNum}): 
+                <span style="color: var(--alert-red); font-size: 14px; font-weight: bold;"> AGUARDANDO CONFIRMAÇÕES</span>
+            </p>
+
+            <p style="font-size: 14px; margin-top: 10px; margin-bottom: 5px; color: var(--muted); font-weight: bold;">
+                PRÓXIMA AÇÃO: Aguardar **${CONFIRMATION_ROUNDS_UI - config.boosterConfirmations}** lances **FORA** da Zona de Risco/Aposta.
+            </p>
+            
+            <div class="bet-zone-list" style="border-color: var(--status-pending); color: var(--status-pending); text-shadow: 0 0 8px rgba(255,195,0,0.8);">
+                ${betZone.join(', ')}
+            </div>
+            <p style="font-size: 14px; margin-top: 5px; color: var(--muted);">
+                Aposta é nessa zona. A quebra ocorre se cair em um desses **${betZone.length}** números ou no Gatilho (**${triggerNum}**).
+            </p>
+
+            ${confirmationHtml}
+        `;
+        return;
+    }
+    
+    // --- MODO NÃO TRAVADO: Procura por novo Gatilho ---
+    
+    const currentTriggerNum = historyArr[0];
+
+    const result = findBoosterSuccessors(currentTriggerNum);
+    const triggerCount = result.triggerCount;
+    const successors = result.successors;
+
+    if (triggerCount >= CONFIRMATION_ROUNDS && successors.length === 4) {
+        // Padrão Detectado! Trava o estado e inicia a contagem.
+        const betZone = successors; 
+        
+        config.boosterBetZone = betZone;
+        config.boosterTriggerNum = currentTriggerNum;
+        config.boosterConfirmations = 0;
+        config.boosterIsLocked = true; 
+        saveConfig();
+        
+        return renderBetSuggestion(); 
+    } 
+    
+    // Gatilho não confirmado ou sem sucessores suficientes.
+    delete config.boosterBetZone;
+    delete config.boosterTriggerNum;
+    config.boosterConfirmations = 0;
+    config.boosterIsLocked = false;
+    saveConfig();
+    
+    let reasonText;
+    if (triggerCount < CONFIRMATION_ROUNDS) {
+        reasonText = `Frequência baixa: O último número **${currentTriggerNum}** se repetiu apenas **${triggerCount}x** como predecessor. Mínimo: **${CONFIRMATION_ROUNDS}x**.`;
+    } else {
+        reasonText = `Faltam dados: Apenas **${successors.length}** sucessores encontrados após a última aparição do ${currentTriggerNum}. Requer **4 sucessores**.`;
+    }
+    
+    betSuggestionDiv.innerHTML = `
+        <span style="color:var(--alert-red); font-weight: bold;">
+            ❌ GATILHO NÃO CONFIRMADO:
+        </span>
+        <p style="margin-top: 5px; color: var(--muted); font-weight: normal;">
+            ${reasonText}
+        </p>
+    `;
+
+  }
+  
+  // =========================================================================================
+  // FIM DO NOVO CÓDIGO INCLUÍDO/MODIFICADO
+  // =========================================================================================
+  
+  
+  // ================== FUNÇÕES DE RENDERIZAÇÃO E UI (Ajustadas) ================== */
+  
+  function renderHistory() {
+    historyDiv.innerHTML = ''; 
+    historyCount.textContent = `${historyArr.length}/${MAX_HISTORY}`;
+    
+    if (historyArr.length === 0) {
+        historyDiv.innerHTML = '<span style="color:var(--muted); font-style:italic;">Nenhum número registrado.</span>';
+        return;
+    }
+    
+    historyArr.forEach((num, index) => {
+        const colorClass = getColor(num);
+        const chip = document.createElement('div');
+        chip.className = `chip ${colorClass}`;
+        chip.textContent = num;
+        chip.title = `Ordem: ${index + 1}º | Número: ${num}`;
+        chip.setAttribute('data-index', index);
+        chip.addEventListener('click', () => removeNumberByIndex(index)); 
+        historyDiv.appendChild(chip);
+    });
+  }
+  
+  function removeNumberByIndex(index) {
+    if (confirm(`Tem certeza que deseja remover o número ${historyArr[index]} da posição ${index + 1} (o ${index + 1}º mais recente)?`)) {
+        historyArr.splice(index, 1);
+        
+        config.boosterConfirmations = 0;
+        config.boosterIsLocked = false;
+        delete config.boosterBetZone;
+        delete config.boosterTriggerNum;
+        saveConfig();
+        
+        saveHistoryData();
+        updateUI();
+    }
+  }
+
+  function renderBankrollDashboard() {
+    const { initial, current, history } = bankrollState;
+    const totalProfit = safeMath(current - initial);
+    
+    const profitClass = totalProfit >= 0 ? 'positive' : 'negative';
+    const totalEntries = history.filter(item => item.amount !== 0).length;
+    const totalWins = history.filter(item => item.amount > 0).length;
+    const totalLosses = history.filter(item => item.amount < 0).length;
+    const winRate = totalEntries > 0 ? safeMath((totalWins / totalEntries) * 100) : 0;
+    
+    let html = '';
+    if (initial > 0) {
+        html = `
+            <div class="stat-item">
+                <div class="stat-title">BANCA ATUAL</div>
+                <div class="stat-value">${formatCurrency(current)}</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-title">LUCRO / PREJUÍZO (TOTAL)</div>
+                <div class="stat-value ${profitClass}">${formatCurrency(totalProfit)}</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-title">TAXA DE VITÓRIA (W/L)</div>
+                <div class="stat-value ${totalWins >= totalLosses ? 'positive' : 'negative'}">${winRate}%</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-title">WINS / LOSSES</div>
+                <div class="stat-value">${totalWins} / ${totalLosses}</div>
+            </div>
+        `;
+    } else {
+        html = `<span class="stat-title" style="grid-column: 1 / -1; color: var(--alert-red);">Defina sua banca inicial para ativar o Gerenciamento de Risco.</span>`;
+    }
+    
+    document.getElementById('performanceDashboard').innerHTML = html;
+  }
+
+  function renderBankrollHistory() {
+    bankrollHistoryDiv.innerHTML = '';
+    const { history } = bankrollState;
+    
+    if (history.length === 0) {
+        bankrollHistoryDiv.innerHTML = '<div class="log-item log-placeholder">Nenhum registro ainda.</div>';
+        return;
+    }
+    
+    history.slice().reverse().forEach((item, originalIndex) => {
+        const index = history.length - 1 - originalIndex; 
+        const isWin = item.amount > 0;
+        const logClass = isWin ? 'log-win' : 'log-loss';
+        const sign = isWin ? '+' : '';
+
+        const itemDiv = document.createElement('div');
+        itemDiv.className = `log-item ${logClass}`;
+        
+        const date = new Date(item.timestamp);
+        const timeStr = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        
+        itemDiv.innerHTML = `
+            <span>${timeStr} - ${isWin ? 'GREEN' : 'RED'}</span>
+            <span style="font-weight: bold;">${sign}${formatCurrency(item.amount)}</span>
+            <button class="log-delete-btn" data-index="${index}" title="Excluir este registro">
+                <span class="material-symbols-outlined" style="font-size: 16px;">close</span>
+            </button>
+        `;
+        bankrollHistoryDiv.appendChild(itemDiv);
+    });
+
+    bankrollHistoryDiv.querySelectorAll('.log-delete-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const index = parseInt(e.currentTarget.dataset.index, 10);
+            deleteBankrollEntry(index);
+        });
+    });
+  }
+  
+  function deleteBankrollEntry(index) {
+    if (confirm('Tem certeza que deseja excluir este registro? Isso afetará sua banca e estatísticas.')) {
+        const deletedEntry = bankrollState.history[index];
+        bankrollState.current = safeMath(bankrollState.current - deletedEntry.amount);
+        bankrollState.history.splice(index, 1);
+        saveBankrollData();
+        updateUI();
+        checkStopCondition();
+    }
+  }
+  
+  // CORREÇÃO: Listener do botão de número adicionado aqui.
+  function renderGrid() {
+    gridNumbers.innerHTML = '';
+    
+    const allNumbers = [...Array(37).keys()]; // 0 a 36
+    allNumbers.forEach(num => {
+        const btn = document.createElement('button');
+        btn.className = `number-btn ${getColor(num)}`;
+        btn.textContent = num;
+        btn.addEventListener('click', () => addNumber(num)); // <--- CORREÇÃO AQUI
+        gridNumbers.appendChild(btn);
+    });
+  }
+
+  let sessionTimerInterval;
+  function updateClock() {
+    const now = new Date();
+    const clockDiv = document.getElementById('clock');
+    clockDiv.textContent = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    
+    if (config.sessionStart > 0) {
+        const elapsed = Date.now() - config.sessionStart;
+        const totalSeconds = Math.floor(elapsed / 1000);
+        const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+        const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+        sessionTimerDiv.textContent = `Sessão: ${hours}:${minutes}`;
+    }
+  }
+  
+  function updateUI() {
+    checkLockStatus(); 
+    if (config.isLocked) return;
+
+    calculateStats(); 
+    renderHistory();
+    renderBankrollDashboard();
+    renderBankrollHistory();
+    renderLatestSuccessors();
+    renderZoneAnalysis();
+    
+    renderBetSuggestion(); 
+    
+    // Tendências
+    hotColdDiv.innerHTML = `
+        🔥 Hot: <span style="font-weight: bold; color: var(--red);">${numberStats.hotList.join(', ') || '-'}</span>
+        <br>
+        ❄️ Cold: <span style="font-weight: bold; color: var(--accent-secondary);">${numberStats.coldList.join(', ') || '-'}</span>
+    `;
+  }
+  
+  /* ================== EVENT LISTENERS (Corrigidos) ================== */
+  
+  document.getElementById('btnSetBankroll').addEventListener('click', () => {
+    const amount = parseFloat(initialBankrollInput.value);
+    if (isNaN(amount) || amount <= 0) {
+        alert('Por favor, insira um valor inicial de banca válido (maior que zero).');
+        return;
+    }
+    bankrollState.initial = safeMath(amount);
+    bankrollState.current = safeMath(amount);
+    bankrollState.history = []; 
+    saveBankrollData();
+    updateUI();
+  });
+
+  function registerTransaction(type) {
+    if (bankrollState.initial === 0) {
+        alert('Defina a Banca Inicial primeiro.');
+        return;
+    }
+    const input = parseFloat(betAmountInput.value);
+    if (isNaN(input) || input <= 0) {
+        alert('Insira um valor válido para o ganho/perda (maior que zero).');
+        return;
+    }
+    
+    const amount = safeMath(type === 'win' ? input : -input);
+    
+    bankrollState.current = safeMath(bankrollState.current + amount);
+    bankrollState.history.push({
+        amount: amount,
+        timestamp: Date.now()
+    });
+    
+    betAmountInput.value = ''; 
+    saveBankrollData();
+    updateUI();
+    checkStopCondition();
+  }
+
+  btnRegisterWin.addEventListener('click', () => registerTransaction('win'));
+  btnRegisterLoss.addEventListener('click', () => registerTransaction('loss'));
+  
+  clearBtn.addEventListener('click', () => {
+    if (confirm('Tem certeza que deseja limpar todo o Histórico de Números?')) {
+        historyArr = [];
+        config.boosterConfirmations = 0;
+        config.boosterIsLocked = false;
+        delete config.boosterBetZone;
+        delete config.boosterTriggerNum;
+        saveConfig();
+        
+        saveHistoryData();
+        updateUI();
+    }
+  });
+
+  // CORREÇÃO: Tratamento do OCR mais robusto e direto.
+  btnUpload.addEventListener('click', () => { 
+    if (typeof Tesseract === 'undefined') {
+        alert("A biblioteca OCR (Tesseract.js) não foi carregada. Verifique sua conexão com a internet ou o CDN.");
+        return;
+    }
+    uploadPhotoInput.click(); 
+  });
+
+  uploadPhotoInput.addEventListener('change', async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        alert('Iniciando análise OCR da imagem. Isso pode levar alguns segundos...');
+        
+        try {
+            const { data: { text } } = await Tesseract.recognize(
+                file,
+                'eng', 
+                {
+                    // Apenas foca em dígitos e espaços
+                    tessedit_char_whitelist: '0123456789 ',
+                    logger: m => console.log(m)
+                }
+            );
+            
+            // Filtra os números válidos (0-36) e ignora o resto
+            const numbersFound = text.match(/\d+/g); 
+            
+            if (numbersFound && numbersFound.length > 0) {
+                const validNumbers = numbersFound
+                    .map(n => parseInt(n, 10))
+                    .filter(n => !isNaN(n) && n >= 0 && n <= 36);
+
+                if (validNumbers.length > 0) {
+                     // NOVO: Pergunta ao usuário se a ordem está correta (recente -> antigo)
+                     const confirmation = confirm(`Números identificados na imagem (do MAIS RECENTE para o MAIS ANTIGO): ${validNumbers.join(', ')}. Adicionar ao histórico nesta ordem?`);
+                     if (confirmation) {
+                         addMultipleNumbers(validNumbers);
+                     }
+                } else {
+                    alert('OCR não conseguiu identificar números válidos (0-36).');
+                }
+            } else {
+                alert('Nenhum número encontrado pelo OCR.');
+            }
+
+        } catch (error) {
+            console.error('OCR Error:', error);
+            alert('Erro ao processar a imagem com OCR.');
+        } finally {
+            uploadPhotoInput.value = '';
+        }
+    });
+  
+  // Bloqueio
+  btnSkipLock.addEventListener('click', skipLock);
+  
+  // Inicialização
+  loadConfig();
+  loadHistoryData();
+  loadBankrollData();
+  renderGrid(); // <--- GARANTINDO A CRIAÇÃO DA GRID
+  updateUI();
+  
+  // Loop de relógio e timer
+  setInterval(updateClock, 1000); 
+
+  // Re-checar o Stop Condition e UI a cada 1 minuto (segurança)
+  setInterval(updateUI, 60000); 
+
+});
+</script>
+
+</body>
+</html>
+  font-family:'Roboto',sans-serif; /* Fonte mais clean para leitura */
+  background:var(--bg);
+  color:#17202A; /* Texto escuro no fundo claro */
+  padding:14px;
+}
+.hidden { display: none !important; }
+
+/* Correção da Tela de Login: impedida de rolar, mas não necessária agora */
+body.login-active {
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* ================== LAYOUT E COMPONENTES MODERNOS ================== */
+
+/* Header / clock */
+.header{
+  /* Novo gradiente de Mar e Sol */
+  background: linear-gradient(90deg, rgba(255,195,0,0.2), rgba(0,121,192,0.1)); 
+  border-radius:8px; 
+  padding:12px; 
+  display:flex; 
+  justify-content:space-between; 
+  align-items:center; 
+  box-shadow:0 0 15px rgba(0,0,0,0.1);
+  border: 1px solid rgba(0,121,192,0.1);
+}
+.title{
+  font-family:'Passion One', cursive;
+  font-weight:700;
+  font-size:24px;
+  color: var(--accent-secondary); /* Título em Azul do Mar */
+  text-shadow: 0 0 5px rgba(0, 121, 192, 0.5);
+}
+#clock{
+  color:var(--zero);
+  font-family:'Passion One', cursive;
+  font-weight:700;
+  text-shadow:0 0 8px rgba(255,140,0,0.5);
+}
+#sessionTimer{
+    font-size: 10px;
+    color: var(--muted);
+    font-family: 'Roboto', sans-serif;
+    margin-left: 10px;
+}
+
+/* card */
+.card{
+  background:var(--panel);
+  border-radius:12px;
+  padding:15px;
+  margin-top:14px;
+  /* Sombra mais suave */
+  box-shadow:0 5px 20px rgba(0,0,0,0.1), inset 0 0 8px rgba(0,121,192,0.05); 
+  border:1px solid rgba(0,121,192,0.1);
+  transition: all 0.3s ease;
+}
+
+/* Títulos / Sugestões */
+.suggestionTitle{
+  font-family:'Passion One', cursive;
+  font-weight:700;
+  color:var(--accent); /* Títulos em Amarelo Sol */
+  margin-bottom:8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px dashed rgba(0, 121, 192, 0.3);
+  padding-bottom: 5px;
+}
+.iaGlow{
+  color:var(--accent-secondary); /* Cor secundária para o Booster */
+  text-shadow:0 0 10px rgba(0, 121, 192, 0.6);
+  /* Brilho mais suave */
+  animation:glowPulse 2s infinite alternate;
+}
+@keyframes glowPulse{
+  0%{text-shadow:0 0 3px rgba(0, 121, 192, 0.2)}
+  100%{text-shadow:0 0 10px rgba(0, 121, 192, 0.8)}
+}
+
+.data-separator {
+  height: 1px;
+  /* Gradiente de Sol para Mar */
+  background: linear-gradient(90deg, var(--accent), var(--accent-secondary), rgba(0,0,0,0));
+  margin: 12px 0;
+  opacity: 0.7;
+}
+
+/* ================== BOTÕES E INPUTS ================== */
+
+/* grid numbers */
+.grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
+  gap:8px;
+  justify-content:center;
+  margin-top: 10px;
+}
+.number-btn{
+  width:100%; height:45px;
+  border-radius:8px;
+  border:1px solid rgba(0, 0, 0, 0.1);
+  font-family:'Passion One', cursive;
+  font-weight:700;
+  cursor:pointer;
+  transition:transform .14s,box-shadow .14s, border-color 0.14s;
+  color: var(--black); /* Texto escuro */
+}
+.number-btn:hover{
+    transform:scale(1.05); 
+    box-shadow:0 0 15px rgba(0,121,192,0.4);
+    border-color: var(--accent-secondary);
+}
+.number-btn:active{transform:scale(0.95); }
+.red{background:var(--red);color:#fff}
+.black{background:var(--black);color:#fff}
+.zero, .green {background:var(--zero);color:var(--black)} 
+
+/* Botões de controle */
+.control-btn{
+  background:var(--btn-main);
+  border:0;
+  border-radius:6px;
+  padding:12px 14px;
+  color:#fff; /* Texto branco no gradiente */
+  font-weight:700;
+  font-family:'Passion One', cursive;
+  cursor:pointer;
+  transition: all .2s;
+  margin: 4px 0;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  text-transform: uppercase;
+  display: flex; /* Para alinhar o ícone */
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.control-btn:hover{
+    opacity:0.95; 
+    box-shadow: 0 0 15px rgba(255,195,0,0.8);
+    transform: translateY(-2px);
+}
+.control-btn:active{transform: translateY(1px);}
+.control-btn:disabled { 
+    opacity: 0.3; 
+    cursor: not-allowed; 
+    box-shadow: none; 
+}
+
+
+.btn-win { background: var(--alert-green); color: #fff; }
+.btn-loss { background: var(--alert-red); color: #fff; }
+
+/* Estilos de Entrada (Input) */
+.bankroll-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'Roboto', sans-serif;
+    font-weight: 400;
+    margin-bottom: 4px;
+    margin-top: 8px;
+}
+.bankroll-input {
+    width: 100%;
+    padding: 10px;
+    background: #F0F8FF; /* Fundo do input mais claro */
+    border: 1px solid var(--accent-secondary);
+    border-radius: 6px;
+    color: var(--black);
+    font-family: 'Roboto', sans-serif;
+    font-size: 16px;
+    transition: border-color 0.2s;
+}
+.bankroll-input:focus {
+    outline: none;
+    border-color: var(--zero);
+    box-shadow: 0 0 8px rgba(255,140,0,0.5);
+    background: #fff;
+}
+
+/* ================== ANÁLISE E DASHBOARD DE BANCA ================== */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 15px;
+    margin-top: 10px;
+    padding-top: 10px;
+}
+.stat-item {
+    background: #F0F8FF; /* Fundo do stat item mais suave */
+    padding: 12px;
+    border-radius: 8px;
+    border-left: 4px solid var(--accent-secondary);
+    box-shadow: inset 0 0 5px rgba(0, 121, 192, 0.1);
+}
+.stat-title {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'Roboto', sans-serif;
+    font-weight: 400;
+    margin-bottom: 5px;
+}
+.stat-value {
+    font-size: 18px;
+    font-weight: 700;
+    font-family: 'Passion One', cursive;
+    color: var(--black);
+}
+.positive { color: var(--alert-green) !important; text-shadow: 0 0 3px rgba(0, 168, 89, 0.5);}
+.negative { color: var(--alert-red) !important; text-shadow: 0 0 3px rgba(216, 60, 60, 0.5);}
+
+/* História de Padrões (Chips) - ALTERADO PARA LINHA ÚNICA */
+.history{
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 8px;
+    margin-top: 10px;
+    max-width: 100%;
+    overflow-x: auto;
+    padding: 8px 5px;
+    background: rgba(0,0,0,0.1); /* Fundo da história mais claro */
+    border-radius: 6px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; 
+}
+.history::-webkit-scrollbar {
+    display: none; 
+}
+.chip{
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    border: 1px solid rgba(0,0,0,0.2);
+    transition: transform 0.1s;
+    font-family: 'Passion One', cursive;
+}
+.chip:hover { transform: scale(1.15); box-shadow: 0 0 10px var(--accent-secondary);}
+.chip.zero { background: var(--zero); color: var(--black); }
+.chip.red { background: var(--red); color: #fff; }
+.chip.black { background: var(--black); color: #fff; border-color: rgba(255,255,255,0.5);}
+
+/* Análise de Padrões/Tabela */
+.analysis-output {
+    background: #F0F8FF; 
+    border: 1px solid var(--accent-secondary);
+    border-radius: 8px;
+    padding: 12px;
+    box-shadow: inset 0 0 5px rgba(0, 121, 192, 0.1);
+}
+.pattern-line {
+    font-size: 14px;
+    margin-bottom: 6px;
+    line-height: 1.4;
+    color: var(--black);
+}
+.pattern-trigger {
+    color: var(--zero);
+    font-weight: bold;
+    font-family: 'Passion One', cursive;
+}
+.pattern-succession {
+    color: var(--accent);
+    font-weight: bold;
+}
+.pattern-count {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+/* Extrato */
+#bankrollHistory {
+    max-height: 150px;
+    overflow-y: auto;
+    padding: 5px;
+    background: rgba(0,0,0,0.1); 
+    border-radius: 6px;
+}
+.log-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 10px;
+    margin-bottom: 4px;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: background 0.2s;
+}
+.log-win { background: rgba(0, 168, 89, 0.1); border-left: 3px solid var(--alert-green); color: var(--alert-green);}
+.log-loss { background: rgba(216, 60, 60, 0.1); border-left: 3px solid var(--alert-red); color: var(--alert-red);}
+.log-delete-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+.log-delete-btn:hover { color: var(--black); }
+
+/* ================== TELA DE BLOQUEIO (CADEADO) ================== */
+
+#lockScreen{
+  position:fixed;
+  inset:0;
+  background:var(--lock-bg);
+  backdrop-filter: blur(6px);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  z-index:9000;
+  text-align:center;
+}
+#lockScreen svg {
+    color: var(--alert-red);
+    margin-bottom: 10px;
+}
+#lockScreen h2{
+  font-family:'Passion One', cursive;
+  color:var(--alert-red);
+  font-size:32px;
+}
+#lockScreen h2.win {
+  color:var(--alert-green);
+}
+#lockScreen p{
+  font-size:18px;
+  color:var(--muted);
+  margin-top: 10px;
+}
+#lockScreen .countdown{
+  font-family:'Passion One', cursive;
+  font-size:52px;
+  font-weight:700;
+  color:var(--accent-secondary);
+  margin-top:20px;
+  margin-bottom: 25px;
+  text-shadow: 0 0 15px rgba(0, 121, 192, 0.8);
+}
+/* Novo estilo para a sugestão final */
+.bet-zone-list {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--alert-green);
+    text-shadow: 0 0 10px rgba(0, 168, 89, 0.6);
+    border: 2px solid var(--alert-green);
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 10px;
+    line-height: 1.5;
+}
+
+/* ================== ANIMAÇÃO DE CONFIRMAÇÃO ================== */
+
+.confirmation-animation {
+    margin-top: 15px;
+    padding: 10px;
+    border: 1px dashed var(--muted);
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.conf-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 5px;
+    font-weight: 700;
+}
+.conf-icon {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: 10px;
+    font-weight: 900;
+    transition: background-color 0.5s;
+    flex-shrink: 0;
+}
+.conf-pending { background-color: var(--status-pending); animation: pulse 1s infinite alternate; }
+.conf-success { background-color: var(--status-success); }
+.conf-fail { background-color: var(--status-fail); }
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(255, 195, 0, 0.7); }
+    100% { box-shadow: 0 0 0 5px rgba(255, 195, 0, 0); }
+}
+
+.status-text-ready {
+    color: var(--status-success);
+    font-size: 1.5em;
+    font-family: 'Passion One', cursive;
+    text-shadow: 0 0 5px var(--status-success);
+}
+.status-text-fail {
+    color: var(--status-fail);
+    font-size: 1.3em;
+    font-weight: 700;
+}
+
+</style>
+</head>
+<body id="bodyTag">
+
+<div id="lockScreen" class="hidden">
+  <svg xmlns="http://www.w3.org/2000/svg" width="70" height="70" fill="currentColor" viewBox="0 0 16 16" id="lockIcon">
+    <path d="M8 1a2 2 0 0 0-2 2v4h4V3a2 2 0 0 0-2-2m3 6V3a3 3 0 1 0-6 0v4a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1zM4 8a.5.5 0 0 0-.5.5v5a.5.5 0 0 0 .5.5h6a.5.5 0 0 0 .5-.5v-5a.5.5 0 0 0-.5-.5z"/>
+  </svg>
+  <h2 id="lockTitle">ZONA SEGURA ATINGIDA (STOP LOSS)</h2>
+  <p>Análise bloqueada. Retorne após o período de resfriamento:</p>
+  <div class="countdown" id="countdownTimer">02:00:00</div>
+  
+  <button id="btnSkipLock" class="control-btn" 
+          style="margin-top: 30px; background: #6c757d; font-size: 16px;">
+      <span class="material-symbols-outlined">lock_open</span>
+      PULAR BLOQUEIO (QUEBRAR REGRA)
+  </button>
+</div>
+
+
+<div id="mainPanel"> <div class="header">
+    <div style="display: flex; align-items: center;">
+        <div class="title">IAP BRASIL (MODO REAL)</div> <div id="sessionTimer">Sessão: -:-</div>
+    </div>
+    <div id="clock">--:--:--</div>
+  </div>
+
+  <div class="card">
+    <div class="suggestionTitle">
+        <span class="material-symbols-outlined">payments</span>
+        GESTÃO DE BANCA E RISCO
+    </div>
+    
+    <div class="bankroll-grid" style="display:flex; gap:15px;">
+        <div style="flex:1;">
+            <div class="bankroll-label">BANCA INICIAL (R$)</div>
+            <input id="initialBankrollInput" type="number" class="bankroll-input" placeholder="1000" min="0" step="0.01">
+            <button id="btnSetBankroll" class="control-btn" style="width: 100%; margin-top: 8px;">
+                <span class="material-symbols-outlined">account_balance</span>
+                DEFINIR BANCA
+            </button>
+        </div>
+        <div class="bankroll-actions" style="flex:1;">
+            <div class="bankroll-label">REGISTRAR ENTRADA (R$)</div>
+            <input id="betAmountInput" type="number" class="bankroll-input" placeholder="Valor ganho/perdido" min="0" step="0.01">
+            <div style="display:flex; gap: 8px;">
+                <button id="btnRegisterWin" class="control-btn btn-win" style="flex:1; margin-top: 8px;">GREEN (+)</button>
+                <button id="btnRegisterLoss" class="control-btn btn-loss" style="flex:1; margin-top: 8px;">RED (-)</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="data-separator"></div>
+    <div class="suggestionTitle">
+        <span class="material-symbols-outlined">monitoring</span>
+        ESTATÍSTICAS DE DESEMPENHO
+    </div>
+    <div id="performanceDashboard" class="dashboard-grid">
+      <span class="stat-title" style="grid-column: 1 / -1;">Defina sua banca inicial para começar.</span>
+    </div>
+
+  </div>
+
+  <div class="card">
+    <div class="suggestionTitle">
+        <span class="material-symbols-outlined">receipt_long</span>
+        EXTRATO DE TRANSAÇÕES
+    </div>
+    <div id="bankrollHistory" class="bankroll-history-list">
+      <div class="log-item log-placeholder">Nenhum registro ainda.</div>
+    </div>
+  </div>
+  
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div class="suggestionTitle history-title">
+        <span class="material-symbols-outlined">history</span>
+        HISTÓRICO DA ROLETA <span id="historyCount" class="history-subtitle">0/100</span>
+      </div>
+      <div class="history-subtitle" style="font-size:11px;color:var(--muted)">Recentes → Antigos (Scroll)</div> 
+    </div>
+    <div id="history" class="history"></div>
+  </div>
+  
+
+  <div class="card">
+    <div class="suggestionTitle">
+        <span class="material-symbols-outlined">dialpad</span>
+        ENTRADAS RÁPIDAS
+    </div>
+    <div class="grid" id="gridNumbers"></div>
+    <div class="data-separator"></div>
+    <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px;">
+        <button id="btnUpload" class="control-btn" style="flex:1 1 150px;">
+            <span class="material-symbols-outlined">camera_alt</span>
+            📸 Enviar foto
+        </button> 
+        <button id="clearBtn" class="control-btn btn-loss" title="Limpar histórico" style="flex:1 1 100px;">
+            <span class="material-symbols-outlined">delete</span>
+            LIMPAR
+        </button>
+        </div>
+  </div>
+  
+  <div class="card" id="latestSuccessorsCard" style="display:none;">
+    <div class="suggestionTitle" style="color: var(--accent-secondary); border-bottom-color: var(--accent-secondary);">
+        <span class="material-symbols-outlined">repeat</span>
+        ÚLTIMOS SUCESSORES DO GATILHO (<span id="successorTriggerNum" style="font-weight: 700;">-</span>)
+    </div>
+    <div id="latestSuccessorsList" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
+        <span style="color:var(--muted)">Adicione números ao histórico para ver os sucessores.</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="analysis-wrapper">
+      <div class="analysis-main">
+        <div class="suggestionTitle">
+            <span class="material-symbols-outlined">auto_fix</span>
+            SUCESSÃO DE ZONAS (ZONA 5)
+        </div>
+        <div id="zoneAnalysis" class="suggestionBox">Adicione números ao histórico para análise de Zonas.</div>
+      </div>
+      <div class="analysis-hot-cold" style="margin-top:15px;">
+        <div class="suggestionTitle">
+            <span class="material-symbols-outlined">thermometer</span>
+            TENDÊNCIAS GERAIS
+        </div>
+        <div id="hotCold" class="suggestionBox">🔥 Hot: -<br>❄️ Cold: -</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="boosterCard">
+    <div class="suggestionTitle iaGlow">
+        <span class="material-symbols-outlined">magic_button</span>
+        BOOSTER DE APOSTA I.A.
+    </div>
+    <div id="betSuggestion" class="suggestionBox" style="font-size: 16px; font-weight: 700;">
+        <span style="color:var(--muted)">Aguardando dados ou aguardando desbloqueio...</span>
+    </div>
+  </div>
+  
+  <input type="file" id="uploadPhoto" accept="image/*" class="hidden">
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+  /* ================== CONSTANTES DE CONFIGURAÇÃO ================== */
   // const getPasswordHash = () => '2025'; // Removido
   const BANKROLL_STORAGE_KEY = 'roletaIAPBankroll_main';
   const HISTORY_STORAGE_KEY = 'roletaIAPHistory'; 
