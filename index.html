@@ -342,34 +342,6 @@ body.login-active {
 .chip.red { background: var(--red); color: #fff; }
 .chip.black { background: var(--black); color: #fff; border-color: rgba(255,255,255,0.5);}
 
-/* Análise de Padrões/Tabela */
-.analysis-output {
-    background: #F0F8FF; 
-    border: 1px solid var(--accent-secondary);
-    border-radius: 8px;
-    padding: 12px;
-    box-shadow: inset 0 0 5px rgba(0, 121, 192, 0.1);
-}
-.pattern-line {
-    font-size: 14px;
-    margin-bottom: 6px;
-    line-height: 1.4;
-    color: var(--black);
-}
-.pattern-trigger {
-    color: var(--zero);
-    font-weight: bold;
-    font-family: 'Passion One', cursive;
-}
-.pattern-succession {
-    color: var(--accent);
-    font-weight: bold;
-}
-.pattern-count {
-    color: var(--muted);
-    font-size: 12px;
-}
-
 /* Extrato */
 #bankrollHistory {
     max-height: 150px;
@@ -592,34 +564,6 @@ body.login-active {
     </div>
   </div>
   
-  <div class="card" id="latestSuccessorsCard" style="display:none;">
-    <div class="suggestionTitle" style="color: var(--accent-secondary); border-bottom-color: var(--accent-secondary);">
-        <span class="material-symbols-outlined">repeat</span>
-        ÚLTIMOS SUCESSORES DO GATILHO (<span id="successorTriggerNum" style="font-weight: 700;">-</span>)
-    </div>
-    <div id="latestSuccessorsList" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-        <span style="color:var(--muted)">Adicione números ao histórico para ver os sucessores.</span>
-    </div>
-  </div>
-  <div class="card">
-    <div class="analysis-wrapper">
-      <div class="analysis-main">
-        <div class="suggestionTitle">
-            <span class="material-symbols-outlined">auto_fix</span>
-            SUCESSÃO DE ZONAS (ZONA 5)
-        </div>
-        <div id="zoneAnalysis" class="suggestionBox">Adicione números ao histórico para análise de Zonas.</div>
-      </div>
-      <div class="analysis-hot-cold" style="margin-top:15px;">
-        <div class="suggestionTitle">
-            <span class="material-symbols-outlined">thermometer</span>
-            TENDÊNCIAS GERAIS
-        </div>
-        <div id="hotCold" class="suggestionBox">🔥 Hot: -<br>❄️ Cold: -</div>
-      </div>
-    </div>
-  </div>
-
   <div class="card" id="boosterCard">
     <div class="suggestionTitle iaGlow">
         <span class="material-symbols-outlined">magic_button</span>
@@ -664,8 +608,7 @@ document.addEventListener('DOMContentLoaded', () => {
    ========================================================================================= */
   const SUCCESSOR_LOOKBACK = 100; // Analisa os últimos 100 lançamentos
   const SUGGESTION_THRESHOLD = 80; // Limite de ativação de 80%
-  const SUCCESSOR_DISPLAY_LIMIT = 10; // Novo: Limite de sucessores para exibir no card
-  // NOVA REGRA: O Gatilho deve ter aparecido mais de 4x nos últimos 100
+  // NOVA REGRA: O Gatilho deve ter aparecido mais de 4x
   const TRIGGER_MIN_COUNT = 5; 
 
   
@@ -682,15 +625,14 @@ document.addEventListener('DOMContentLoaded', () => {
   
   const historyDiv = document.getElementById('history');
   const historyCount = document.getElementById('historyCount');
-  const zoneAnalysisDiv = document.getElementById('zoneAnalysis');
-  const hotColdDiv = document.getElementById('hotCold');
+  // const zoneAnalysisDiv = document.getElementById('zoneAnalysis'); // REMOVIDO
+  // const hotColdDiv = document.getElementById('hotCold'); // REMOVIDO
   const betSuggestionDiv = document.getElementById('betSuggestion'); 
   const gridNumbers = document.getElementById('gridNumbers');
   
-  // Novos elementos DOM para os sucessores imediatos
-  const latestSuccessorsCard = document.getElementById('latestSuccessorsCard');
-  const latestSuccessorsList = document.getElementById('latestSuccessorsList');
-  const successorTriggerNumDiv = document.getElementById('successorTriggerNum');
+  // const latestSuccessorsCard = document.getElementById('latestSuccessorsCard'); // REMOVIDO
+  // const latestSuccessorsList = document.getElementById('latestSuccessorsList'); // REMOVIDO
+  // const successorTriggerNumDiv = document.getElementById('successorTriggerNum'); // REMOVIDO
 
 
   const btnRegisterWin = document.getElementById('btnRegisterWin');
@@ -705,7 +647,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   /* ================== ESTADO DA APLICAÇÃO ================== */
   let historyArr = []; 
-  let numberStats = {}; 
+  // let numberStats = {}; // REMOVIDO
   let config = {
       mode: 'DEMO', 
       isLoggedIn: false, 
@@ -1020,42 +962,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Estatísticas simplificadas apenas para o Booster
   function calculateStats() {
-    const allNumbers = [...Array(37).keys()]; 
-    const stats = {
-      counts: {},
-      zoneSuccessionMap: {}, 
-      hotList: [],
-      coldList: [],
-    };
-    allNumbers.forEach(n => { stats.counts[n] = { count: 0 }; });
-
-    for (let i = 0; i < historyArr.length; i++) {
-      const currentNum = historyArr[i];
-      stats.counts[currentNum].count++;
-      
-      if (i < historyArr.length - 1) {
-        const nextNum = historyArr[i + 1]; 
-        if (!stats.zoneSuccessionMap[currentNum]) { stats.zoneSuccessionMap[currentNum] = []; }
-        stats.zoneSuccessionMap[currentNum].push(nextNum);
-      }
-    }
-    
-    // Calcula hot/cold com base na média para evitar listas vazias
-    const allCounts = allNumbers.map(n => stats.counts[n].count);
-    const avgCount = allCounts.length > 0 ? allCounts.reduce((a, b) => a + b, 0) / allCounts.length : 0;
-
-    stats.hotList = allNumbers
-      .filter(n => stats.counts[n].count > avgCount) 
-      .sort((a, b) => stats.counts[b].count - stats.counts[a].count) // Ordena por maior contagem
-      .slice(0, 4);
-    
-    stats.coldList = allNumbers
-      .filter(n => stats.counts[n].count < avgCount)
-      .sort((a, b) => stats.counts[a].count - stats.counts[b].count) // Ordena por menor contagem
-      .slice(0, 4);
-
-    numberStats = stats;
+    // Mantido como função dummy pois não renderizamos hot/cold/sucessores, mas pode ser útil no futuro.
   }
   
   /**
@@ -1147,243 +1056,6 @@ document.addEventListener('DOMContentLoaded', () => {
     updateUI();
   }
 
-  // ==================== NOVA FUNÇÃO: RENDERIZAR SUCESSORES IMEDIATOS ====================
-  function renderLatestSuccessors() {
-    if (historyArr.length < 2) {
-        latestSuccessorsCard.style.display = 'none';
-        return;
-    }
-
-    const triggerNum = historyArr[0];
-    const recentSuccessors = [];
-    const limit = Math.min(historyArr.length - 1, SUCCESSOR_LOOKBACK);
-
-    // 1. Coleta os sucessores imediatos do Gatilho (mais recente para o mais antigo)
-    for (let i = 1; i <= limit; i++) {
-        const predecessorNum = historyArr[i];
-        const successorNum = historyArr[i - 1]; 
-        
-        if (predecessorNum === triggerNum) {
-            recentSuccessors.push(successorNum);
-        }
-    }
-
-    // 2. Renderiza o Card
-    latestSuccessorsCard.style.display = 'block';
-    successorTriggerNumDiv.textContent = triggerNum;
-    latestSuccessorsList.innerHTML = ''; // Limpa a lista
-
-    if (recentSuccessors.length === 0) {
-        latestSuccessorsList.innerHTML = `<span style="color:var(--muted)">O número **${triggerNum}** não se repetiu como predecessor nos últimos ${limit} lançamentos.</span>`;
-        return;
-    }
-    
-    // 3. Renderiza os Chips dos Sucessores (limitando a 10)
-    const displaySuccessors = recentSuccessors.slice(0, SUCCESSOR_DISPLAY_LIMIT); 
-    
-    let html = `
-        <span style="color: var(--black); font-weight: 700; flex-shrink: 0;">Total: ${recentSuccessors.length}x</span>
-    `;
-
-    displaySuccessors.forEach((num, index) => {
-        html += `<div class="chip ${getColor(num)}" 
-                     style="width: 30px; height: 30px; font-size: 12px; font-weight: 700; flex-shrink: 0;" 
-                     title="Ordem de Aparição: ${index + 1}º mais recente (Recente → Antigo)">
-                     ${num}
-                 </div>`;
-    });
-    
-    if (recentSuccessors.length > SUCCESSOR_DISPLAY_LIMIT) {
-         html += `<span style="font-size: 12px; color: var(--muted); align-self: flex-end; flex-shrink: 0;">...e mais ${recentSuccessors.length - SUCCESSOR_DISPLAY_LIMIT}</span>`;
-    }
-
-    latestSuccessorsList.innerHTML = html;
-  }
-  // ==================== FIM NOVA FUNÇÃO ====================
-
-  
-  // ==================== LÓGICA DE ANÁLISE DE SUCESSÃO DE ZONAS (ZONA 5) ====================
-  function renderZoneAnalysis() {
-    if (historyArr.length < 2) { 
-      zoneAnalysisDiv.innerHTML = '<span style="color:var(--muted)">Adicione pelo menos 2 números ao histórico para análise de Sucessão de Zonas.</span>';
-      return;
-    }
-    
-    const LOOKBACK_ZONA = 100;
-    const triggerNum = historyArr[0]; 
-    const triggerZone = getNeighbors(triggerNum, 2); // ZONA 5
-    
-    const zoneFollowers = {};
-    const lastAppearanceIndex = {}; // Rastreia o índice (atraso) de aparição mais recente
-    let totalOccurrences = 0;
-    
-    // 1. Coleta os dados brutos de sucessores e rastreia a recentidade
-    for (let i = 1; i < historyArr.length && i <= LOOKBACK_ZONA; i++) {
-        const predecessorNum = historyArr[i];
-        const successorNum = historyArr[i - 1];
-        
-        // Verifica se o predecessor faz parte da Zona do último lançamento (triggerNum)
-        if (triggerZone.includes(predecessorNum)) {
-            zoneFollowers[successorNum] = (zoneFollowers[successorNum] || 0) + 1;
-            totalOccurrences++;
-            
-            // Rastrea o índice de aparição mais recente para ordenação (i é o 'atraso' ou a posição no historyArr)
-            if (!lastAppearanceIndex[successorNum] || i < lastAppearanceIndex[successorNum]) {
-                lastAppearanceIndex[successorNum] = i; 
-            }
-        }
-    }
-
-    if (totalOccurrences === 0) { 
-      zoneAnalysisDiv.innerHTML = `<span style="color:var(--muted)">A **Zona ${triggerNum}** (${triggerZone.join(', ')} ) não teve ocorrências registradas como predecessor nos últimos ${Math.min(historyArr.length, LOOKBACK_ZONA)} lançamentos.</span>`;
-      return;
-    }
-    
-    // 2. AGRUPAMENTO DE SUCESSORES VIZINHOS
-    const processed = new Set();
-    const successorGroups = [];
-
-    // Itera na ordem física da roleta (WHEEL_ORDER)
-    for (const num of WHEEL_ORDER) {
-        if (zoneFollowers[num] && !processed.has(num)) {
-            let group = [num];
-            let groupCount = zoneFollowers[num];
-            processed.add(num);
-
-            let currentIdx = WHEEL_INDEX_MAP[num];
-            let groupLastAppearance = lastAppearanceIndex[num]; // Rastreia o mais recente do grupo
-
-            let isContiguous = true;
-            while (isContiguous) {
-                let nextIdx = (currentIdx + 1) % WHEEL_ORDER.length;
-                let nextNum = WHEEL_ORDER[nextIdx];
-                
-                if (zoneFollowers[nextNum] && !processed.has(nextNum)) {
-                    group.push(nextNum);
-                    groupCount += zoneFollowers[nextNum];
-                    processed.add(nextNum);
-                    currentIdx = nextIdx;
-                    // Atualiza o índice mais recente se o novo membro for mais recente
-                    if (lastAppearanceIndex[nextNum] < groupLastAppearance) {
-                        groupLastAppearance = lastAppearanceIndex[nextNum];
-                    }
-                } else {
-                    isContiguous = false; 
-                }
-                
-                if (group.length === WHEEL_ORDER.length) break; 
-            }
-            
-            successorGroups.push({ 
-                numbers: group, 
-                count: groupCount,
-                first: group[0],
-                last: group[group.length - 1],
-                recentIndex: groupLastAppearance 
-            });
-        }
-    }
-
-    // 3. Ordena os grupos pela RECENTIDADE e depois pela contagem (descendente)
-    successorGroups.sort((a, b) => {
-        if (a.recentIndex !== b.recentIndex) {
-            return a.recentIndex - b.recentIndex; // Mais recente (menor index) primeiro
-        }
-        return b.count - a.count; // Desempate pela contagem
-    });
-    
-    // 4. Renderiza o HTML do Relatório
-    let html = `
-        <div class="analysis-output">
-            <div class="pattern-line">Último lançamento (GATILHO): <span class="pattern-trigger">${triggerNum}</span></div>
-            <div class="pattern-line pattern-count">**ZONA DE ANÁLISE (5 Números):** <span style="font-weight: bold; color: var(--accent);">${triggerZone.join(', ')}</span></div>
-            <div class="data-separator" style="margin: 8px 0;"></div>
-            <div style="font-size: 14px; margin-bottom: 10px; font-weight: bold; color: var(--accent);">
-                **RELATÓRIO DE SUCESSORES AGRUPADOS** (${totalOccurrences} Ocorrências após esta Zona):
-            </div>
-            
-            <div id="successorGroupsReport">
-    `;
-    
-    successorGroups.forEach(groupInfo => {
-        const group = groupInfo.numbers;
-        const count = groupInfo.count;
-        const probability = (count / totalOccurrences * 100).toFixed(1);
-        
-        let groupDisplay;
-        if (group.length === 1) {
-            const num = group[0];
-            groupDisplay = `**${num}** (<span class="pattern-succession">${getColor(num).toUpperCase()}</span>)`;
-        } else {
-            groupDisplay = `**${groupInfo.first} → ${groupInfo.last}** (${group.length} vizinhos)`;
-        }
-        
-        html += `<div class="pattern-line" style="border-left: 3px solid var(--accent); padding-left: 5px; margin-bottom: 8px;">
-                    <span style="font-size: 16px;">
-                        → ${groupDisplay}
-                    </span>
-                    <span class="pattern-count">
-                        — Repetições Totais: **${count}x** (Prob: ${probability}%)
-                        (Recente: #${groupInfo.recentIndex})
-                    </span>
-                </div>`;
-    });
-    
-    html += `</div>`; // Fecha successorGroupsReport
-
-    // 5. Geração da Sugestão de Aposta
-    const filteredSuggestions = successorGroups.filter(g => g.count >= 2);
-    
-    html += `
-        <div class="data-separator"></div>
-        <div class="suggestionTitle" style="color: var(--zero); border-bottom-color: var(--zero);">
-            <span class="material-symbols-outlined">gavel</span>
-            SUGESTÃO DE APOSTA (REPETIÇÃO 2x+)
-        </div>
-        <div style="margin-top: 10px; font-size: 15px;">
-    `;
-
-    if (filteredSuggestions.length === 0) {
-        html += `<span style="color:var(--muted)">Nenhum grupo de sucessores se repetiu 2x ou mais. Aguarde mais lançamentos.</span>`;
-    } else {
-        filteredSuggestions.forEach((groupInfo) => {
-            const count = groupInfo.count;
-            const group = groupInfo.numbers;
-            const targetAnchor = groupInfo.first; 
-            const coverageRadius = 2; // ZONA 5
-            const coveredNumbers = getNeighbors(targetAnchor, coverageRadius);
-            
-            let suggestionText;
-            if (group.length === 1) {
-                suggestionText = `Aposte no **${targetAnchor}** com **2 Vizinhos para cada lado** (Total de 5 números).`;
-            } else {
-                suggestionText = `Aposte na **Zona 5** centrada em **${targetAnchor}** (${coveredNumbers.join(', ')}).`;
-            }
-            
-            html += `
-                <div class="pattern-line" style="margin-bottom: 12px; padding: 5px; background: rgba(0, 121, 192, 0.05); border-left: 3px solid var(--zero);">
-                    <div style="font-weight: 700;">
-                        🔁 Grupo Repetido: <span style="color: var(--zero);">${count}x</span> (Mais Recente em **#${groupInfo.recentIndex}**)
-                    </div>
-                    <div style="margin-top: 4px;">
-                        Zona de Sucessão: <span style="font-weight: bold; color: var(--accent);">${group.join(', ')}</span>
-                    </div>
-                    <div style="font-size: 14px; margin-top: 4px;">
-                        **SUGESTÃO DE COBERTURA 5 NÚMEROS (2 VIZINHOS):** <span style="color: var(--black); font-weight: bold;">${suggestionText}</span>
-                    </div>
-                </div>
-            `;
-        });
-    }
-
-    html += `</div>`; // Fecha a seção de sugestão
-    html += `</div>`; // Fecha analysis-output
-    
-    zoneAnalysisDiv.innerHTML = html;
-  }
-  // ==================== FIM LÓGICA DE ANÁLISE DE SUCESSÃO DE ZONAS ====================
-  
-  
   // =========================================================================================
   // LOGICA PRINCIPAL DO BOOSTER I.A. (ATUALIZADA)
   // =========================================================================================
@@ -1424,7 +1096,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const totalTriggerCount = triggerSuccessors.length;
       
-      // NOVO CRITÉRIO 1: Gatilho deve ter aparecido mais de 4x (>= 5x)
+      // CRITÉRIO 1: Gatilho deve ter aparecido mais de 4x (>= 5x)
       if (totalTriggerCount < TRIGGER_MIN_COUNT) {
           betSuggestionDiv.innerHTML = `<span style="color:var(--muted)">Aguardando mais ocorrências do **${triggerNum}** para análise confiável (Mínimo ${TRIGGER_MIN_COUNT}x - Encontrado: ${totalTriggerCount}x).</span>`;
           return;
@@ -1501,13 +1173,10 @@ document.addEventListener('DOMContentLoaded', () => {
           .slice(0, 3)
           .map(([num]) => parseInt(num)); 
 
+      // 1. INICIO do HTML da sugestão (removida a taxa de intersecção aqui)
       let suggestionHTML = `
           <div style="font-size: 14px; margin-bottom: 8px; color: var(--muted);">
               O GATILHO atual (último número) é: <span style="color: var(--zero); font-weight: 700;">${triggerNum}</span> (Apareceu ${totalTriggerCount}x).
-          </div>
-          <div style="font-family: 'Passion One', cursive; font-size: 16px;">
-              🔗 **Taxa de Intersecção da Zona** (Baseada em ${totalTriggerCount} sucessores): 
-              <span style="color: ${intersectionRate >= SUGGESTION_THRESHOLD ? 'var(--alert-green)' : 'var(--alert-red)'}; font-weight: bold;">${intersectionRate.toFixed(1)}%</span>
           </div>
       `;
       
@@ -1554,12 +1223,13 @@ document.addEventListener('DOMContentLoaded', () => {
               </div>
           `;
       } else {
+          // 2. BLOQUEIO: Mensagem simplificada sem a taxa de intersecção e limite
           suggestionHTML += `
               <div style="margin-top: 12px; margin-bottom: 12px;">
                   <span style="color: var(--alert-red); font-weight: 800; font-size: 18px;">🛑 APOSTA BOOSTER BLOQUEADA!</span>
               </div>
               <div>
-                  A Taxa de Intersecção com a Zona **${triggerNum}** (${intersectionRate.toFixed(1)}%) está **abaixo do limite de ${SUGGESTION_THRESHOLD}%**. A sugestão é desativada por segurança.
+                  O padrão histórico de sucessão não atingiu a confiabilidade mínima (${SUGGESTION_THRESHOLD}%). A sugestão é desativada por segurança.
               </div>
           `;
       }
@@ -1585,11 +1255,7 @@ document.addEventListener('DOMContentLoaded', () => {
     historyDiv.scrollLeft = 0; 
   }
 
-  function renderHotCold() {
-    const hotNumbers = numberStats.hotList || [];
-    const coldNumbers = numberStats.coldList || [];
-    hotColdDiv.innerHTML = `🔥 **Hot** (Mais Frequentes): ${hotNumbers.join(', ') || '-'}<br>❄️ **Cold** (Mais Atrasados): ${coldNumbers.join(', ') || '-'}`;
-  }
+  // FUNÇÕES DE RENDERIZAÇÃO DE ANÁLISE REMOVIDAS
   
   function renderBankrollDashboard() {
     const { initial, current, history } = bankrollState;
@@ -1599,7 +1265,7 @@ document.addEventListener('DOMContentLoaded', () => {
       dashboardElement.innerHTML = `<span class="stat-title" style="grid-column: 1 / -1;">Defina sua banca inicial para começar.</span>`;
       return;
     }
-    // USANDO safeMath
+    // USANDO safeMath para garantir precisão
     const totalProfit = safeMath(current - initial); 
     const totalProfitPercent = (initial > 0) ? safeMath((totalProfit / initial) * 100).toFixed(1) : 0;
     const wins = history.filter(v => v.amount > 0).length;
@@ -1723,9 +1389,9 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             calculateStats();
             renderHistory();
-            renderLatestSuccessors(); 
-            renderZoneAnalysis();
-            renderHotCold();
+            // renderLatestSuccessors(); // REMOVIDO
+            // renderZoneAnalysis(); // REMOVIDO
+            // renderHotCold(); // REMOVIDO
             renderBankrollDashboard();
             renderBankrollHistory();
             renderBetSuggestion(); // Inclui o novo estado de alerta
@@ -1969,6 +1635,22 @@ document.addEventListener('DOMContentLoaded', () => {
   function initialize() {
       setInterval(updateClock, 1000);
       updateClock();
+      
+      loadConfig();
+      loadBankrollData();
+      loadHistoryData(); 
+      setupNumberGrid(); 
+      
+      checkLockStatus(); 
+      updateUI(); 
+  }
+
+  initialize();
+});
+</script>
+
+</body>
+</html>
       
       loadConfig();
       loadBankrollData();
