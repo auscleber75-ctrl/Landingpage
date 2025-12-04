@@ -162,11 +162,6 @@ body.login-active {
   border-bottom: 1px dashed rgba(0, 121, 192, 0.3);
   padding-bottom: 5px;
 }
-.suggestionBox{
-  font-size:15px;
-  color:var(--black); /* Texto escuro */
-  line-height:1.7;
-}
 .iaGlow{
   color:var(--accent-secondary); /* Cor secundária para o Booster */
   text-shadow:0 0 10px rgba(0, 121, 192, 0.6);
@@ -684,9 +679,7 @@ body.login-active {
 document.addEventListener('DOMContentLoaded', () => {
 
   /* ================== CONSTANTES DE CONFIGURAÇÃO ================== */
-  // --- SENHA ALTERADA PARA 2025 ---
   const getPasswordHash = () => '2025'; 
-  // ---------------------------------
   const BANKROLL_STORAGE_KEY = 'roletaIAPBankroll_main';
   const HISTORY_STORAGE_KEY = 'roletaIAPHistory'; 
   const CONFIG_STORAGE_KEY = 'roletaIAPConfig'; 
@@ -712,7 +705,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const SUCCESSOR_DISPLAY_LIMIT = 10; 
   const CONFIRMATION_ROUNDS = 4; // Mínimo de repetições do Gatilho como predecessor.
   const CONFIRMATION_ROUNDS_UI = 3; // Quantas confirmações de "fora da zona" são necessárias.
-
 
   
   /* ================== ELEMENTOS DOM (Mantidos) ================== */
@@ -746,8 +738,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnUpload = document.getElementById('btnUpload'); 
   const uploadPhotoInput = document.getElementById('uploadPhoto');
   const clearBtn = document.getElementById('clearBtn');
-  const authPwdInput = document.getElementById('authPwd'); // Necessário para login
-  
+  const logoutBtn = document.getElementById('logoutBtn');
+  // const authPwdInput = document.getElementById('authPwd'); // Removido do escopo global para evitar problemas
+
   /* ================== ESTADO DA APLICAÇÃO (MODIFICADO) ================== */
   let historyArr = []; 
   let numberStats = {}; 
@@ -758,8 +751,8 @@ document.addEventListener('DOMContentLoaded', () => {
       lockUntil: 0,
       lockReason: '', 
       sessionStart: 0, 
-      boosterConfirmations: 0, // Contador de confirmações de "fora da zona"
-      boosterIsLocked: false, // NOVO: Trava o estado após o gatilho ser detectado
+      boosterConfirmations: 0, 
+      boosterIsLocked: false, 
   };
   
   let bankrollState = {
@@ -812,8 +805,8 @@ document.addEventListener('DOMContentLoaded', () => {
           config.lockReason = loaded.lockReason || '';
           config.sessionStart = loaded.sessionStart || 0;
           config.boosterConfirmations = loaded.boosterConfirmations || 0;
-          config.boosterIsLocked = loaded.boosterIsLocked || false; // NOVO
-          // Garante que o estado de login está limpo se não for a sessão atual
+          config.boosterIsLocked = loaded.boosterIsLocked || false; 
+          
           if (config.isLoggedIn && config.sessionStart === 0) {
               config.isLoggedIn = false;
           }
@@ -1308,7 +1301,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   
   // =========================================================================================
-  // 🚀 CÓDIGO DO BOOSTER I.A. (MODIFICADO COM LÓGICA DE 4 SUCESSORES E TRAVAMENTO)
+  // 🚀 CÓDIGO DO BOOSTER I.A.
   // =========================================================================================
 
   /**
@@ -1497,6 +1490,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- MODO NÃO TRAVADO: Procura por novo Gatilho ---
     
+    const currentTriggerNum = historyArr[0];
+
     const result = findBoosterSuccessors(currentTriggerNum);
     const triggerCount = result.triggerCount;
     const successors = result.successors;
@@ -1692,62 +1687,4 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (config.isLoggedIn && config.sessionStart > 0) {
         const elapsed = Date.now() - config.sessionStart;
-        const totalSeconds = Math.floor(elapsed / 1000);
-        const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
-        const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
-        sessionTimerDiv.textContent = `Sessão: ${hours}:${minutes}`;
-    }
-  }
-  
-  function updateUI() {
-    checkLockStatus(); 
-    if (!getLoginStatus() || config.isLocked) return;
-
-    calculateStats(); 
-    renderHistory();
-    renderBankrollDashboard();
-    renderBankrollHistory();
-    renderLatestSuccessors();
-    renderZoneAnalysis();
-    
-    // ⭐️ Chama a nova função do Booster I.A.
-    renderBetSuggestion(); 
-    
-    // Tendências
-    hotColdDiv.innerHTML = `
-        🔥 Hot: <span style="font-weight: bold; color: var(--red);">${numberStats.hotList.join(', ') || '-'}</span>
-        <br>
-        ❄️ Cold: <span style="font-weight: bold; color: var(--accent-secondary);">${numberStats.coldList.join(', ') || '-'}</span>
-    `;
-  }
-  
-  /* ================== EVENT LISTENERS ================== */
-  
-  // Login (Corrigido para garantir a funcionalidade)
-  document.getElementById('btnSignInReal').addEventListener('click', () => {
-      // Usa o elemento DOM diretamente, garantindo que não haja problema de variável não inicializada
-      if (authPwdInput.value === getPasswordHash()) { 
-          setLoginStatus(true, 'REAL');
-          updateUI();
-      } else {
-          alert('Senha incorreta.');
-          authPwdInput.value = '';
-      }
-  });
-  
-  document.getElementById('btnSignInDemo').addEventListener('click', () => {
-      setLoginStatus(true, 'DEMO');
-      updateUI();
-  });
-  
-  document.getElementById('logoutBtn').addEventListener('click', () => {
-      setLoginStatus(false, 'DEMO');
-      updateUI();
-  });
-  
-  // Banca
-  document.getElementById('btnSetBankroll').addEventListener('click', () => {
-    const amount = parseFloat(initialBankrollInput.value);
-    if (isNaN(amount) || amount <= 0) {
-        alert('Por favor, insira um valor inicial de banca válido (maior que zero).');
-        return;
+        const totalSeconds = Math.floor(elapsed
